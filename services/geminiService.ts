@@ -1,8 +1,6 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
-import { Event } from "../types";
+import { Event } from "../types.ts";
 
-// Always use the API key directly from process.env.API_KEY.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const getAIRecommendations = async (userMood: string, allEvents: Event[]) => {
@@ -37,20 +35,10 @@ export const getAIRecommendations = async (userMood: string, allEvents: Event[])
   });
 
   try {
-    // Extract text directly from the response.text property.
     const text = response.text || "{}";
     return JSON.parse(text.trim());
   } catch (error) {
     console.error("AI parse error", error);
     return null;
   }
-};
-
-export const getSmartSummary = async (event: Event) => {
-  const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: `Write a compelling 2-sentence marketing summary for this event: ${event.title}. Category: ${event.category}. Description: ${event.description}. Focus on why someone should attend.`,
-  });
-  // Use the .text property to get the generated text output.
-  return response.text;
 };

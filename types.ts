@@ -12,6 +12,7 @@ export interface Event {
   image: string;
   description: string;
   price: number;
+  originalPrice?: number;
   slots: Slot[];
 }
 

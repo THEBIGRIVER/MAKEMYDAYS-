@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { INITIAL_EVENTS } from './constants';
-import { Event, Category, Booking, Slot, AIRecommendation } from './types';
-import EventCard from './components/EventCard';
-import BookingModal from './components/BookingModal';
-import { getAIRecommendations } from './services/geminiService';
+import { INITIAL_EVENTS } from './constants.ts';
+import { Event, Category, Booking, Slot, AIRecommendation } from './types.ts';
+import EventCard from './components/EventCard.tsx';
+import BookingModal from './components/BookingModal.tsx';
+import { getAIRecommendations } from './services/geminiService.ts';
 
 const ConnectionLogo = () => (
   <svg viewBox="0 0 100 100" className="w-8 h-8 md:w-10 md:h-10 fill-current text-[#F84464]">
@@ -15,25 +15,100 @@ const ConnectionLogo = () => (
   </svg>
 );
 
+const ShapeIcon: React.FC<{ type: string; color: string; active: boolean }> = ({ type, color, active }) => {
+  const icons: Record<string, React.ReactNode> = {
+    all: (
+      <circle cx="50" cy="50" r="35" stroke="currentColor" strokeWidth="2" fill="none" strokeDasharray="4 4" />
+    ),
+    mountain: (
+      <path d="M20 80 L50 20 L80 80 M40 80 L60 40 L85 80" stroke="currentColor" strokeWidth="4" fill="none" strokeLinejoin="round" />
+    ),
+    ball: (
+      <g>
+        <circle cx="50" cy="50" r="30" stroke="currentColor" strokeWidth="4" fill="none" />
+        <path d="M30 35 Q50 50 30 65 M70 35 Q50 50 70 65" stroke="currentColor" strokeWidth="2" fill="none" />
+      </g>
+    ),
+    boat: (
+      <path d="M15 60 Q50 85 85 60 L75 50 L25 50 Z M50 15 L50 50 M30 30 L50 30" stroke="currentColor" strokeWidth="4" fill="none" />
+    ),
+    horse: (
+      <path d="M30 70 Q30 30 50 20 Q70 20 70 40 Q70 60 50 80 M50 20 L40 10" stroke="currentColor" strokeWidth="4" fill="none" />
+    ),
+    racket: (
+      <g>
+        <ellipse cx="50" cy="40" rx="20" ry="25" stroke="currentColor" strokeWidth="4" fill="none" />
+        <path d="M50 65 L50 90 M40 90 L60 90" stroke="currentColor" strokeWidth="4" fill="none" />
+        <path d="M40 30 L60 50 M40 50 L60 30" stroke="currentColor" strokeWidth="1" fill="none" opacity="0.4" />
+      </g>
+    ),
+    bat: (
+      <path d="M45 20 L55 20 L60 70 L40 70 Z M50 70 L50 90" stroke="currentColor" strokeWidth="4" fill="none" />
+    )
+  };
+
+  return (
+    <svg viewBox="0 0 100 100" className={`w-full h-full transition-all duration-500 ${active ? 'scale-110' : 'scale-90 opacity-60 group-hover:opacity-100 group-hover:scale-100'}`} style={{ color }}>
+      {icons[type] || icons.all}
+    </svg>
+  );
+};
+
 const CategoryItem: React.FC<{
   label: string;
-  image: string;
+  shape: string;
+  color: string;
   active: boolean;
   onClick: () => void;
-}> = ({ label, image, active, onClick }) => (
+}> = ({ label, shape, color, active, onClick }) => (
   <button 
     onClick={onClick}
-    className="flex flex-col items-center gap-2 group transition-all shrink-0 snap-center pb-1"
+    className="flex flex-col items-center gap-3 group transition-all shrink-0 snap-center pb-2 px-3"
   >
-    <div className={`w-14 h-14 md:w-20 md:h-20 rounded-full overflow-hidden border-2 transition-all duration-300 ${active ? 'border-[#F84464] scale-105 shadow-lg' : 'border-transparent'}`}>
-      <img src={image} alt={label} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+    <div className={`relative w-20 h-20 md:w-24 md:h-24 flex items-center justify-center transition-all duration-500 ${
+      active 
+        ? 'scale-110' 
+        : 'hover:-translate-y-2'
+    }`}>
+      {/* Glow Effect */}
+      {active && (
+        <div 
+          className="absolute inset-0 rounded-full blur-2xl opacity-20 animate-pulse" 
+          style={{ backgroundColor: color }}
+        ></div>
+      )}
+      
+      {/* Glass Container */}
+      <div className={`absolute inset-0 rounded-2xl border-2 transition-all duration-500 ${
+        active 
+          ? 'bg-white shadow-xl rotate-3' 
+          : 'bg-slate-50 border-slate-100 group-hover:border-slate-300 group-hover:bg-white'
+      }`} style={{ borderColor: active ? color : undefined }}></div>
+      
+      {/* Icon Shape */}
+      <div className="relative w-12 h-12 md:w-16 md:h-16 z-10">
+        <ShapeIcon type={shape} color={color} active={active} />
+      </div>
     </div>
-    <span className={`text-[10px] md:text-[11px] font-bold uppercase tracking-tight text-center transition-colors ${active ? 'text-[#F84464]' : 'text-slate-500 group-hover:text-slate-800'}`}>{label}</span>
+
+    <span className={`text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-center transition-colors ${
+      active ? 'text-slate-900' : 'text-slate-400 group-hover:text-slate-600'
+    }`}>
+      {label}
+    </span>
+    {active && <div className="h-1 w-6 rounded-full" style={{ backgroundColor: color }}></div>}
   </button>
 );
 
 const App: React.FC = () => {
-  const [events, setEvents] = useState<Event[]>(INITIAL_EVENTS);
+  const [events, setEvents] = useState<Event[]>(() => 
+    INITIAL_EVENTS.map(e => ({
+      ...e,
+      originalPrice: e.price,
+      price: Math.round(e.price * 0.2)
+    }))
+  );
+
   const [userBookings, setUserBookings] = useState<Booking[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<Category | 'All'>('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -74,30 +149,36 @@ const App: React.FC = () => {
     setTimeout(() => setLastNotification(null), 5000);
   };
 
-  const askAI = async () => {
-    if (!searchQuery.trim()) return;
+  const askAI = async (mood?: string) => {
+    const query = mood || searchQuery;
+    if (!query.trim()) return;
+    
+    if (mood) setSearchQuery(mood);
     setIsAiLoading(true);
     setAiRecommendation(null);
     try {
-      const result = await getAIRecommendations(searchQuery, events);
+      const result = await getAIRecommendations(query, events);
       setAiRecommendation(result);
     } catch (err) {
       console.error("AI recommendation failed", err);
     } finally {
       setIsAiLoading(false);
       setIsMobileSearchOpen(false);
+      window.scrollTo({ top: 300, behavior: 'smooth' });
     }
   };
 
   const categories = [
-    { label: 'All', image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80&w=200' },
-    { label: 'Adventure', image: 'https://images.unsplash.com/photo-1501555088652-021faa106b9b?auto=format&fit=crop&q=80&w=200' },
-    { label: 'Mindfulness', image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&q=80&w=200' },
-    { label: 'Creative Arts', image: 'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?auto=format&fit=crop&q=80&w=200' },
-    { label: 'Team Building', image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=80&w=200' },
-    { label: 'Activity', image: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&q=80&w=200' },
-    { label: 'Wellness', image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&q=80&w=200' }
+    { label: 'All', shape: 'all', color: '#F84464' },
+    { label: 'Adventure', shape: 'mountain', color: '#3B82F6' },
+    { label: 'Mindfulness', shape: 'bat', color: '#10B981' },
+    { label: 'Creative Arts', shape: 'racket', color: '#EF4444' },
+    { label: 'Team Building', shape: 'boat', color: '#06B6D4' },
+    { label: 'Activity', shape: 'ball', color: '#F59E0B' },
+    { label: 'Wellness', shape: 'horse', color: '#8B5CF6' }
   ];
+
+  const quickMoods = ["Stressed", "Bored", "Energetic", "Creative", "Tired", "Adventurous"];
 
   return (
     <div className="min-h-screen bg-[#F5F5F5] text-slate-900 pb-safe transition-colors duration-500">
@@ -164,7 +245,7 @@ const App: React.FC = () => {
                 autoFocus
               />
               <button 
-                onClick={askAI}
+                onClick={() => askAI()}
                 className="absolute right-2 top-2 bg-[#F84464] text-white text-[10px] font-black uppercase px-3 py-1.5 rounded shadow-sm"
               >
                 Match
@@ -174,60 +255,50 @@ const App: React.FC = () => {
         )}
       </nav>
 
-      {lastNotification && (
-        <div className="fixed top-24 right-4 z-[100] bg-slate-900 text-white px-6 py-4 rounded-xl shadow-2xl border-l-4 border-[#F84464] animate-in slide-in-from-right duration-500 max-w-xs md:max-w-sm">
-          <div className="flex items-center gap-3">
-            <div className="bg-[#F84464] rounded-full p-1.5">
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-            </div>
-            <span className="text-[11px] font-bold leading-tight">{lastNotification}</span>
+      <div className="bg-white border-b border-slate-200 py-8 px-4 shadow-sm">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-start md:justify-center gap-4 md:gap-12 overflow-x-auto scrollbar-hide pb-2">
+            {categories.map((cat) => (
+              <CategoryItem 
+                key={cat.label} 
+                label={cat.label} 
+                shape={cat.shape}
+                color={cat.color}
+                active={selectedCategory === cat.label}
+                onClick={() => {
+                  setSelectedCategory(cat.label as Category | 'All');
+                  setAiRecommendation(null);
+                  setSearchQuery('');
+                }}
+              />
+            ))}
           </div>
-        </div>
-      )}
-
-      <div className="bg-white border-b border-slate-200 py-6 px-4 overflow-x-auto scrollbar-hide shadow-sm">
-        <div className="max-w-7xl mx-auto flex items-center justify-start md:justify-center gap-6 md:gap-14">
-          {categories.map((cat) => (
-            <CategoryItem 
-              key={cat.label} 
-              label={cat.label} 
-              image={cat.image} 
-              active={selectedCategory === cat.label}
-              onClick={() => {
-                setSelectedCategory(cat.label as Category | 'All');
-                setAiRecommendation(null);
-                setSearchQuery('');
-              }}
-            />
-          ))}
+          
+          <div className="flex items-center justify-start md:justify-center gap-2 md:gap-3 overflow-x-auto scrollbar-hide py-4 mt-4 border-t border-slate-50">
+            <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest shrink-0 mr-2">Quick Moods</span>
+            {quickMoods.map((mood) => (
+              <button 
+                key={mood}
+                onClick={() => askAI(mood)}
+                className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all shrink-0 border border-slate-100 ${
+                  searchQuery === mood 
+                    ? 'bg-[#F84464] text-white border-[#F84464] shadow-md' 
+                    : 'bg-white text-slate-500 hover:border-[#F84464] hover:text-[#F84464]'
+                }`}
+              >
+                {mood}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {!searchQuery && !aiRecommendation && (
-        <div className="max-w-7xl mx-auto px-4 pt-6 md:pt-10">
-          <div className="w-full h-48 md:h-96 bg-slate-800 rounded-3xl overflow-hidden relative group shadow-2xl">
-            <img src="https://images.unsplash.com/photo-1511886929837-354d827aae26?auto=format&fit=crop&q=80&w=1500" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-[3s] ease-out" alt="Banner" />
-            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-900/40 to-transparent flex flex-col justify-center p-8 md:p-20">
-              <span className="bg-[#F84464] self-start px-3 py-1 rounded-full text-[10px] font-black text-white uppercase mb-4 tracking-widest shadow-lg">Featured Experience</span>
-              <h2 className="text-white text-3xl md:text-6xl font-black mb-4 leading-none italic uppercase tracking-tighter">Elite Paintball & <br/> Soul Wellness</h2>
-              <p className="text-white/80 text-xs md:text-xl max-w-xs md:max-w-xl font-medium leading-relaxed">Escape the routine. Choose between heart-pounding tactical combat or deep-tissue restoration. Exclusively on MAKEMYDAYS.</p>
-              <button 
-                onClick={() => setSelectedCategory('Adventure')}
-                className="mt-8 self-start bg-white text-slate-900 px-8 py-3 rounded-full text-xs font-black uppercase tracking-widest hover:bg-[#F84464] hover:text-white transition-all shadow-xl active:scale-95"
-              >
-                Explore Adventures
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {aiRecommendation && (
-        <section className="px-4 py-10 max-w-7xl mx-auto">
+      {(aiRecommendation || isAiLoading) && (
+        <section className="px-4 py-10 max-w-7xl mx-auto" id="ai-results">
           <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-2xl relative animate-in fade-in zoom-in-95 duration-500 overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-[#F84464]/5 rounded-full -mr-16 -mt-16"></div>
             <button 
-              onClick={() => setAiRecommendation(null)}
+              onClick={() => { setAiRecommendation(null); setSearchQuery(''); }}
               className="absolute top-6 right-6 text-slate-300 hover:text-slate-900 transition-colors z-10"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -238,26 +309,26 @@ const App: React.FC = () => {
               </div>
               <span className="font-black text-xs uppercase tracking-[0.2em]">AI Mood Matcher</span>
             </div>
-            <p className="text-xl md:text-2xl font-black mb-10 text-slate-900 leading-tight italic max-w-3xl">"{aiRecommendation.reasoning}"</p>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-              {events.filter(e => aiRecommendation.suggestedEventIds.includes(e.id)).map(e => (
-                <EventCard key={e.id} event={e} onClick={setSelectedEvent} />
-              ))}
-            </div>
+            
+            {isAiLoading ? (
+              <div className="py-20 flex flex-col items-center justify-center">
+                 <div className="relative">
+                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-slate-100 border-t-[#F84464]"></div>
+                </div>
+                <span className="mt-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] animate-pulse">Analyzing Mood Context</span>
+              </div>
+            ) : aiRecommendation && (
+              <>
+                <p className="text-xl md:text-2xl font-black mb-10 text-slate-900 leading-tight italic max-w-3xl">"{aiRecommendation.reasoning}"</p>
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+                  {events.filter(e => aiRecommendation.suggestedEventIds.includes(e.id)).map(e => (
+                    <EventCard key={e.id} event={e} onClick={setSelectedEvent} />
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </section>
-      )}
-
-      {isAiLoading && (
-        <div className="flex flex-col items-center justify-center py-20 animate-in fade-in duration-300">
-          <div className="relative">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-slate-100 border-t-[#F84464]"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-2 h-2 bg-[#F84464] rounded-full animate-ping"></div>
-            </div>
-          </div>
-          <span className="mt-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] animate-pulse">Personalizing Results</span>
-        </div>
       )}
 
       <main className="max-w-7xl mx-auto px-4 py-12">
@@ -265,34 +336,14 @@ const App: React.FC = () => {
           <div className="flex flex-col gap-1">
              <span className="text-[#F84464] text-[10px] font-black uppercase tracking-[0.2em]">{selectedCategory !== 'All' ? 'Browsing Category' : 'Featured Feed'}</span>
              <h2 className="text-2xl md:text-4xl font-black text-slate-900 uppercase tracking-tighter italic">
-              {searchQuery ? `Results for "${searchQuery}"` : selectedCategory === 'All' ? 'Must-Try Experiences' : `${selectedCategory}`}
+              {searchQuery && !aiRecommendation ? `Results for "${searchQuery}"` : selectedCategory === 'All' ? 'Must-Try Experiences' : `${selectedCategory}`}
             </h2>
           </div>
-          {searchQuery && (
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-100 px-3 py-1 rounded-full">
-              {filteredEvents.length} items found
-            </span>
-          )}
         </div>
 
-        {filteredEvents.length === 0 ? (
-          <div className="py-24 text-center animate-in fade-in duration-500">
-            <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-              <svg className="w-10 h-10 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-            </div>
-            <p className="text-slate-400 font-black uppercase text-xs tracking-[0.2em] mb-6">No matching experiences found</p>
-            <button 
-              onClick={() => { setSearchQuery(''); setSelectedCategory('All'); }}
-              className="bg-[#333545] text-white px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-[#F84464] transition-all shadow-xl active:scale-95"
-            >
-              Reset Filters
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 md:gap-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {filteredEvents.map(event => <EventCard key={event.id} event={event} onClick={setSelectedEvent} />)}
-          </div>
-        )}
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 md:gap-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          {filteredEvents.map(event => <EventCard key={event.id} event={event} onClick={setSelectedEvent} />)}
+        </div>
       </main>
 
       {isBookingHistoryOpen && (
@@ -309,39 +360,19 @@ const App: React.FC = () => {
               </button>
             </div>
             <div className="p-6 overflow-y-auto flex-1 bg-slate-50/50">
-              {userBookings.length === 0 ? (
-                <div className="py-32 text-center">
-                  <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm">
-                    <svg className="w-10 h-10 text-slate-100" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 11-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                  </div>
-                  <p className="text-slate-400 font-black uppercase text-[10px] tracking-widest">Your schedule is empty</p>
-                  <button 
-                    onClick={() => setIsBookingHistoryOpen(false)}
-                    className="mt-8 text-[#F84464] text-[10px] font-black uppercase tracking-[0.2em] border-b-2 border-[#F84464] pb-1"
-                  >
-                    Browse Now
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {userBookings.map((b) => (
-                    <div key={b.id} className="p-5 bg-white rounded-2xl shadow-sm border border-slate-100 flex gap-5 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                      <img src={events.find(e => e.id === b.eventId)?.image} alt="" className="w-16 h-24 object-cover rounded-xl shadow-md shrink-0" />
-                      <div className="min-w-0 flex flex-col py-1">
-                        <span className="text-[9px] font-black text-[#F84464] uppercase tracking-widest mb-1">{b.category}</span>
-                        <h3 className="font-bold text-slate-900 text-lg leading-tight truncate italic">{b.eventTitle}</h3>
-                        <div className="mt-auto">
-                           <p className="text-[12px] text-slate-600 font-black flex items-center gap-1.5">
-                              <svg className="w-3.5 h-3.5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                              {b.time}
-                           </p>
-                           <span className="text-[9px] text-slate-400 font-bold uppercase mt-2 block tracking-tighter">ID: {b.id.toUpperCase()} • {new Date(b.bookedAt).toLocaleDateString()}</span>
-                        </div>
-                      </div>
+              {userBookings.map((b) => (
+                <div key={b.id} className="p-5 bg-white rounded-2xl shadow-sm border border-slate-100 flex gap-5 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 mb-4">
+                  <img src={events.find(e => e.id === b.eventId)?.image} alt="" className="w-16 h-24 object-cover rounded-xl shadow-md shrink-0" />
+                  <div className="min-w-0 flex flex-col py-1">
+                    <span className="text-[9px] font-black text-[#F84464] uppercase tracking-widest mb-1">{b.category}</span>
+                    <h3 className="font-bold text-slate-900 text-lg leading-tight truncate italic">{b.eventTitle}</h3>
+                    <div className="mt-auto">
+                       <p className="text-[12px] text-slate-600 font-black flex items-center gap-1.5">{b.time}</p>
+                       <span className="text-[9px] text-slate-400 font-bold uppercase mt-2 block">ID: {b.id.toUpperCase()}</span>
                     </div>
-                  ))}
+                  </div>
                 </div>
-              )}
+              ))}
             </div>
           </div>
         </div>
@@ -354,32 +385,6 @@ const App: React.FC = () => {
           onConfirm={handleBookingConfirm} 
         />
       )}
-
-      <footer className="bg-[#333545] text-white py-12 border-t border-white/5">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-8 border-b border-white/5 pb-10 mb-10">
-            <div className="flex flex-col items-center md:items-start gap-4">
-              <div className="flex items-center gap-3">
-                <ConnectionLogo />
-                <span className="text-2xl font-black italic tracking-tighter">MAKEMYDAYS</span>
-              </div>
-              <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest text-center md:text-left">start your experience journey</p>
-            </div>
-            <div className="flex gap-8">
-               <a href="#" className="text-white/40 hover:text-[#F84464] transition-colors text-[10px] font-black uppercase tracking-widest">Support</a>
-               <a href="#" className="text-white/40 hover:text-[#F84464] transition-colors text-[10px] font-black uppercase tracking-widest">Privacy</a>
-               <a href="#" className="text-white/40 hover:text-[#F84464] transition-colors text-[10px] font-black uppercase tracking-widest">Terms</a>
-            </div>
-          </div>
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 opacity-30">
-            <p className="text-[9px] font-bold uppercase tracking-[0.2em]">© 2025 MAKEMYDAYS connect pvt. ltd.</p>
-            <div className="flex items-center gap-4">
-               <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-               <span className="text-[9px] font-black uppercase tracking-widest">System Operational — Vercel Edge</span>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 };

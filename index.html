@@ -43,7 +43,6 @@
       .poster-gradient {
         background: linear-gradient(0deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 40%);
       }
-      /* Smoother transitions for Vercel deployment experience */
       .page-transition {
         animation: fadeIn 0.4s ease-out;
       }
@@ -52,18 +51,21 @@
         to { opacity: 1; transform: translateY(0); }
       }
     </style>
-  <script type="importmap">
+<script type="importmap">
 {
   "imports": {
+    "@google/genai": "https://esm.sh/@google/genai@^1.37.0",
+    "react/": "https://esm.sh/react@^19.2.3/",
     "react": "https://esm.sh/react@^19.2.3",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "@google/genai": "https://esm.sh/@google/genai@^1.37.0"
+    "vite": "https://esm.sh/vite@^7.3.1",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
   }
 }
 </script>
 </head>
   <body>
     <div id="root" class="page-transition"></div>
+    <script type="module" src="/index.tsx"></script>
   </body>
 </html>
