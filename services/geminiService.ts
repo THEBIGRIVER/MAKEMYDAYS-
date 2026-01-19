@@ -1,9 +1,14 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Event } from "../types.ts";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const apiKey = process.env.API_KEY;
+const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
 export const getAIRecommendations = async (userMood: string, allEvents: Event[]) => {
+  if (!ai) {
+    console.warn("Gemini API key not configured");
+    return null;
+  }
   const eventContext = allEvents.map(e => ({
     id: e.id,
     title: e.title,
