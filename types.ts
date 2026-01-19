@@ -1,3 +1,4 @@
+
 export type Category = "Team Building" | "Activity" | "Wellness" | "Mindfulness" | "Adventure" | "Creative Arts";
 
 export interface Slot {
@@ -26,6 +27,7 @@ export interface Booking {
   bookedAt: string;
   userName?: string;
   userPhone?: string;
+  confirmationEmail?: string;
 }
 
 export interface User {

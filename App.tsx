@@ -1,9 +1,11 @@
+
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Event, Category, Booking, Slot, AIRecommendation, User } from './types.ts';
 import EventCard from './components/EventCard.tsx';
 import BookingModal from './components/BookingModal.tsx';
 import Dashboard from './components/Dashboard.tsx';
 import AdminPanel from './components/AdminPanel.tsx';
+import ChatBot from './components/ChatBot.tsx';
 import { api } from './services/api.ts';
 
 // Sound Assets
@@ -180,18 +182,24 @@ const App: React.FC = () => {
     if (storedUser) setCurrentUser(JSON.parse(storedUser));
   }, []);
 
+  // Ensure AI recommendations clear if category changes manually to avoid conflicting filters
+  useEffect(() => {
+    if (aiRec) setAiRec(null);
+  }, [selectedCategory]);
+
   const handleMoodSearch = async (mood: string) => {
     if (!mood.trim()) return;
     setIsAiLoading(true);
     setAiRec(null);
     try {
+      // Pass the current state of events to the recommendation API
       const rec = await api.getRecommendations(mood, events);
       setAiRec(rec);
       setTimeout(() => {
         document.getElementById('ai-recommendation-target')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 100);
+      }, 300);
     } catch (err) {
-      console.error(err);
+      console.error("Calibration Error:", err);
     } finally {
       setIsAiLoading(false);
     }
@@ -202,7 +210,12 @@ const App: React.FC = () => {
       const matchCat = selectedCategory === 'All' || e.category === selectedCategory;
       const matchSearch = e.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           e.description.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchAi = aiRec ? aiRec.suggestedEventIds.includes(e.id) : true;
+      
+      // If AI has suggestions, we prioritize those.
+      const matchAi = aiRec && aiRec.suggestedEventIds.length > 0 
+        ? aiRec.suggestedEventIds.includes(e.id) 
+        : true;
+        
       return matchCat && matchSearch && matchAi;
     });
   }, [events, selectedCategory, searchQuery, aiRec]);
@@ -282,7 +295,7 @@ const App: React.FC = () => {
                 <div className="relative inline-block animate-float">
                   <div className="absolute inset-0 bg-brand-lime/20 blur-xl"></div>
                   <div className="relative glass-card px-4 py-1 rounded-full border border-brand-lime/20">
-                    <span className="text-slate-900 text-[9px] font-black uppercase tracking-[0.3em] italic">Frequency: ULTRA</span>
+                    <span className="text-slate-900 text-[9px] font-black uppercase tracking-[0.3em] italic">AI Calibrated: TRUE</span>
                   </div>
                 </div>
 
@@ -313,13 +326,16 @@ const App: React.FC = () => {
 
                    <div className="relative dark-glass-card rounded-[2rem] p-3 flex flex-col md:flex-row items-center gap-2 ai-glow overflow-hidden">
                       {isAiLoading && (
-                        <div className="absolute inset-x-8 top-0 h-0.5 bg-brand-red/50 shadow-[0_0_10px_#F84464] animate-scanner z-20"></div>
+                        <>
+                          <div className="absolute inset-x-8 top-0 h-0.5 bg-brand-red/50 shadow-[0_0_10px_#F84464] animate-scanner z-20"></div>
+                          <div className="absolute inset-0 bg-brand-red/10 animate-pulse z-0"></div>
+                        </>
                       )}
                       <div className="flex-1 w-full px-4 py-2 flex items-center gap-3 z-10">
                          <div className={`w-2 h-2 rounded-full ${isAiLoading ? 'bg-brand-lime animate-ping' : 'bg-slate-700'}`}></div>
                          <input 
                            type="text" 
-                           placeholder="Type your state..."
+                           placeholder="Type your current frequency..."
                            className="w-full bg-transparent border-none text-white text-base font-medium placeholder:text-slate-600 focus:outline-none"
                            value={userMood}
                            onChange={(e) => setUserMood(e.target.value)}
@@ -331,22 +347,22 @@ const App: React.FC = () => {
                         disabled={isAiLoading}
                         className="w-full md:w-auto px-8 py-3 bg-brand-red text-white rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all active:scale-95 disabled:opacity-50 z-10"
                       >
-                        {isAiLoading ? 'Scanning...' : 'Calibrate'}
+                        {isAiLoading ? 'Calibrating...' : 'Sync AI'}
                       </button>
                    </div>
                    
                    {aiRec && (
-                     <div id="ai-recommendation-target" className="relative">
-                       <div className="relative bg-white rounded-3xl p-6 animate-in zoom-in-95 duration-500 text-left border border-slate-100 shadow-xl flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-full bg-slate-900 flex items-center justify-center shrink-0">
-                             <span className="text-xl animate-bounce">✨</span>
+                     <div id="ai-recommendation-target" className="relative group animate-in slide-in-from-top-4 duration-500">
+                       <div className="relative bg-white rounded-3xl p-5 text-left border border-slate-100 shadow-xl flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center shrink-0 shadow-lg">
+                             <span className="text-lg animate-bounce">✨</span>
                           </div>
-                          <div>
+                          <div className="flex-1">
                             <div className="flex items-center gap-3 mb-1">
-                              <span className="bg-brand-lime text-slate-900 text-[8px] font-black uppercase px-2 py-0.5 rounded-full">Optimal Match</span>
-                              <button onClick={() => setAiRec(null)} className="text-slate-300 hover:text-slate-600 text-[8px] font-black uppercase tracking-widest">Clear</button>
+                              <span className="bg-brand-lime text-slate-900 text-[8px] font-black uppercase px-2 py-0.5 rounded-full">Optimal Match Detected</span>
+                              <button onClick={() => { setAiRec(null); setUserMood(''); }} className="text-slate-300 hover:text-slate-600 text-[8px] font-black uppercase tracking-widest transition-colors ml-auto">Reset</button>
                             </div>
-                            <p className="text-sm font-bold italic text-slate-500 leading-tight">"{aiRec.reasoning}"</p>
+                            <p className="text-xs font-bold italic text-slate-600 leading-tight">"{aiRec.reasoning}"</p>
                           </div>
                        </div>
                      </div>
@@ -367,19 +383,19 @@ const App: React.FC = () => {
             </div>
           </section>
 
-          {/* 2 Events per row grid */}
-          <div className="grid grid-cols-2 gap-4 md:gap-8">
+          <div className="grid grid-cols-2 gap-4 md:gap-8 min-h-[400px]">
             {filteredEvents.map((event) => (
               <EventCard key={event.id} event={event} onClick={(e) => setSelectedEvent(e)} />
             ))}
+            
+            {filteredEvents.length === 0 && (
+               <div className="col-span-2 py-20 text-center space-y-4">
+                  <div className="text-4xl text-slate-200 uppercase font-black italic">Frequency Error</div>
+                  <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">No experiences found for this calibration.</p>
+                  <button onClick={() => { setAiRec(null); setUserMood(''); setSelectedCategory('All'); }} className="px-8 py-2 border-2 border-slate-900 rounded-xl font-black uppercase text-[9px] tracking-widest hover:bg-slate-900 hover:text-white transition-all">Reset All Filters</button>
+               </div>
+            )}
           </div>
-
-          {filteredEvents.length === 0 && (
-             <div className="py-20 text-center space-y-4">
-                <div className="text-4xl text-slate-200 uppercase font-black italic">No Matches</div>
-                <button onClick={() => setAiRec(null)} className="px-8 py-2 border-2 border-slate-900 rounded-xl font-black uppercase text-[9px] tracking-widest hover:bg-slate-900 hover:text-white transition-all">Reset Filters</button>
-             </div>
-          )}
         </main>
       )}
 
@@ -412,6 +428,8 @@ const App: React.FC = () => {
           setSelectedEvent(null);
         }} />
       )}
+
+      <ChatBot />
     </div>
   );
 };

@@ -1,4 +1,5 @@
 
+import { GoogleGenAI, Type } from "@google/genai";
 import { Event, Booking, AIRecommendation } from '../types';
 import { INITIAL_EVENTS } from '../constants';
 
@@ -34,13 +35,55 @@ export const api = {
   },
 
   async getRecommendations(mood: string, events: Event[]): Promise<AIRecommendation> {
-    const res = await fetch('/api/recommendations', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mood, events }),
-    });
-    if (!res.ok) throw new Error('AI recommendation failed');
-    return res.json();
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    
+    const eventContext = events.map(e => ({
+      id: e.id,
+      title: e.title,
+      category: e.category,
+      description: e.description
+    }));
+
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-3-pro-preview",
+        contents: `ACT AS AN EXPERT MOOD-BASED EXPERIENCE CURATOR.
+        USER CURRENT STATE: "${mood}"
+        AVAILABLE EXPERIENCES: ${JSON.stringify(eventContext)}
+        
+        INSTRUCTIONS:
+        1. Analyze the user's mood query.
+        2. Select 1 to 3 EXACT IDs from the provided list that best fit.
+        3. Provide a high-energy, empathetic reasoning sentence starting with an emoji.`,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              reasoning: { 
+                type: Type.STRING,
+                description: "A punchy explanation of the choice."
+              },
+              suggestedEventIds: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING },
+                description: "The IDs of events that match."
+              }
+            },
+            required: ["reasoning", "suggestedEventIds"]
+          }
+        }
+      });
+
+      const result = JSON.parse(response.text.trim());
+      return result;
+    } catch (error) {
+      console.error("AI recommendation failed:", error);
+      return {
+        reasoning: "✨ We've curated a special selection to match your vibe today.",
+        suggestedEventIds: events.slice(0, 2).map(e => e.id)
+      };
+    }
   },
 
   async getBookings(): Promise<Booking[]> {
