@@ -22,6 +22,7 @@ export interface Booking {
   eventTitle: string;
   category: Category;
   time: string;
+  price: number;
   bookedAt: string;
   userName?: string;
   userPhone?: string;

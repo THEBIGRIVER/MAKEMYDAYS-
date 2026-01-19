@@ -13,11 +13,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, bookings, onClose, onRe
   const [activeTab, setActiveTab] = useState<'overview' | 'events' | 'bookings'>('overview');
   const [editingEvent, setEditingEvent] = useState<Partial<Event> | null>(null);
 
-  const totalRevenue = bookings.reduce((acc, curr) => {
-    const event = events.find(e => e.id === curr.eventId);
-    return acc + (event?.price || 0);
-  }, 0);
-
+  const totalRevenue = bookings.reduce((acc, curr) => acc + (curr.price || 0), 0);
   const totalCustomers = new Set(bookings.map(b => b.userPhone)).size;
 
   const handleDeleteEvent = async (id: string) => {
@@ -103,7 +99,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, bookings, onClose, onRe
                         <th className="px-6 py-4">Customer</th>
                         <th className="px-6 py-4">Experience</th>
                         <th className="px-6 py-4">Session</th>
-                        <th className="px-6 py-4">Status</th>
+                        <th className="px-6 py-4 text-right">Amount</th>
                       </tr>
                     </thead>
                     <tbody className="text-slate-300 divide-y divide-slate-800">
@@ -115,8 +111,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, bookings, onClose, onRe
                           </td>
                           <td className="px-6 py-4 font-bold">{b.eventTitle}</td>
                           <td className="px-6 py-4 text-xs">{b.time}</td>
-                          <td className="px-6 py-4">
-                            <span className="px-2 py-1 bg-emerald-500/10 text-emerald-500 text-[9px] font-black rounded-full border border-emerald-500/20 uppercase">Booked</span>
+                          <td className="px-6 py-4 text-right">
+                             <p className="font-black text-white">₹{b.price.toLocaleString()}</p>
+                             <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-500 text-[8px] font-black rounded-full border border-emerald-500/20 uppercase">Paid</span>
                           </td>
                         </tr>
                       ))}
@@ -173,8 +170,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, bookings, onClose, onRe
                       <tr className="text-slate-500 text-[10px] font-black uppercase tracking-widest border-b border-slate-800 bg-slate-900/50">
                         <th className="px-8 py-5">Customer Details</th>
                         <th className="px-8 py-5">Experience Reserved</th>
-                        <th className="px-8 py-5">Session Time</th>
-                        <th className="px-8 py-5">Date Booked</th>
+                        <th className="px-8 py-5">Session Details</th>
+                        <th className="px-8 py-5 text-right">Price</th>
                       </tr>
                     </thead>
                     <tbody className="text-slate-300 divide-y divide-slate-800">
@@ -188,8 +185,14 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, bookings, onClose, onRe
                             <p className="font-bold text-white">{b.eventTitle}</p>
                             <p className="text-[9px] uppercase font-black text-slate-500">{b.category}</p>
                           </td>
-                          <td className="px-8 py-6 text-sm">{b.time}</td>
-                          <td className="px-8 py-6 text-sm opacity-50">{new Date(b.bookedAt).toLocaleString()}</td>
+                          <td className="px-8 py-6">
+                            <p className="text-sm">{b.time}</p>
+                            <p className="text-[9px] text-slate-500 uppercase tracking-tighter">{new Date(b.bookedAt).toLocaleString()}</p>
+                          </td>
+                          <td className="px-8 py-6 text-right">
+                             <p className="font-black text-white text-lg">₹{b.price.toLocaleString()}</p>
+                             <span className="text-[9px] text-emerald-500 font-black uppercase">Confirmed</span>
+                          </td>
                         </tr>
                       ))}
                     </tbody>

@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Event, Category, Booking, Slot, AIRecommendation, User } from './types.ts';
 import EventCard from './components/EventCard.tsx';
@@ -147,7 +148,6 @@ const App: React.FC = () => {
   const pendingBookingRef = useRef<{ slot: Slot } | null>(null);
 
   const refreshData = async () => {
-    setIsDataLoading(true);
     try {
       const [fetchedEvents, fetchedBookings] = await Promise.all([
         api.getEvents(),
@@ -211,7 +211,7 @@ const App: React.FC = () => {
   const handleLogoClick = () => {
     logoClickCount.current += 1;
     if (logoClickCount.current === 5) {
-      setIsAdminPanelOpen(true);
+      refreshData().then(() => setIsAdminPanelOpen(true));
       logoClickCount.current = 0;
     }
     setTimeout(() => { logoClickCount.current = 0; }, 2000);
@@ -232,7 +232,7 @@ const App: React.FC = () => {
 
     // Automatically open Admin Panel if correct passkey was used
     if (isAdmin) {
-      setIsAdminPanelOpen(true);
+      refreshData().then(() => setIsAdminPanelOpen(true));
     }
 
     // If there was a pending booking, complete it
@@ -277,16 +277,20 @@ const App: React.FC = () => {
       eventTitle: selectedEvent.title,
       category: selectedEvent.category,
       time: slot.time,
+      price: selectedEvent.price, // Store price at time of booking
       bookedAt: new Date().toISOString(),
       userName: user.name,
       userPhone: user.phone
     };
     
+    // Update state immediately for optimal UX
     setGlobalBookings([newBooking, ...globalBookings]);
     setSelectedEvent(null);
 
     try {
       await api.saveBooking(newBooking);
+      // Re-sync to ensure everything is perfect
+      refreshData();
     } catch (err) {
       console.error("Failed to save booking", err);
     }
@@ -346,7 +350,10 @@ const App: React.FC = () => {
           <div className="flex items-center gap-3">
             {currentUser?.role === 'admin' && (
               <button
-                onClick={(e) => { triggerRipple(e, '#10B98144', true); setIsAdminPanelOpen(true); }}
+                onClick={(e) => { 
+                  triggerRipple(e, '#10B98144', true); 
+                  refreshData().then(() => setIsAdminPanelOpen(true)); 
+                }}
                 className="hidden md:flex items-center gap-2 px-5 py-2.5 bg-emerald-500 text-white rounded-2xl shadow-lg shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all ripple-container"
               >
                 <span className="text-[10px] font-black uppercase tracking-widest">Admin</span>
@@ -478,7 +485,9 @@ const App: React.FC = () => {
         </div>
       ) : (
         <div className="animate-in slide-in-from-bottom-8 duration-500">
-          <Dashboard user={{ ...currentUser!, bookings: userBookings }} onLogout={handleLogout} onOpenAdmin={() => setIsAdminPanelOpen(true)} />
+          <Dashboard user={{ ...currentUser!, bookings: userBookings }} onLogout={handleLogout} onOpenAdmin={() => {
+             refreshData().then(() => setIsAdminPanelOpen(true));
+          }} />
         </div>
       )}
 
