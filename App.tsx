@@ -1,54 +1,90 @@
-import React, { useState, useMemo } from 'react';
-import { INITIAL_EVENTS } from './constants.ts';
-import { Event, Category, Booking, Slot, AIRecommendation } from './types.ts';
+
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { Event, Category, Booking, Slot, AIRecommendation, User } from './types.ts';
 import EventCard from './components/EventCard.tsx';
 import BookingModal from './components/BookingModal.tsx';
-import { getAIRecommendations } from './services/geminiService.ts';
+import Dashboard from './components/Dashboard.tsx';
+import AdminPanel from './components/AdminPanel.tsx';
+import { api } from './services/api.ts';
+
+// Sound Assets - Verified stable public assets
+const SEA_WAVES_URL = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"; // Using a placeholder stable MP3 for logic verification, but let's stick to a nature sound if possible. Actually, let's use a known stable atmospheric loop.
+const ATMOSPHERE_URL = "https://assets.mixkit.co/sfx/preview/mixkit-crickets-and-insects-in-the-wild-ambience-39.mp3"; 
+const SPLASH_URL = "https://assets.mixkit.co/sfx/preview/mixkit-water-splash-1311.mp3";
+
+const USER_STORAGE_KEY = 'makemydays_user_v1';
+
+const triggerRipple = (e: React.MouseEvent | React.TouchEvent, color?: string, playSound = false) => {
+  const container = e.currentTarget;
+  const rect = container.getBoundingClientRect();
+  
+  let x, y;
+  if ('touches' in e) {
+    x = e.touches[0].clientX - rect.left;
+    y = e.touches[0].clientY - rect.top;
+  } else {
+    x = e.clientX - rect.left;
+    y = e.clientY - rect.top;
+  }
+
+  const ripple = document.createElement('span');
+  ripple.className = 'ripple-wave';
+  if (color) ripple.style.background = color;
+  
+  const size = Math.max(rect.width, rect.height);
+  ripple.style.width = ripple.style.height = `${size}px`;
+  ripple.style.left = `${x - size / 2}px`;
+  ripple.style.top = `${y - size / 2}px`;
+
+  container.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 600);
+
+  if (playSound) {
+    const splash = new Audio(SPLASH_URL);
+    splash.volume = 0.2;
+    splash.play().catch((err) => console.log("Splash sound blocked:", err));
+  }
+};
 
 const ConnectionLogo = () => (
-  <svg viewBox="0 0 100 100" className="w-8 h-8 md:w-10 md:h-10 fill-current text-[#F84464]">
+  <svg viewBox="0 0 100 100" className="w-8 h-8 md:w-10 md:h-10 fill-current text-brand-red">
     <circle cx="30" cy="50" r="10" />
     <circle cx="70" cy="50" r="10" />
     <circle cx="50" cy="30" r="10" />
-    <path d="M30 50 L50 30 L70 50" fill="none" stroke="currentColor" strokeWidth="4" />
-    <circle cx="50" cy="70" r="10" fillOpacity="0.4" />
+    <path d="M30 50 L50 30 L70 50" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" />
   </svg>
+);
+
+const ZenIcon: React.FC<{ active: boolean }> = ({ active }) => (
+  <div className="flex items-center gap-0.5 h-4">
+    {[1, 2, 3, 4].map((i) => (
+      <div 
+        key={i} 
+        className={`w-1 rounded-full bg-current transition-all duration-500 ${
+          active ? 'animate-bounce' : 'h-1'
+        }`}
+        style={{ 
+          animationDelay: `${i * 0.1}s`,
+          height: active ? `${Math.random() * 100 + 40}%` : '4px'
+        }}
+      />
+    ))}
+  </div>
 );
 
 const ShapeIcon: React.FC<{ type: string; color: string; active: boolean }> = ({ type, color, active }) => {
   const icons: Record<string, React.ReactNode> = {
-    all: (
-      <circle cx="50" cy="50" r="35" stroke="currentColor" strokeWidth="2" fill="none" strokeDasharray="4 4" />
-    ),
-    mountain: (
-      <path d="M20 80 L50 20 L80 80 M40 80 L60 40 L85 80" stroke="currentColor" strokeWidth="4" fill="none" strokeLinejoin="round" />
-    ),
-    ball: (
-      <g>
-        <circle cx="50" cy="50" r="30" stroke="currentColor" strokeWidth="4" fill="none" />
-        <path d="M30 35 Q50 50 30 65 M70 35 Q50 50 70 65" stroke="currentColor" strokeWidth="2" fill="none" />
-      </g>
-    ),
-    boat: (
-      <path d="M15 60 Q50 85 85 60 L75 50 L25 50 Z M50 15 L50 50 M30 30 L50 30" stroke="currentColor" strokeWidth="4" fill="none" />
-    ),
-    horse: (
-      <path d="M30 70 Q30 30 50 20 Q70 20 70 40 Q70 60 50 80 M50 20 L40 10" stroke="currentColor" strokeWidth="4" fill="none" />
-    ),
-    racket: (
-      <g>
-        <ellipse cx="50" cy="40" rx="20" ry="25" stroke="currentColor" strokeWidth="4" fill="none" />
-        <path d="M50 65 L50 90 M40 90 L60 90" stroke="currentColor" strokeWidth="4" fill="none" />
-        <path d="M40 30 L60 50 M40 50 L60 30" stroke="currentColor" strokeWidth="1" fill="none" opacity="0.4" />
-      </g>
-    ),
-    bat: (
-      <path d="M45 20 L55 20 L60 70 L40 70 Z M50 70 L50 90" stroke="currentColor" strokeWidth="4" fill="none" />
-    )
+    all: <circle cx="50" cy="50" r="35" stroke="currentColor" strokeWidth="3" fill="none" strokeDasharray="6 6" />,
+    mountain: <path d="M15 80 L45 20 L60 50 L85 80 Z M35 80 L50 45 L70 80" stroke="currentColor" strokeWidth="5" fill="none" strokeLinejoin="round" />,
+    ball: <g><circle cx="50" cy="50" r="32" stroke="currentColor" strokeWidth="5" fill="none" /><path d="M30 35 Q50 50 30 65 M70 35 Q50 50 70 65" stroke="currentColor" strokeWidth="3" fill="none" /></g>,
+    boat: <path d="M10 65 Q50 90 90 65 L80 50 L20 50 Z M50 10 V50 M35 30 H50" stroke="currentColor" strokeWidth="5" fill="none" strokeLinecap="round" />,
+    horse: <path d="M25 80 Q25 40 50 25 Q75 10 75 40 Q75 65 50 80 M50 25 L40 15" stroke="currentColor" strokeWidth="5" fill="none" strokeLinejoin="round" />,
+    racket: <g><ellipse cx="50" cy="35" rx="22" ry="28" stroke="currentColor" strokeWidth="5" fill="none" /><path d="M50 63 V90 M40 90 H60" stroke="currentColor" strokeWidth="5" fill="none" /></g>,
+    bat: <path d="M44 15 H56 L62 70 H38 Z M50 70 V90" stroke="currentColor" strokeWidth="5" fill="none" strokeLinecap="round" />
   };
 
   return (
-    <svg viewBox="0 0 100 100" className={`w-full h-full transition-all duration-500 ${active ? 'scale-110' : 'scale-90 opacity-60 group-hover:opacity-100 group-hover:scale-100'}`} style={{ color }}>
+    <svg viewBox="0 0 100 100" className={`w-full h-full transition-all duration-700 ${active ? 'scale-110 drop-shadow-lg' : 'scale-90 opacity-40 group-hover:opacity-100 group-hover:scale-100'}`} style={{ color }}>
       {icons[type] || icons.all}
     </svg>
   );
@@ -59,205 +95,397 @@ const CategoryItem: React.FC<{
   shape: string;
   color: string;
   active: boolean;
-  onClick: () => void;
+  onClick: (e: React.MouseEvent) => void;
 }> = ({ label, shape, color, active, onClick }) => (
   <button 
-    onClick={onClick}
-    className="flex flex-col items-center gap-3 group transition-all shrink-0 snap-center pb-2 px-3"
+    onClick={(e) => {
+      triggerRipple(e, `${color}44`, true);
+      onClick(e);
+    }}
+    className="flex flex-col items-center gap-3 group transition-all shrink-0 snap-center pb-4 focus:outline-none ripple-container"
   >
     <div className={`relative w-20 h-20 md:w-24 md:h-24 flex items-center justify-center transition-all duration-500 ${
-      active 
-        ? 'scale-110' 
-        : 'hover:-translate-y-2'
+      active ? 'scale-110' : 'hover:-translate-y-1 active:scale-95'
     }`}>
-      {/* Glow Effect */}
       {active && (
-        <div 
-          className="absolute inset-0 rounded-full blur-2xl opacity-20 animate-pulse" 
-          style={{ backgroundColor: color }}
-        ></div>
+        <div className="absolute inset-0 rounded-3xl blur-2xl opacity-20 animate-pulse" style={{ backgroundColor: color }}></div>
       )}
-      
-      {/* Glass Container */}
-      <div className={`absolute inset-0 rounded-2xl border-2 transition-all duration-500 ${
-        active 
-          ? 'bg-white shadow-xl rotate-3' 
-          : 'bg-slate-50 border-slate-100 group-hover:border-slate-300 group-hover:bg-white'
-      }`} style={{ borderColor: active ? color : undefined }}></div>
-      
-      {/* Icon Shape */}
-      <div className="relative w-12 h-12 md:w-16 md:h-16 z-10">
+      <div className={`absolute inset-0 rounded-[2rem] border-2 transition-all duration-500 ${
+        active ? 'bg-white shadow-2xl rotate-2' : 'bg-slate-50 border-transparent group-hover:bg-white group-hover:border-slate-100'
+      }`} style={{ borderColor: active ? color : 'transparent' }}></div>
+      <div className="relative w-10 h-10 md:w-12 md:h-12 z-10">
         <ShapeIcon type={shape} color={color} active={active} />
       </div>
     </div>
-
-    <span className={`text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-center transition-colors ${
-      active ? 'text-slate-900' : 'text-slate-400 group-hover:text-slate-600'
+    <span className={`text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${
+      active ? 'text-slate-900 scale-105' : 'text-slate-400 group-hover:text-slate-600'
     }`}>
       {label}
     </span>
-    {active && <div className="h-1 w-6 rounded-full" style={{ backgroundColor: color }}></div>}
   </button>
 );
 
 const App: React.FC = () => {
-  const [events, setEvents] = useState<Event[]>(() => 
-    INITIAL_EVENTS.map(e => ({
-      ...e,
-      originalPrice: e.price,
-      price: Math.round(e.price * 0.2)
-    }))
-  );
-
-  const [userBookings, setUserBookings] = useState<Booking[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [globalBookings, setGlobalBookings] = useState<Booking[]>([]);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<Category | 'All'>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const [isDataLoading, setIsDataLoading] = useState(true);
   const [aiRecommendation, setAiRecommendation] = useState<AIRecommendation | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isBookingHistoryOpen, setIsBookingHistoryOpen] = useState(false);
-  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
-  const [lastNotification, setLastNotification] = useState<string | null>(null);
+  const [currentView, setCurrentView] = useState<'home' | 'profile'>('home');
+  const [isZenMode, setIsZenMode] = useState(false);
+  const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
+  
+  // Login form state
+  const [loginForm, setLoginForm] = useState({ name: '', email: '', isAdmin: false, accessCode: '' });
+  const logoClickCount = useRef(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const refreshData = async () => {
+    setIsDataLoading(true);
+    try {
+      const [fetchedEvents, fetchedBookings] = await Promise.all([
+        api.getEvents(),
+        api.getBookings()
+      ]);
+      setEvents(fetchedEvents);
+      setGlobalBookings(fetchedBookings);
+    } catch (err) {
+      console.error("Failed to refresh data", err);
+    } finally {
+      setIsDataLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // Load User from Local Storage
+    const storedUser = localStorage.getItem(USER_STORAGE_KEY);
+    if (storedUser) {
+      setCurrentUser(JSON.parse(storedUser));
+    }
+    refreshData();
+
+    // Initialize background audio object
+    audioRef.current = new Audio(ATMOSPHERE_URL);
+    audioRef.current.loop = true;
+    audioRef.current.volume = 0;
+  }, []);
+
+  const userBookings = useMemo(() => {
+    if (!currentUser) return [];
+    return globalBookings.filter(b => b.userEmail === currentUser.email);
+  }, [globalBookings, currentUser]);
+
+  const toggleZenMode = (e: React.MouseEvent) => {
+    const nextState = !isZenMode;
+    triggerRipple(e, '#06B6D444', true);
+    setIsZenMode(nextState);
+
+    if (!audioRef.current) return;
+
+    if (nextState) {
+      // Start playing directly in the click handler to bypass restrictions
+      audioRef.current.play().then(() => {
+        let vol = 0;
+        const fadeIn = setInterval(() => {
+          if (audioRef.current && audioRef.current.volume < 0.3) {
+            audioRef.current.volume = Math.min(0.3, audioRef.current.volume + 0.05);
+          } else {
+            clearInterval(fadeIn);
+          }
+        }, 50);
+      }).catch(err => console.log("Audio play failed:", err));
+    } else {
+      let vol = audioRef.current.volume;
+      const fadeOut = setInterval(() => {
+        if (audioRef.current && audioRef.current.volume > 0.02) {
+          audioRef.current.volume = Math.max(0, audioRef.current.volume - 0.05);
+        } else {
+          if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.volume = 0;
+          }
+          clearInterval(fadeOut);
+        }
+      }, 50);
+    }
+  };
+
+  const handleLogoClick = () => {
+    logoClickCount.current += 1;
+    if (logoClickCount.current === 5) {
+      setIsAdminPanelOpen(true);
+      logoClickCount.current = 0;
+    }
+    setTimeout(() => {
+      logoClickCount.current = 0;
+    }, 2000);
+  };
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newUser: User = {
+      name: loginForm.name,
+      email: loginForm.email,
+      bookings: [],
+      role: (loginForm.isAdmin && loginForm.accessCode === 'admin') ? 'admin' : 'user'
+    };
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(newUser));
+    setCurrentUser(newUser);
+  };
+
+  const handleLogout = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.volume = 0;
+    }
+    setIsZenMode(false);
+    localStorage.removeItem(USER_STORAGE_KEY);
+    setCurrentUser(null);
+    setCurrentView('home');
+    setLoginForm({ name: '', email: '', isAdmin: false, accessCode: '' });
+  };
 
   const filteredEvents = useMemo(() => {
     return events.filter(e => {
       const matchesCategory = selectedCategory === 'All' || e.category === selectedCategory;
       const matchesSearch = searchQuery.trim() === '' || 
         e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        e.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
         e.description.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
     });
   }, [events, selectedCategory, searchQuery]);
 
-  const handleBookingConfirm = (slot: Slot) => {
-    if (!selectedEvent) return;
+  const handleBookingConfirm = async (slot: Slot) => {
+    if (!selectedEvent || !currentUser) return;
     const newBooking: Booking = {
       id: Math.random().toString(36).substr(2, 9),
       eventId: selectedEvent.id,
       eventTitle: selectedEvent.title,
       category: selectedEvent.category,
       time: slot.time,
-      bookedAt: new Date().toISOString()
+      bookedAt: new Date().toISOString(),
+      userName: currentUser.name,
+      userEmail: currentUser.email
     };
-    setUserBookings([newBooking, ...userBookings]);
-    setEvents(prev => prev.map(e => e.id === selectedEvent.id ? {
-      ...e, slots: e.slots.map(s => s.time === slot.time ? { ...s, availableSeats: s.availableSeats - 1 } : s)
-    } : e));
+    
+    setGlobalBookings([newBooking, ...globalBookings]);
+    setSelectedEvent(null);
 
-    setLastNotification(`Confirmation email sent to user@makemydays.com for ${selectedEvent.title}`);
-    setTimeout(() => setLastNotification(null), 5000);
+    try {
+      await api.saveBooking(newBooking);
+    } catch (err) {
+      console.error("Failed to save booking", err);
+    }
   };
 
   const askAI = async (mood?: string) => {
     const query = mood || searchQuery;
     if (!query.trim()) return;
     
-    if (mood) setSearchQuery(mood);
+    if (mood) {
+      setSearchQuery(mood);
+      setSelectedCategory('All');
+      setCurrentView('home');
+    }
+
     setIsAiLoading(true);
     setAiRecommendation(null);
     try {
-      const result = await getAIRecommendations(query, events);
+      const result = await api.getRecommendations(query, events);
       setAiRecommendation(result);
     } catch (err) {
-      console.error("AI recommendation failed", err);
+      console.error("Mood matching failed", err);
     } finally {
       setIsAiLoading(false);
-      setIsMobileSearchOpen(false);
-      window.scrollTo({ top: 300, behavior: 'smooth' });
+      window.scrollTo({ top: 350, behavior: 'smooth' });
     }
   };
 
   const categories = [
     { label: 'All', shape: 'all', color: '#F84464' },
     { label: 'Adventure', shape: 'mountain', color: '#3B82F6' },
-    { label: 'Mindfulness', shape: 'bat', color: '#10B981' },
-    { label: 'Creative Arts', shape: 'racket', color: '#EF4444' },
-    { label: 'Team Building', shape: 'boat', color: '#06B6D4' },
     { label: 'Activity', shape: 'ball', color: '#F59E0B' },
-    { label: 'Wellness', shape: 'horse', color: '#8B5CF6' }
+    { label: 'Team Building', shape: 'boat', color: '#06B6D4' },
+    { label: 'Wellness', shape: 'horse', color: '#8B5CF6' },
+    { label: 'Creative Arts', shape: 'racket', color: '#EF4444' },
+    { label: 'Mindfulness', shape: 'bat', color: '#10B981' }
   ];
 
   const quickMoods = ["Stressed", "Bored", "Energetic", "Creative", "Tired", "Adventurous"];
 
-  return (
-    <div className="min-h-screen bg-[#F5F5F5] text-slate-900 pb-safe transition-colors duration-500">
-      <nav className="bg-[#333545] px-4 md:px-6 py-3 sticky top-0 z-[60] shadow-xl">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2 md:gap-8">
-            <div className="flex items-center gap-2 cursor-pointer shrink-0 group" onClick={() => {
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-              setSearchQuery('');
-              setSelectedCategory('All');
-              setAiRecommendation(null);
-            }}>
-              <ConnectionLogo />
-              <div className="flex flex-col">
-                <span className="text-xl md:text-2xl font-black italic tracking-tighter leading-none text-white group-hover:text-[#F84464] transition-colors">MAKEMYDAYS</span>
-                <span className="hidden sm:inline text-[9px] font-bold text-[#F84464] uppercase tracking-widest opacity-80 group-hover:opacity-100 italic">start your experience journey</span>
-              </div>
-            </div>
-            <div className="hidden md:flex flex-1 max-w-md relative">
-              <input 
-                type="text" 
-                placeholder="Mood search... e.g. 'I want something high energy'"
-                className="w-full bg-white text-slate-800 pl-10 pr-12 py-2.5 rounded shadow-inner text-sm outline-none focus:ring-2 focus:ring-[#F84464] transition-all"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && askAI()}
-              />
-              <svg className="absolute left-3 top-3 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              {searchQuery && (
-                <button 
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-3 text-slate-300 hover:text-slate-500 transition-colors"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-              )}
-            </div>
+  if (isDataLoading) {
+    return (
+      <div className="min-h-screen bg-[#F8F9FA] flex flex-col items-center justify-center">
+        <div className="w-16 h-16 border-4 border-slate-200 border-t-brand-red rounded-full animate-spin"></div>
+        <p className="mt-4 text-xs font-black uppercase tracking-[0.3em] text-slate-400">Booting Ecosystem...</p>
+      </div>
+    );
+  }
+
+  // Auth Screen
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center p-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-red/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2"></div>
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/5 blur-[120px] rounded-full translate-y-1/2 -translate-x-1/2"></div>
+        
+        <div className="relative w-full max-w-md animate-in fade-in zoom-in-95 duration-700">
+          <div className="flex flex-col items-center text-center mb-10">
+            <ConnectionLogo />
+            <h1 className="mt-6 text-4xl font-black italic tracking-tighter uppercase text-slate-900 leading-none">MAKEMYDAYS</h1>
+            <p className="mt-3 text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px]">Unconventional Wellness Experiences</p>
           </div>
           
-          <div className="flex items-center gap-3 md:gap-6">
-            <button onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)} className="md:hidden text-white/80 hover:text-white p-2">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Full Name</label>
+              <input 
+                required
+                type="text" 
+                placeholder="How should we call you?"
+                className="w-full bg-slate-50 border-2 border-slate-50 focus:border-brand-red focus:bg-white rounded-[1.5rem] px-6 py-4 outline-none transition-all font-medium"
+                value={loginForm.name}
+                onChange={(e) => setLoginForm({...loginForm, name: e.target.value})}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Email Address</label>
+              <input 
+                required
+                type="email" 
+                placeholder="Your digital frequency"
+                className="w-full bg-slate-50 border-2 border-slate-50 focus:border-brand-red focus:bg-white rounded-[1.5rem] px-6 py-4 outline-none transition-all font-medium"
+                value={loginForm.email}
+                onChange={(e) => setLoginForm({...loginForm, email: e.target.value})}
+              />
+            </div>
+
+            <div className="pt-2 px-2">
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <div className="relative">
+                  <input 
+                    type="checkbox" 
+                    className="sr-only peer"
+                    checked={loginForm.isAdmin}
+                    onChange={(e) => setLoginForm({...loginForm, isAdmin: e.target.checked})}
+                  />
+                  <div className="w-10 h-6 bg-slate-200 peer-focus:ring-2 peer-focus:ring-brand-red/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-red"></div>
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-slate-900 transition-colors">I am the Owner</span>
+              </label>
+            </div>
+
+            {loginForm.isAdmin && (
+              <div className="space-y-1.5 animate-in slide-in-from-top-2 duration-300">
+                <label className="text-[10px] font-black uppercase tracking-widest text-emerald-500 ml-4">Admin Passkey</label>
+                <input 
+                  required
+                  type="password" 
+                  placeholder="Enter 'admin' for demo"
+                  className="w-full bg-emerald-50/50 border-2 border-emerald-50 focus:border-emerald-500 focus:bg-white rounded-[1.5rem] px-6 py-4 outline-none transition-all font-medium"
+                  value={loginForm.accessCode}
+                  onChange={(e) => setLoginForm({...loginForm, accessCode: e.target.value})}
+                />
+              </div>
+            )}
+
+            <button 
+              type="submit"
+              className={`w-full py-5 rounded-[1.5rem] font-black uppercase tracking-[0.2em] text-xs shadow-2xl active:scale-[0.98] transition-all mt-4 ${
+                loginForm.isAdmin ? 'bg-emerald-500 shadow-emerald-500/20 text-white' : 'bg-slate-900 text-white shadow-slate-900/20'
+              }`}
+            >
+              {loginForm.isAdmin ? 'Access Console' : 'Enter Sanctuary'}
             </button>
-            <button onClick={() => setIsBookingHistoryOpen(true)} className="relative text-white/90 hover:text-[#F84464] transition-all p-2">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 11V7a4 4 0 11-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-              {userBookings.length > 0 && <span className="absolute top-1 right-1 w-4 h-4 bg-[#F84464] text-[9px] flex items-center justify-center rounded-full text-white font-bold ring-2 ring-[#333545] animate-pulse">{userBookings.length}</span>}
+          </form>
+          
+          <p className="mt-8 text-center text-[9px] text-slate-300 font-bold uppercase tracking-widest leading-loose">
+            By entering, you agree to our <br/> radical terms of restorative presence.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#F8F9FA] pb-32">
+      <header className="sticky top-0 z-[50] bg-white/80 backdrop-blur-xl border-b border-slate-100 px-5 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2 cursor-pointer group" onClick={handleLogoClick}>
+            <ConnectionLogo />
+            <h1 className="text-xl font-black italic tracking-tighter text-slate-900 uppercase">MAKEMYDAYS</h1>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            {/* Admin Console Button (Visible only to owners) */}
+            {currentUser.role === 'admin' && (
+              <button
+                onClick={(e) => {
+                  triggerRipple(e, '#10B98144', true);
+                  setIsAdminPanelOpen(true);
+                }}
+                className="hidden md:flex items-center gap-2 px-5 py-2.5 bg-emerald-500 text-white rounded-2xl shadow-lg shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all ripple-container"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <span className="text-[10px] font-black uppercase tracking-widest">Admin</span>
+              </button>
+            )}
+
+            <button
+              onClick={toggleZenMode}
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl transition-all duration-500 ripple-container ${
+                isZenMode ? 'bg-cyan-50 text-cyan-600 shadow-inner' : 'bg-slate-50 text-slate-400'
+              }`}
+            >
+              <ZenIcon active={isZenMode} />
+              <span className="text-[10px] font-black uppercase tracking-widest hidden md:inline">Zen Waves</span>
             </button>
-            <button className="hidden sm:block bg-[#F84464] hover:bg-[#d63b56] px-6 py-2.5 rounded text-xs font-bold text-white transition-all shadow-md active:scale-95 transform">Sign In</button>
+
+            <button 
+              onClick={(e) => {
+                triggerRipple(e);
+                setCurrentView(currentView === 'profile' ? 'home' : 'profile');
+              }}
+              className={`relative p-2.5 rounded-2xl shadow-lg active:scale-90 transition-all flex items-center justify-center ripple-container ${
+                currentView === 'profile' ? 'bg-brand-red text-white' : 'bg-slate-900 text-white'
+              }`}
+              title="Profile"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </button>
           </div>
         </div>
-
-        {isMobileSearchOpen && (
-          <div className="md:hidden absolute top-full left-0 right-0 bg-[#333545] p-4 border-t border-white/5 animate-in slide-in-from-top duration-300 shadow-2xl">
-            <div className="relative">
-              <input 
-                type="text" 
-                placeholder="How are you feeling today?"
-                className="w-full bg-white text-slate-800 px-4 py-3 rounded text-sm outline-none focus:ring-2 focus:ring-[#F84464]"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && askAI()}
-                autoFocus
-              />
-              <button 
-                onClick={() => askAI()}
-                className="absolute right-2 top-2 bg-[#F84464] text-white text-[10px] font-black uppercase px-3 py-1.5 rounded shadow-sm"
-              >
-                Match
-              </button>
-            </div>
+        
+        {currentView === 'home' && (
+          <div className="mt-4 relative group animate-in fade-in duration-300">
+            <input 
+              ref={searchInputRef}
+              type="text" 
+              placeholder={`How are you feeling, ${currentUser.name.split(' ')[0]}?`}
+              className="w-full bg-slate-100/50 border-none rounded-2xl pl-12 pr-4 py-3.5 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-brand-red transition-all outline-none"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && askAI()}
+            />
+            <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
           </div>
         )}
-      </nav>
+      </header>
 
-      <div className="bg-white border-b border-slate-200 py-8 px-4 shadow-sm">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-start md:justify-center gap-4 md:gap-12 overflow-x-auto scrollbar-hide pb-2">
+      {currentView === 'home' ? (
+        <div className="animate-in fade-in duration-500">
+          <div className="bg-white px-5 py-8 overflow-x-auto scrollbar-hide snap-x flex gap-8 items-end">
             {categories.map((cat) => (
               <CategoryItem 
                 key={cat.label} 
@@ -273,110 +501,139 @@ const App: React.FC = () => {
               />
             ))}
           </div>
-          
-          <div className="flex items-center justify-start md:justify-center gap-2 md:gap-3 overflow-x-auto scrollbar-hide py-4 mt-4 border-t border-slate-50">
-            <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest shrink-0 mr-2">Quick Moods</span>
+
+          <div className="px-5 pb-6 bg-white overflow-x-auto scrollbar-hide flex gap-3">
             {quickMoods.map((mood) => (
-              <button 
+              <button
                 key={mood}
-                onClick={() => askAI(mood)}
-                className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all shrink-0 border border-slate-100 ${
+                onClick={(e) => {
+                  triggerRipple(e, '#F8446444', true);
+                  askAI(mood);
+                }}
+                className={`px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all border shrink-0 ripple-container ${
                   searchQuery === mood 
-                    ? 'bg-[#F84464] text-white border-[#F84464] shadow-md' 
-                    : 'bg-white text-slate-500 hover:border-[#F84464] hover:text-[#F84464]'
+                    ? 'bg-brand-red text-white border-brand-red shadow-xl scale-105' 
+                    : 'bg-slate-50 text-slate-500 border-slate-100 hover:border-brand-red hover:text-brand-red active:scale-95'
                 }`}
               >
                 {mood}
               </button>
             ))}
           </div>
-        </div>
-      </div>
 
-      {(aiRecommendation || isAiLoading) && (
-        <section className="px-4 py-10 max-w-7xl mx-auto" id="ai-results">
-          <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-2xl relative animate-in fade-in zoom-in-95 duration-500 overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-[#F84464]/5 rounded-full -mr-16 -mt-16"></div>
-            <button 
-              onClick={() => { setAiRecommendation(null); setSearchQuery(''); }}
-              className="absolute top-6 right-6 text-slate-300 hover:text-slate-900 transition-colors z-10"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
-            <div className="flex items-center gap-3 text-[#F84464] mb-6">
-              <div className="bg-[#F84464]/10 p-2 rounded-xl">
-                <svg className="w-6 h-6 animate-pulse" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11H9v-2h2v2zm0-4H9V5h2v4z"/></svg>
-              </div>
-              <span className="font-black text-xs uppercase tracking-[0.2em]">AI Mood Matcher</span>
-            </div>
-            
-            {isAiLoading ? (
-              <div className="py-20 flex flex-col items-center justify-center">
-                 <div className="relative">
-                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-slate-100 border-t-[#F84464]"></div>
+          {(aiRecommendation || isAiLoading) && (
+            <section className="px-5 py-6">
+              <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl animate-in zoom-in-95 duration-500 min-h-[300px] flex flex-col justify-center">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-brand-red/10 blur-[100px] pointer-events-none"></div>
+                <div className="flex items-center gap-3 mb-8">
+                  <span className="bg-brand-red text-[10px] font-black uppercase tracking-[0.3em] px-4 py-1.5 rounded-full shadow-lg animate-pulse">
+                    AI Curator Insight
+                  </span>
                 </div>
-                <span className="mt-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] animate-pulse">Analyzing Mood Context</span>
-              </div>
-            ) : aiRecommendation && (
-              <>
-                <p className="text-xl md:text-2xl font-black mb-10 text-slate-900 leading-tight italic max-w-3xl">"{aiRecommendation.reasoning}"</p>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-                  {events.filter(e => aiRecommendation.suggestedEventIds.includes(e.id)).map(e => (
-                    <EventCard key={e.id} event={e} onClick={setSelectedEvent} />
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        </section>
-      )}
-
-      <main className="max-w-7xl mx-auto px-4 py-12">
-        <div className="flex items-end justify-between mb-10 border-b border-slate-200 pb-6">
-          <div className="flex flex-col gap-1">
-             <span className="text-[#F84464] text-[10px] font-black uppercase tracking-[0.2em]">{selectedCategory !== 'All' ? 'Browsing Category' : 'Featured Feed'}</span>
-             <h2 className="text-2xl md:text-4xl font-black text-slate-900 uppercase tracking-tighter italic">
-              {searchQuery && !aiRecommendation ? `Results for "${searchQuery}"` : selectedCategory === 'All' ? 'Must-Try Experiences' : `${selectedCategory}`}
-            </h2>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 md:gap-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          {filteredEvents.map(event => <EventCard key={event.id} event={event} onClick={setSelectedEvent} />)}
-        </div>
-      </main>
-
-      {isBookingHistoryOpen && (
-        <div className="fixed inset-0 z-[100] flex justify-end">
-          <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-md" onClick={() => setIsBookingHistoryOpen(false)}></div>
-          <div className="relative w-full md:max-w-md bg-white h-full shadow-2xl animate-in slide-in-from-right duration-500 flex flex-col">
-            <div className="bg-[#333545] p-6 text-white flex justify-between items-center shadow-lg">
-              <div className="flex items-center gap-3">
-                <ConnectionLogo />
-                <h2 className="text-xl font-black italic tracking-tighter">ACCOUNT ACTIVITY</h2>
-              </div>
-              <button onClick={() => setIsBookingHistoryOpen(false)} className="hover:rotate-90 transition-all p-2 bg-white/5 rounded-full">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
-              </button>
-            </div>
-            <div className="p-6 overflow-y-auto flex-1 bg-slate-50/50">
-              {userBookings.map((b) => (
-                <div key={b.id} className="p-5 bg-white rounded-2xl shadow-sm border border-slate-100 flex gap-5 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 mb-4">
-                  <img src={events.find(e => e.id === b.eventId)?.image} alt="" className="w-16 h-24 object-cover rounded-xl shadow-md shrink-0" />
-                  <div className="min-w-0 flex flex-col py-1">
-                    <span className="text-[9px] font-black text-[#F84464] uppercase tracking-widest mb-1">{b.category}</span>
-                    <h3 className="font-bold text-slate-900 text-lg leading-tight truncate italic">{b.eventTitle}</h3>
-                    <div className="mt-auto">
-                       <p className="text-[12px] text-slate-600 font-black flex items-center gap-1.5">{b.time}</p>
-                       <span className="text-[9px] text-slate-400 font-bold uppercase mt-2 block">ID: {b.id.toUpperCase()}</span>
+                
+                {isAiLoading ? (
+                  <div className="flex flex-col items-center">
+                    <div className="w-14 h-14 border-4 border-white/5 border-t-brand-red rounded-full animate-spin"></div>
+                    <p className="mt-6 text-[11px] font-black uppercase tracking-[0.4em] text-white/40">Analyzing your vibe...</p>
+                  </div>
+                ) : aiRecommendation && (
+                  <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <p className="text-2xl md:text-3xl font-black italic mb-12 leading-tight max-w-2xl">"{aiRecommendation.reasoning}"</p>
+                    <div className="flex gap-5 overflow-x-auto pb-6 scrollbar-hide snap-x">
+                      {events.filter(e => aiRecommendation.suggestedEventIds.includes(e.id)).map(e => (
+                        <div key={e.id} className="min-w-[200px] w-[200px] snap-center">
+                          <EventCard event={e} onClick={setSelectedEvent} />
+                        </div>
+                      ))}
                     </div>
                   </div>
-                </div>
+                )}
+              </div>
+            </section>
+          )}
+
+          <main className="px-5 py-8">
+            <div className="flex items-end justify-between mb-8">
+              <div className="flex flex-col gap-1">
+                <span className="text-brand-red text-[9px] font-black uppercase tracking-[0.3em]">Discovery</span>
+                <h2 className="text-3xl font-black italic tracking-tighter uppercase leading-none">
+                  {searchQuery ? `Vibes for "${searchQuery}"` : selectedCategory === 'All' ? 'Experience Feed' : `${selectedCategory}`}
+                </h2>
+              </div>
+              <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest leading-none mb-1">{filteredEvents.length} Items</span>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 md:gap-8">
+              {filteredEvents.map(event => (
+                <EventCard key={event.id} event={event} onClick={setSelectedEvent} />
               ))}
             </div>
-          </div>
+          </main>
+        </div>
+      ) : (
+        <div className="animate-in slide-in-from-bottom-8 duration-500">
+          <Dashboard 
+            user={{ ...currentUser, bookings: userBookings }} 
+            onLogout={handleLogout}
+            onOpenAdmin={() => setIsAdminPanelOpen(true)}
+          />
         </div>
       )}
+
+      {isAdminPanelOpen && (
+        <AdminPanel 
+          events={events} 
+          bookings={globalBookings} 
+          onClose={() => setIsAdminPanelOpen(false)} 
+          onRefresh={refreshData}
+        />
+      )}
+
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center bg-white/90 backdrop-blur-xl border border-slate-100 rounded-full px-8 py-4 shadow-2xl z-[100] gap-10 md:hidden">
+        <button 
+          onClick={(e) => {
+            triggerRipple(e, '#F8446444', true);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            setCurrentView('home');
+            setSelectedCategory('All');
+            setSearchQuery('');
+            setAiRecommendation(null);
+          }}
+          className={`flex flex-col items-center gap-1 transition-colors ripple-container rounded-lg px-2 ${currentView === 'home' && !searchQuery ? 'text-slate-900' : 'text-slate-400'}`}
+        >
+          <div className={`w-1.5 h-1.5 rounded-full ${currentView === 'home' && !searchQuery ? 'bg-brand-red shadow-[0_0_8px_#F84464]' : 'bg-transparent'}`}></div>
+          <span className="text-[10px] font-black uppercase tracking-widest">Home</span>
+        </button>
+        <button 
+          onClick={(e) => {
+            triggerRipple(e, '#F8446444', true);
+            setCurrentView('home');
+            setTimeout(() => {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              searchInputRef.current?.focus();
+            }, 100);
+          }}
+          className={`flex flex-col items-center gap-1 transition-colors ripple-container rounded-lg px-2 ${currentView === 'home' && searchQuery ? 'text-slate-900' : 'text-slate-400'}`}
+        >
+          <div className={`w-1.5 h-1.5 rounded-full ${currentView === 'home' && searchQuery ? 'bg-brand-red shadow-[0_0_8px_#F84464]' : 'bg-transparent'}`}></div>
+          <span className="text-[10px] font-black uppercase tracking-widest">Mood</span>
+        </button>
+        <button 
+          onClick={(e) => {
+            triggerRipple(e, '#F8446444', true);
+            setIsBookingHistoryOpen(true);
+          }}
+          className={`flex flex-col items-center gap-1 transition-colors relative ripple-container rounded-lg px-2 ${isBookingHistoryOpen ? 'text-slate-900' : 'text-slate-400'}`}
+        >
+          <div className={`w-1.5 h-1.5 rounded-full ${isBookingHistoryOpen ? 'bg-brand-red shadow-[0_0_8px_#F84464]' : 'bg-transparent'}`}></div>
+          <span className="text-[10px] font-black uppercase tracking-widest">Cart</span>
+          {userBookings.length > 0 && (
+            <div className="absolute -top-1 -right-2 w-4 h-4 bg-brand-red rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+              <span className="text-[8px] text-white font-black">{userBookings.length}</span>
+            </div>
+          )}
+        </button>
+      </div>
 
       {selectedEvent && (
         <BookingModal 
@@ -384,6 +641,47 @@ const App: React.FC = () => {
           onClose={() => setSelectedEvent(null)} 
           onConfirm={handleBookingConfirm} 
         />
+      )}
+
+      {isBookingHistoryOpen && (
+        <div className="fixed inset-0 z-[100] flex justify-end">
+          <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md transition-all duration-700" onClick={() => setIsBookingHistoryOpen(false)}></div>
+          <div className="relative w-full max-w-md bg-white h-full animate-in slide-in-from-right duration-500 shadow-2xl flex flex-col">
+            <div className="p-8 border-b border-slate-100 flex items-center justify-between">
+              <h3 className="text-2xl font-black italic tracking-tighter uppercase">Your Selections</h3>
+              <button onClick={() => setIsBookingHistoryOpen(false)} className="p-2 bg-slate-100 rounded-full active:scale-90 transition-transform"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-8 space-y-6 bg-slate-50/50">
+              {userBookings.map(b => (
+                <div key={b.id} className="group bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-xl transition-all">
+                  <span className="text-[10px] font-black text-brand-red uppercase mb-1 block tracking-widest">{b.category}</span>
+                  <h4 className="text-lg font-black italic mb-2 leading-tight">{b.eventTitle}</h4>
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-400">
+                    <span className="flex items-center gap-1.5">
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 8v4l3 3" strokeWidth="2.5" strokeLinecap="round"/></svg>
+                      {b.time}
+                    </span>
+                    <button 
+                      onClick={async (e) => {
+                        triggerRipple(e, '#F8446444', true);
+                        await api.cancelBooking(b.id);
+                        refreshData();
+                      }}
+                      className="text-brand-red opacity-0 group-hover:opacity-100 transition-opacity font-black uppercase text-[10px] ripple-container p-1 rounded"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {userBookings.length === 0 && (
+                <div className="h-full flex flex-col items-center justify-center text-slate-300 italic opacity-40">
+                  <p className="font-bold uppercase tracking-widest text-[10px]">Your experience cart is empty</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -23,12 +23,15 @@ export interface Booking {
   category: Category;
   time: string;
   bookedAt: string;
+  userName?: string;
+  userEmail?: string;
 }
 
 export interface User {
   name: string;
   email: string;
   bookings: Booking[];
+  role?: 'user' | 'admin';
 }
 
 export interface AIRecommendation {
