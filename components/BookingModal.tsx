@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Event, Slot } from '../types';
+import confetti from 'https://esm.sh/canvas-confetti@1.9.2';
 
 interface BookingModalProps {
   event: Event;
@@ -15,24 +16,34 @@ const BookingModal: React.FC<BookingModalProps> = ({ event, onClose, onConfirm }
     if (selectedSlot) {
       onConfirm(selectedSlot);
       setIsSuccess(true);
+      confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#F84464', '#333545', '#ffffff']
+      });
     }
   };
 
   if (isSuccess) {
     return (
       <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-        <div className="absolute inset-0 bg-forest/80 backdrop-blur-xl" onClick={onClose}></div>
-        <div className="relative bg-linen w-full max-w-sm rounded-[3rem] p-12 text-center animate-in zoom-in-95 duration-500 shadow-2xl">
-           <div className="w-24 h-24 bg-meadow-500 rounded-full flex items-center justify-center mx-auto mb-10 shadow-2xl animate-bounce">
-              <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7"/></svg>
+        <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm" onClick={onClose}></div>
+        <div className="relative bg-white w-full max-w-sm rounded-xl p-8 text-center animate-in zoom-in-95 duration-300 shadow-2xl">
+           <div className="w-16 h-16 bg-[#F84464] rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg animate-bounce">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7"/></svg>
            </div>
-           <h2 className="text-4xl font-black text-forest mb-6 tracking-tighter italic font-serif leading-none">ROOTED!</h2>
-           <p className="text-forest/60 font-bold mb-12 leading-relaxed text-sm">Your spot for <span className="text-meadow-600 underline underline-offset-4">{event.title}</span> is secured in our ecosystem.</p>
+           <h2 className="text-2xl font-black text-slate-900 mb-2 italic">BOOKED!</h2>
+           <p className="text-slate-500 text-sm mb-4">You're confirmed for <span className="text-[#F84464] font-bold">{event.title}</span>.</p>
+           <div className="bg-slate-50 p-4 rounded-lg mb-8">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Confirmation Email Sent</p>
+              <p className="text-[11px] text-slate-600 font-medium">Ticket & details sent to user@makemydays.com</p>
+           </div>
            <button 
             onClick={onClose}
-            className="w-full py-5 bg-forest text-white rounded-2xl font-black uppercase tracking-[0.2em] hover:bg-meadow-700 transition-all shadow-xl active:scale-95 text-xs"
+            className="w-full py-3 bg-slate-900 text-white rounded font-bold uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 shadow-xl"
            >
-             RETURN TO MEADOW
+             Got it!
            </button>
         </div>
       </div>
@@ -41,58 +52,51 @@ const BookingModal: React.FC<BookingModalProps> = ({ event, onClose, onConfirm }
 
   return (
     <div className="fixed inset-0 z-[200] flex items-end md:items-center justify-center p-0 md:p-4 overflow-hidden">
-      <div className="absolute inset-0 bg-forest/70 backdrop-blur-sm" onClick={onClose}></div>
-      <div className="relative bg-linen w-full md:max-w-2xl rounded-t-[3rem] md:rounded-[3.5rem] shadow-2xl overflow-hidden animate-in slide-in-from-bottom md:zoom-in-95 duration-500 max-h-[95vh] flex flex-col">
+      <div className="absolute inset-0 bg-slate-900/70" onClick={onClose}></div>
+      <div className="relative bg-white w-full md:max-w-xl rounded-t-xl md:rounded-xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-300 max-h-[90vh] flex flex-col">
         
-        <div className="relative h-48 md:h-64 bg-forest shrink-0">
-          <img src={event.image} alt="" className="w-full h-full object-cover opacity-60" />
-          <div className="absolute inset-0 bg-gradient-to-t from-forest to-transparent"></div>
-          <div className="absolute inset-0 p-8 md:p-12 flex items-end gap-8">
-            <div className="w-28 h-36 md:w-36 md:h-52 rounded-[2rem] shadow-2xl overflow-hidden border-4 border-white translate-y-12 md:translate-y-20">
-              <img src={event.image} alt="" className="w-full h-full object-cover" />
-            </div>
-            <div className="pb-2 md:pb-6 min-w-0">
-              <span className="text-[10px] md:text-xs font-black uppercase tracking-[0.4em] text-meadow-400 block mb-3">EXPERIENCE / {event.category}</span>
-              <h2 className="text-2xl md:text-4xl font-black text-white leading-none tracking-tight font-serif italic truncate">{event.title}</h2>
+        <div className="relative h-40 md:h-52 bg-slate-800">
+          <img src={event.image} alt="" className="w-full h-full object-cover opacity-50" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent"></div>
+          <div className="absolute inset-0 p-6 flex items-end gap-6">
+            <img src={event.image} alt="" className="w-20 h-28 object-cover rounded shadow-lg border-2 border-white translate-y-4" />
+            <div className="mb-2">
+              <span className="text-[10px] font-bold text-[#F84464] uppercase block mb-1">{event.category}</span>
+              <h2 className="text-xl md:text-2xl font-black text-white italic truncate">{event.title}</h2>
             </div>
           </div>
-          <button onClick={onClose} className="absolute top-6 right-6 w-12 h-12 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-meadow-500 transition-all border border-white/20">
+          <button onClick={onClose} className="absolute top-4 right-4 text-white/60 hover:text-white transition-colors">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
 
-        <div className="p-8 md:p-14 pt-20 md:pt-32 overflow-y-auto">
-          <div className="flex items-center gap-6 mb-12">
-             <div className="bg-meadow-50 border-2 border-meadow-100 px-6 py-3 rounded-2xl flex items-center gap-3">
-                <span className="text-xl md:text-3xl font-black text-forest font-serif italic">₹{event.price.toLocaleString('en-IN')}</span>
-                <span className="text-[10px] font-black text-forest/30 uppercase tracking-[0.2em]">ENERGY EXCHANGE</span>
-             </div>
+        <div className="p-6 pt-10 overflow-y-auto">
+          <div className="bg-slate-50 px-4 py-2 rounded-lg mb-6 flex items-center justify-between">
+            <span className="text-[10px] font-bold text-slate-400 uppercase">Ticket Price</span>
+            <span className="text-xl font-black text-slate-900">₹{event.price.toLocaleString('en-IN')}</span>
           </div>
 
-          <p className="text-forest/60 text-sm md:text-lg leading-relaxed mb-12 font-medium">
+          <p className="text-slate-500 text-xs md:text-sm leading-relaxed mb-8">
             {event.description}
           </p>
 
-          <div className="mb-12">
-            <h4 className="text-[10px] md:text-xs font-black text-forest/40 uppercase mb-6 flex items-center gap-3 tracking-[0.4em]">
-              <div className="w-2 h-2 bg-meadow-500 rounded-full"></div>
-              RESERVE YOUR MOMENT
-            </h4>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <div className="mb-8">
+            <h4 className="text-[10px] font-bold text-slate-400 uppercase mb-3">Select Time Slot</h4>
+            <div className="grid grid-cols-2 gap-3">
               {event.slots.map((slot, idx) => (
                 <button
                   key={idx}
                   onClick={() => setSelectedSlot(slot)}
                   disabled={slot.availableSeats === 0}
-                  className={`px-4 py-6 rounded-[2rem] border-4 transition-all flex flex-col items-center gap-1.5 ${
+                  className={`px-4 py-3 rounded border-2 transition-all flex flex-col items-center gap-0.5 ${
                     selectedSlot === slot 
-                      ? 'border-meadow-500 bg-meadow-500 text-white shadow-2xl scale-105' 
-                      : 'border-white bg-white text-forest/60 hover:border-meadow-100'
-                  } ${slot.availableSeats === 0 ? 'opacity-20 cursor-not-allowed bg-stone-50 grayscale' : ''}`}
+                      ? 'border-[#F84464] bg-[#F84464] text-white' 
+                      : 'border-slate-100 bg-white text-slate-600 hover:border-slate-200 shadow-sm'
+                  } ${slot.availableSeats === 0 ? 'opacity-30 cursor-not-allowed' : 'active:scale-95'}`}
                 >
-                  <span className="font-black text-sm md:text-lg tracking-tight font-serif italic">{slot.time}</span>
-                  <span className={`text-[9px] font-black uppercase tracking-widest ${selectedSlot === slot ? 'text-white/70' : 'text-forest/20'}`}>
-                    {slot.availableSeats} LEFT
+                  <span className="font-bold text-sm italic">{slot.time}</span>
+                  <span className={`text-[8px] font-bold uppercase ${selectedSlot === slot ? 'text-white/60' : 'text-slate-400'}`}>
+                    {slot.availableSeats} Seats
                   </span>
                 </button>
               ))}
@@ -102,13 +106,13 @@ const BookingModal: React.FC<BookingModalProps> = ({ event, onClose, onConfirm }
           <button
             onClick={handleConfirm}
             disabled={!selectedSlot}
-            className={`w-full py-6 rounded-3xl font-black text-sm md:text-lg uppercase tracking-[0.3em] transition-all ${
+            className={`w-full py-4 rounded font-bold uppercase tracking-widest transition-all ${
               selectedSlot 
-                ? 'bg-meadow-500 text-white shadow-[0_20px_50px_-10px_rgba(34,197,94,0.4)] hover:bg-meadow-600 active:scale-95' 
-                : 'bg-stone-100 text-stone-300 cursor-not-allowed'
+                ? 'bg-[#F84464] text-white shadow-lg hover:bg-[#d63b56] active:scale-95' 
+                : 'bg-slate-100 text-slate-300 cursor-not-allowed'
             }`}
           >
-            CONFIRM CONNECTION
+            Confirm Reservation
           </button>
         </div>
       </div>

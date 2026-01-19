@@ -3,59 +3,36 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
-    <title>MAKEMYDAYS — Natural Connections</title>
+    <title>MAKEMYDAYS — Book Your Experience</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@1,700;1,900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
         theme: {
           extend: {
             colors: {
-              meadow: {
-                50: '#f0fdf4',
-                100: '#dcfce7',
-                500: '#22c55e',
-                600: '#16a34a',
-                700: '#15803d',
-                800: '#166534',
-                900: '#14532d',
-              },
-              linen: '#FDFCF7',
-              forest: '#1A2F16'
-            },
-            fontFamily: {
-              serif: ['Playfair Display', 'serif'],
+              brand: {
+                red: '#F84464',
+                dark: '#333545',
+                bg: '#F5F5F5'
+              }
             }
           }
         }
       }
     </script>
     <style>
-      :root {
-        --meadow-green: #2D5A27;
-        --soft-bg: #FDFCF7;
-      }
       body {
         font-family: 'Inter', sans-serif;
-        background-color: var(--soft-bg);
-        color: #1A2F16;
+        background-color: #F5F5F5;
+        color: #333333;
         -webkit-tap-highlight-color: transparent;
       }
-      /* Subtle organic grain texture */
-      body::before {
-        content: "";
-        position: fixed;
-        top: 0; left: 0; width: 100%; height: 100%;
-        opacity: 0.03;
-        z-index: 1000;
-        pointer-events: none;
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-      }
       .scrollbar-hide::-webkit-scrollbar { display: none; }
-      .hero-gradient {
-        background: linear-gradient(to top, rgba(26, 47, 22, 0.9) 0%, rgba(26, 47, 22, 0.2) 60%, transparent 100%);
+      .poster-gradient {
+        background: linear-gradient(0deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 40%);
       }
     </style>
   <script type="importmap">

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { User } from '../types';
 
@@ -33,9 +32,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
               <div key={booking.id} className="p-6 flex flex-col md:flex-row md:items-center justify-between hover:bg-slate-50 transition-colors">
                 <div className="mb-4 md:mb-0">
                   <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase mb-2 ${
-                    booking.category === 'Movie' ? 'bg-purple-100 text-purple-600' :
+                    booking.category === 'Adventure' ? 'bg-purple-100 text-purple-600' :
                     booking.category === 'Activity' ? 'bg-orange-100 text-orange-600' :
-                    'bg-teal-100 text-teal-600'
+                    booking.category === 'Wellness' ? 'bg-teal-100 text-teal-600' :
+                    'bg-slate-100 text-slate-600'
                   }`}>
                     {booking.category}
                   </span>

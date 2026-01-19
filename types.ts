@@ -1,4 +1,4 @@
-export type Category = "Team Building" | "Activity" | "Therapy" | "Mindfulness" | "Adventure" | "Creative Arts";
+export type Category = "Team Building" | "Activity" | "Wellness" | "Mindfulness" | "Adventure" | "Creative Arts";
 
 export interface Slot {
   time: string;
