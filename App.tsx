@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Event, Category, Booking, Slot, AIRecommendation, User } from './types.ts';
 import EventCard from './components/EventCard.tsx';
@@ -7,9 +6,9 @@ import Dashboard from './components/Dashboard.tsx';
 import AdminPanel from './components/AdminPanel.tsx';
 import { api } from './services/api.ts';
 
-// Sound Assets
-const ATMOSPHERE_URL = "https://assets.mixkit.co/sfx/preview/mixkit-crickets-and-insects-in-the-wild-ambience-39.mp3"; 
-const SPLASH_URL = "https://assets.mixkit.co/sfx/preview/mixkit-water-splash-1311.mp3";
+// Sound Assets from the provided dump
+const ATMOSPHERE_URL = "https://assets.mixkit.co/sfx/preview/mixkit-forest-ambiance-with-birds-and-wind-1220.mp3"; 
+const TAP_SOUND_URL = "https://static.whatsapp.net/rsrc.php/yv/r/ze2kHBOq8T0.mp3";
 
 const USER_STORAGE_KEY = 'makemydays_user_v1';
 const ADMIN_PASSKEY = '2576';
@@ -40,9 +39,9 @@ const triggerRipple = (e: React.MouseEvent | React.TouchEvent, color?: string, p
   setTimeout(() => ripple.remove(), 600);
 
   if (playSound) {
-    const splash = new Audio(SPLASH_URL);
-    splash.volume = 0.2;
-    splash.play().catch((err) => console.log("Splash sound blocked:", err));
+    const sound = new Audio(TAP_SOUND_URL);
+    sound.volume = 0.3;
+    sound.play().catch((err) => console.log("Sound blocked:", err));
   }
 };
 
@@ -111,9 +110,9 @@ const CategoryItem: React.FC<{
         <div className="absolute inset-0 rounded-3xl blur-2xl opacity-20 animate-pulse" style={{ backgroundColor: color }}></div>
       )}
       <div className={`absolute inset-0 rounded-[2rem] border-2 transition-all duration-500 ${
-        active ? 'bg-white shadow-2xl rotate-2' : 'bg-slate-50 border-transparent group-hover:bg-white group-hover:border-slate-100'
+        active ? 'bg-white shadow-2xl rotate-2' : 'bg-slate-50 border-transparent group-hover:bg-white group-hover:border-slate-100 group-hover:animate-subtle-pulse'
       }`} style={{ borderColor: active ? color : 'transparent' }}></div>
-      <div className="relative w-10 h-10 md:w-12 md:h-12 z-10">
+      <div className={`relative w-10 h-10 md:w-12 md:h-12 z-10 transition-transform duration-700 group-hover:scale-110 ${active ? 'animate-subtle-pulse' : ''}`}>
         <ShapeIcon type={shape} color={color} active={active} />
       </div>
     </div>
@@ -137,6 +136,7 @@ const App: React.FC = () => {
   const [userMood, setUserMood] = useState('');
   const [showDashboard, setShowDashboard] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [isAtmosphereActive, setIsAtmosphereActive] = useState(false);
   
   const atmosphereRef = useRef<HTMLAudioElement | null>(null);
 
@@ -247,6 +247,19 @@ const App: React.FC = () => {
     localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(newUser));
   };
 
+  const toggleAtmosphere = (e: React.MouseEvent) => {
+    triggerRipple(e, '#F8446444', true);
+    if (atmosphereRef.current) {
+      if (atmosphereRef.current.paused) {
+        atmosphereRef.current.play();
+        setIsAtmosphereActive(true);
+      } else {
+        atmosphereRef.current.pause();
+        setIsAtmosphereActive(false);
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#fafafa] selection:bg-brand-red selection:text-white pb-20">
       <audio ref={atmosphereRef} src={ATMOSPHERE_URL} loop />
@@ -255,7 +268,8 @@ const App: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div 
             className="flex items-center gap-3 cursor-pointer group"
-            onClick={() => {
+            onClick={(e) => {
+              triggerRipple(e, '#F8446444', true);
               setShowDashboard(false);
               setShowAdmin(false);
               window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -269,28 +283,31 @@ const App: React.FC = () => {
 
           <div className="flex items-center gap-6">
             <button 
-              onClick={() => {
-                if (atmosphereRef.current) {
-                  if (atmosphereRef.current.paused) atmosphereRef.current.play();
-                  else atmosphereRef.current.pause();
-                }
-              }}
-              className="hidden md:flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-full text-slate-400 hover:text-slate-900 transition-all border border-transparent hover:border-slate-100"
+              onClick={toggleAtmosphere}
+              className={`hidden md:flex items-center gap-2 px-4 py-2 rounded-full transition-all border ${
+                isAtmosphereActive ? 'bg-brand-red/10 border-brand-red/20 text-brand-red' : 'bg-slate-50 border-transparent text-slate-400 hover:text-slate-900'
+              }`}
             >
-              <ZenIcon active={true} />
+              <ZenIcon active={isAtmosphereActive} />
               <span className="text-[9px] font-black uppercase tracking-widest">Atmosphere</span>
             </button>
             
             {currentUser ? (
               <button 
-                onClick={() => setShowDashboard(!showDashboard)}
+                onClick={(e) => {
+                   triggerRipple(e, '#0f172a44', true);
+                   setShowDashboard(!showDashboard);
+                }}
                 className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center font-black italic text-lg shadow-xl shadow-slate-900/20 active:scale-90 transition-transform"
               >
                 {currentUser.name[0]}
               </button>
             ) : (
               <button 
-                onClick={handleJoinFlow}
+                onClick={(e) => {
+                  triggerRipple(e, '#F8446444', true);
+                  handleJoinFlow();
+                }}
                 className="text-[10px] font-black uppercase tracking-widest text-slate-900 hover:text-brand-red transition-colors"
               >
                 Join Flow
@@ -332,7 +349,10 @@ const App: React.FC = () => {
                   className="w-full bg-white border-2 border-slate-100 rounded-[2.5rem] px-10 py-8 text-lg font-bold italic outline-none focus:border-brand-red shadow-2xl shadow-slate-200/50 transition-all placeholder:text-slate-300"
                 />
                 <button 
-                  onClick={() => handleMoodSearch(userMood)}
+                  onClick={(e) => {
+                    triggerRipple(e, '#0f172a44', true);
+                    handleMoodSearch(userMood);
+                  }}
                   disabled={isAiLoading}
                   className="absolute right-4 top-[3.3rem] w-14 h-14 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-xl shadow-slate-900/20 hover:scale-110 active:scale-90 transition-all disabled:opacity-50"
                 >
@@ -374,7 +394,9 @@ const App: React.FC = () => {
               <div key={event.id} className={aiRec?.suggestedEventIds.includes(event.id) ? 'ring-4 ring-brand-red/20 rounded-[2.5rem] p-1' : ''}>
                 <EventCard 
                   event={event} 
-                  onClick={handleBooking} 
+                  onClick={(e) => {
+                    handleBooking(e);
+                  }} 
                 />
               </div>
             ))}

@@ -12,19 +12,32 @@ interface AdminPanelProps {
 const AdminPanel: React.FC<AdminPanelProps> = ({ events, bookings, onClose, onRefresh }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'events' | 'bookings'>('overview');
   const [editingEvent, setEditingEvent] = useState<Partial<Event> | null>(null);
+  const [adminPasskey, setAdminPasskey] = useState('');
+  const [error, setError] = useState('');
 
   const totalRevenue = bookings.reduce((acc, curr) => acc + (curr.price || 0), 0);
   const totalCustomers = new Set(bookings.map(b => b.userPhone)).size;
 
   const handleDeleteEvent = async (id: string) => {
-    if (window.confirm('Delete this experience forever?')) {
+    const confirmPass = prompt('Enter Owner Passkey to confirm deletion:');
+    if (confirmPass === '2576') {
       await api.deleteEvent(id);
       onRefresh();
+    } else if (confirmPass !== null) {
+      alert('Invalid passkey. Deletion aborted.');
     }
   };
 
   const handleSaveEvent = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+
+    // Verification check as requested by user
+    if (adminPasskey !== '2576') {
+      setError('Invalid owner passkey. Save denied.');
+      return;
+    }
+
     if (editingEvent && editingEvent.title && editingEvent.category) {
       const eventToSave = {
         ...editingEvent,
@@ -35,6 +48,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, bookings, onClose, onRe
       
       await api.saveEvent(eventToSave);
       setEditingEvent(null);
+      setAdminPasskey('');
       onRefresh();
     }
   };
@@ -130,7 +144,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, bookings, onClose, onRe
                   <h3 className="text-2xl font-black text-white italic uppercase">Experience Catalog</h3>
                   <p className="text-slate-500 text-xs">Manage your storefront items.</p>
                 </div>
-                <button onClick={() => setEditingEvent({})} className="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 transition-all">Create New Experience</button>
+                <button onClick={() => { setEditingEvent({}); setError(''); setAdminPasskey(''); }} className="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 transition-all">Create New Experience</button>
               </div>
               <div className="grid grid-cols-1 gap-4">
                 {events.map(event => (
@@ -146,7 +160,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, bookings, onClose, onRe
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => setEditingEvent(event)} className="p-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition-all">
+                      <button onClick={() => { setEditingEvent(event); setError(''); setAdminPasskey(''); }} className="p-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition-all">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </button>
                       <button onClick={() => handleDeleteEvent(event.id)} className="p-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl transition-all">
@@ -208,7 +222,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, bookings, onClose, onRe
       {editingEvent && (
         <div className="fixed inset-0 z-[400] flex items-center justify-center p-6">
           <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-xl" onClick={() => setEditingEvent(null)}></div>
-          <div className="relative bg-slate-900 border border-slate-800 w-full max-w-xl rounded-[2.5rem] shadow-3xl overflow-hidden p-10">
+          <div className="relative bg-slate-900 border border-slate-800 w-full max-w-xl rounded-[2.5rem] shadow-3xl overflow-hidden p-10 animate-in zoom-in-95 duration-300">
             <h3 className="text-2xl font-black italic text-white uppercase mb-8">{editingEvent.id ? 'Edit Experience' : 'New Experience'}</h3>
             <form onSubmit={handleSaveEvent} className="space-y-6">
               <div className="space-y-2">
@@ -241,9 +255,23 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, bookings, onClose, onRe
                 <label className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Description</label>
                 <textarea value={editingEvent.description || ''} onChange={(e) => setEditingEvent({...editingEvent, description: e.target.value})} rows={3} className="w-full bg-slate-800 border-none rounded-2xl px-5 py-4 text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500 resize-none" />
               </div>
+              
+              <div className="space-y-2 pt-4 border-t border-slate-800">
+                <label className="text-emerald-500 text-[10px] font-black uppercase tracking-widest">Verification Passkey</label>
+                <input 
+                  type="password" 
+                  placeholder="Enter 4-digit Owner Key" 
+                  value={adminPasskey} 
+                  onChange={(e) => setAdminPasskey(e.target.value)} 
+                  className="w-full bg-slate-800 border-none rounded-2xl px-5 py-4 text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500" 
+                  required 
+                />
+                {error && <p className="text-red-500 text-[9px] font-bold uppercase tracking-widest mt-1">{error}</p>}
+              </div>
+
               <div className="flex gap-4 pt-4">
                 <button type="button" onClick={() => setEditingEvent(null)} className="flex-1 py-4 bg-slate-800 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest">Cancel</button>
-                <button type="submit" className="flex-1 py-4 bg-emerald-500 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-emerald-500/20">Save experience</button>
+                <button type="submit" className="flex-1 py-4 bg-emerald-500 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-emerald-500/20">Authorize & Save</button>
               </div>
             </form>
           </div>

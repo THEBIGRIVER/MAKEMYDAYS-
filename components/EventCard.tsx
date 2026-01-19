@@ -6,6 +6,8 @@ interface EventCardProps {
   onClick: (event: Event) => void;
 }
 
+const TAP_SOUND_URL = "https://static.whatsapp.net/rsrc.php/yv/r/ze2kHBOq8T0.mp3";
+
 const triggerRipple = (e: React.MouseEvent) => {
   const container = e.currentTarget;
   const rect = container.getBoundingClientRect();
@@ -22,6 +24,10 @@ const triggerRipple = (e: React.MouseEvent) => {
 
   container.appendChild(ripple);
   setTimeout(() => ripple.remove(), 600);
+
+  const sound = new Audio(TAP_SOUND_URL);
+  sound.volume = 0.2;
+  sound.play().catch((err) => console.log("Sound blocked:", err));
 };
 
 const EventCard: React.FC<EventCardProps> = ({ event, onClick }) => {

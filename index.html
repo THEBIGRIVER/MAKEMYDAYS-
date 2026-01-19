@@ -26,6 +26,15 @@
                 dark: '#333545',
                 bg: '#F5F5F5'
               }
+            },
+            animation: {
+              'subtle-pulse': 'subtle-pulse 2s infinite ease-in-out',
+            },
+            keyframes: {
+              'subtle-pulse': {
+                '0%, 100%': { transform: 'scale(1)' },
+                '50%': { transform: 'scale(1.05)' },
+              }
             }
           }
         }
