@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Event } from '../types.ts';
 
@@ -25,9 +26,10 @@ const triggerRipple = (e: React.MouseEvent) => {
   container.appendChild(ripple);
   setTimeout(() => ripple.remove(), 600);
 
+  // Play sound from the shared URL
   const sound = new Audio(TAP_SOUND_URL);
-  sound.volume = 0.2;
-  sound.play().catch((err) => console.log("Sound blocked:", err));
+  sound.volume = 0.3;
+  sound.play().catch(() => {});
 };
 
 const EventCard: React.FC<EventCardProps> = ({ event, onClick }) => {
