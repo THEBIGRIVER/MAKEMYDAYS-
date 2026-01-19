@@ -12,6 +12,7 @@ const ATMOSPHERE_URL = "https://assets.mixkit.co/sfx/preview/mixkit-crickets-and
 const SPLASH_URL = "https://assets.mixkit.co/sfx/preview/mixkit-water-splash-1311.mp3";
 
 const USER_STORAGE_KEY = 'makemydays_user_v1';
+const ADMIN_PASSKEY = '2576';
 
 const triggerRipple = (e: React.MouseEvent | React.TouchEvent, color?: string, playSound = false) => {
   const container = e.currentTarget;
@@ -19,11 +20,11 @@ const triggerRipple = (e: React.MouseEvent | React.TouchEvent, color?: string, p
   
   let x, y;
   if ('touches' in e) {
-    x = e.touches[0].clientX - rect.left;
-    y = e.touches[0].clientY - rect.top;
+    x = (e as React.TouchEvent).touches[0].clientX - rect.left;
+    y = (e as React.TouchEvent).touches[0].clientY - rect.top;
   } else {
-    x = e.clientX - rect.left;
-    y = e.clientY - rect.top;
+    x = (e as React.MouseEvent).clientX - rect.left;
+    y = (e as React.MouseEvent).clientY - rect.top;
   }
 
   const ripple = document.createElement('span');
@@ -124,7 +125,6 @@ const CategoryItem: React.FC<{
   </button>
 );
 
-// Fix: Completed the App component to resolve truncation and type errors
 const App: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [globalBookings, setGlobalBookings] = useState<Booking[]>([]);
@@ -221,6 +221,30 @@ const App: React.FC = () => {
     setCurrentUser(null);
     localStorage.removeItem(USER_STORAGE_KEY);
     setShowDashboard(false);
+    setShowAdmin(false);
+  };
+
+  const handleJoinFlow = () => {
+    const name = prompt("Enter your Name:") || "Explorer";
+    const phone = prompt("Enter your Phone Number:") || "0000000000";
+    
+    let role: 'user' | 'admin' = 'user';
+    const isAdminRequest = confirm("Are you the platform owner? (Admin access)");
+    
+    if (isAdminRequest) {
+      const passkey = prompt("Enter the Secret Passkey to verify identity:");
+      if (passkey === ADMIN_PASSKEY) {
+        role = 'admin';
+        alert("Identity verified. Welcome back, Owner.");
+      } else {
+        alert("Verification failed. Access denied to owner controls.");
+        role = 'user';
+      }
+    }
+
+    const newUser: User = { name, phone, bookings: [], role };
+    setCurrentUser(newUser);
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(newUser));
   };
 
   return (
@@ -266,13 +290,7 @@ const App: React.FC = () => {
               </button>
             ) : (
               <button 
-                onClick={() => {
-                  const name = prompt("Name:") || "Demo";
-                  const phone = prompt("Phone:") || "123";
-                  const newUser: User = { name, phone, bookings: [], role: 'admin' };
-                  setCurrentUser(newUser);
-                  localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(newUser));
-                }}
+                onClick={handleJoinFlow}
                 className="text-[10px] font-black uppercase tracking-widest text-slate-900 hover:text-brand-red transition-colors"
               >
                 Join Flow
@@ -282,7 +300,7 @@ const App: React.FC = () => {
         </div>
       </nav>
 
-      {showAdmin ? (
+      {showAdmin && currentUser?.role === 'admin' ? (
         <AdminPanel 
           events={events} 
           bookings={globalBookings} 
@@ -384,5 +402,4 @@ const App: React.FC = () => {
   );
 };
 
-// Fix: Added missing default export
 export default App;
