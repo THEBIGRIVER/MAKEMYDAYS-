@@ -1,0 +1,8 @@
+{
+  "name": "MAKEMYDAYS — Natural Wellness",
+  "description": "A grounded booking platform for unconventional wellness and high-energy natural activities.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
