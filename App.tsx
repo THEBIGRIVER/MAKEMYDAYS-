@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Event, Category, Booking, Slot, AIRecommendation, User } from './types.ts';
 import EventCard from './components/EventCard.tsx';
@@ -7,8 +6,7 @@ import Dashboard from './components/Dashboard.tsx';
 import AdminPanel from './components/AdminPanel.tsx';
 import { api } from './services/api.ts';
 
-// Sound Assets - Verified stable public assets
-const SEA_WAVES_URL = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"; // Using a placeholder stable MP3 for logic verification, but let's stick to a nature sound if possible. Actually, let's use a known stable atmospheric loop.
+// Sound Assets
 const ATMOSPHERE_URL = "https://assets.mixkit.co/sfx/preview/mixkit-crickets-and-insects-in-the-wild-ambience-39.mp3"; 
 const SPLASH_URL = "https://assets.mixkit.co/sfx/preview/mixkit-water-splash-1311.mp3";
 
@@ -139,12 +137,14 @@ const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<'home' | 'profile'>('home');
   const [isZenMode, setIsZenMode] = useState(false);
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   
   // Login form state
-  const [loginForm, setLoginForm] = useState({ name: '', email: '', isAdmin: false, accessCode: '' });
+  const [loginForm, setLoginForm] = useState({ name: '', phone: '', isAdmin: false, accessCode: '' });
   const logoClickCount = useRef(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const pendingBookingRef = useRef<{ slot: Slot } | null>(null);
 
   const refreshData = async () => {
     setIsDataLoading(true);
@@ -163,14 +163,11 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    // Load User from Local Storage
     const storedUser = localStorage.getItem(USER_STORAGE_KEY);
     if (storedUser) {
       setCurrentUser(JSON.parse(storedUser));
     }
     refreshData();
-
-    // Initialize background audio object
     audioRef.current = new Audio(ATMOSPHERE_URL);
     audioRef.current.loop = true;
     audioRef.current.volume = 0;
@@ -178,26 +175,21 @@ const App: React.FC = () => {
 
   const userBookings = useMemo(() => {
     if (!currentUser) return [];
-    return globalBookings.filter(b => b.userEmail === currentUser.email);
+    return globalBookings.filter(b => b.userPhone === currentUser.phone);
   }, [globalBookings, currentUser]);
 
   const toggleZenMode = (e: React.MouseEvent) => {
     const nextState = !isZenMode;
     triggerRipple(e, '#06B6D444', true);
     setIsZenMode(nextState);
-
     if (!audioRef.current) return;
-
     if (nextState) {
-      // Start playing directly in the click handler to bypass restrictions
       audioRef.current.play().then(() => {
         let vol = 0;
         const fadeIn = setInterval(() => {
           if (audioRef.current && audioRef.current.volume < 0.3) {
             audioRef.current.volume = Math.min(0.3, audioRef.current.volume + 0.05);
-          } else {
-            clearInterval(fadeIn);
-          }
+          } else { clearInterval(fadeIn); }
         }, 50);
       }).catch(err => console.log("Audio play failed:", err));
     } else {
@@ -222,33 +214,41 @@ const App: React.FC = () => {
       setIsAdminPanelOpen(true);
       logoClickCount.current = 0;
     }
-    setTimeout(() => {
-      logoClickCount.current = 0;
-    }, 2000);
+    setTimeout(() => { logoClickCount.current = 0; }, 2000);
   };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    const isAdmin = loginForm.isAdmin && loginForm.accessCode === '2576';
     const newUser: User = {
       name: loginForm.name,
-      email: loginForm.email,
+      phone: loginForm.phone,
       bookings: [],
-      role: (loginForm.isAdmin && loginForm.accessCode === 'admin') ? 'admin' : 'user'
+      role: isAdmin ? 'admin' : 'user'
     };
     localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(newUser));
     setCurrentUser(newUser);
+    setIsAuthModalOpen(false);
+
+    // Automatically open Admin Panel if correct passkey was used
+    if (isAdmin) {
+      setIsAdminPanelOpen(true);
+    }
+
+    // If there was a pending booking, complete it
+    if (pendingBookingRef.current) {
+      handleBookingConfirm(pendingBookingRef.current.slot, newUser);
+      pendingBookingRef.current = null;
+    }
   };
 
   const handleLogout = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.volume = 0;
-    }
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current.volume = 0; }
     setIsZenMode(false);
     localStorage.removeItem(USER_STORAGE_KEY);
     setCurrentUser(null);
     setCurrentView('home');
-    setLoginForm({ name: '', email: '', isAdmin: false, accessCode: '' });
+    setLoginForm({ name: '', phone: '', isAdmin: false, accessCode: '' });
   };
 
   const filteredEvents = useMemo(() => {
@@ -261,8 +261,16 @@ const App: React.FC = () => {
     });
   }, [events, selectedCategory, searchQuery]);
 
-  const handleBookingConfirm = async (slot: Slot) => {
-    if (!selectedEvent || !currentUser) return;
+  const handleBookingConfirm = async (slot: Slot, userOverride?: User) => {
+    const user = userOverride || currentUser;
+    if (!selectedEvent) return;
+
+    if (!user) {
+      pendingBookingRef.current = { slot };
+      setIsAuthModalOpen(true);
+      return;
+    }
+
     const newBooking: Booking = {
       id: Math.random().toString(36).substr(2, 9),
       eventId: selectedEvent.id,
@@ -270,8 +278,8 @@ const App: React.FC = () => {
       category: selectedEvent.category,
       time: slot.time,
       bookedAt: new Date().toISOString(),
-      userName: currentUser.name,
-      userEmail: currentUser.email
+      userName: user.name,
+      userPhone: user.phone
     };
     
     setGlobalBookings([newBooking, ...globalBookings]);
@@ -287,13 +295,11 @@ const App: React.FC = () => {
   const askAI = async (mood?: string) => {
     const query = mood || searchQuery;
     if (!query.trim()) return;
-    
     if (mood) {
       setSearchQuery(mood);
       setSelectedCategory('All');
       setCurrentView('home');
     }
-
     setIsAiLoading(true);
     setAiRecommendation(null);
     try {
@@ -328,91 +334,6 @@ const App: React.FC = () => {
     );
   }
 
-  // Auth Screen
-  if (!currentUser) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-red/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2"></div>
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/5 blur-[120px] rounded-full translate-y-1/2 -translate-x-1/2"></div>
-        
-        <div className="relative w-full max-w-md animate-in fade-in zoom-in-95 duration-700">
-          <div className="flex flex-col items-center text-center mb-10">
-            <ConnectionLogo />
-            <h1 className="mt-6 text-4xl font-black italic tracking-tighter uppercase text-slate-900 leading-none">MAKEMYDAYS</h1>
-            <p className="mt-3 text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px]">Unconventional Wellness Experiences</p>
-          </div>
-          
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Full Name</label>
-              <input 
-                required
-                type="text" 
-                placeholder="How should we call you?"
-                className="w-full bg-slate-50 border-2 border-slate-50 focus:border-brand-red focus:bg-white rounded-[1.5rem] px-6 py-4 outline-none transition-all font-medium"
-                value={loginForm.name}
-                onChange={(e) => setLoginForm({...loginForm, name: e.target.value})}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Email Address</label>
-              <input 
-                required
-                type="email" 
-                placeholder="Your digital frequency"
-                className="w-full bg-slate-50 border-2 border-slate-50 focus:border-brand-red focus:bg-white rounded-[1.5rem] px-6 py-4 outline-none transition-all font-medium"
-                value={loginForm.email}
-                onChange={(e) => setLoginForm({...loginForm, email: e.target.value})}
-              />
-            </div>
-
-            <div className="pt-2 px-2">
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <div className="relative">
-                  <input 
-                    type="checkbox" 
-                    className="sr-only peer"
-                    checked={loginForm.isAdmin}
-                    onChange={(e) => setLoginForm({...loginForm, isAdmin: e.target.checked})}
-                  />
-                  <div className="w-10 h-6 bg-slate-200 peer-focus:ring-2 peer-focus:ring-brand-red/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-red"></div>
-                </div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-slate-900 transition-colors">I am the Owner</span>
-              </label>
-            </div>
-
-            {loginForm.isAdmin && (
-              <div className="space-y-1.5 animate-in slide-in-from-top-2 duration-300">
-                <label className="text-[10px] font-black uppercase tracking-widest text-emerald-500 ml-4">Admin Passkey</label>
-                <input 
-                  required
-                  type="password" 
-                  placeholder="Enter 'admin' for demo"
-                  className="w-full bg-emerald-50/50 border-2 border-emerald-50 focus:border-emerald-500 focus:bg-white rounded-[1.5rem] px-6 py-4 outline-none transition-all font-medium"
-                  value={loginForm.accessCode}
-                  onChange={(e) => setLoginForm({...loginForm, accessCode: e.target.value})}
-                />
-              </div>
-            )}
-
-            <button 
-              type="submit"
-              className={`w-full py-5 rounded-[1.5rem] font-black uppercase tracking-[0.2em] text-xs shadow-2xl active:scale-[0.98] transition-all mt-4 ${
-                loginForm.isAdmin ? 'bg-emerald-500 shadow-emerald-500/20 text-white' : 'bg-slate-900 text-white shadow-slate-900/20'
-              }`}
-            >
-              {loginForm.isAdmin ? 'Access Console' : 'Enter Sanctuary'}
-            </button>
-          </form>
-          
-          <p className="mt-8 text-center text-[9px] text-slate-300 font-bold uppercase tracking-widest leading-loose">
-            By entering, you agree to our <br/> radical terms of restorative presence.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-[#F8F9FA] pb-32">
       <header className="sticky top-0 z-[50] bg-white/80 backdrop-blur-xl border-b border-slate-100 px-5 py-4">
@@ -423,16 +344,11 @@ const App: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-3">
-            {/* Admin Console Button (Visible only to owners) */}
-            {currentUser.role === 'admin' && (
+            {currentUser?.role === 'admin' && (
               <button
-                onClick={(e) => {
-                  triggerRipple(e, '#10B98144', true);
-                  setIsAdminPanelOpen(true);
-                }}
+                onClick={(e) => { triggerRipple(e, '#10B98144', true); setIsAdminPanelOpen(true); }}
                 className="hidden md:flex items-center gap-2 px-5 py-2.5 bg-emerald-500 text-white rounded-2xl shadow-lg shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all ripple-container"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                 <span className="text-[10px] font-black uppercase tracking-widest">Admin</span>
               </button>
             )}
@@ -447,21 +363,27 @@ const App: React.FC = () => {
               <span className="text-[10px] font-black uppercase tracking-widest hidden md:inline">Zen Waves</span>
             </button>
 
-            <button 
-              onClick={(e) => {
-                triggerRipple(e);
-                setCurrentView(currentView === 'profile' ? 'home' : 'profile');
-              }}
-              className={`relative p-2.5 rounded-2xl shadow-lg active:scale-90 transition-all flex items-center justify-center ripple-container ${
-                currentView === 'profile' ? 'bg-brand-red text-white' : 'bg-slate-900 text-white'
-              }`}
-              title="Profile"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-            </button>
+            {currentUser ? (
+              <button 
+                onClick={(e) => { triggerRipple(e); setCurrentView(currentView === 'profile' ? 'home' : 'profile'); }}
+                className={`relative p-2.5 rounded-2xl shadow-lg active:scale-90 transition-all flex items-center justify-center ripple-container ${
+                  currentView === 'profile' ? 'bg-brand-red text-white' : 'bg-slate-900 text-white'
+                }`}
+                title="Profile"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </button>
+            ) : (
+              <button 
+                onClick={() => setIsAuthModalOpen(true)}
+                className="px-5 py-2.5 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-slate-900/20 active:scale-95 transition-all"
+              >
+                Join
+              </button>
+            )}
           </div>
         </div>
         
@@ -470,7 +392,7 @@ const App: React.FC = () => {
             <input 
               ref={searchInputRef}
               type="text" 
-              placeholder={`How are you feeling, ${currentUser.name.split(' ')[0]}?`}
+              placeholder={`How are you feeling${currentUser ? ', ' + currentUser.name.split(' ')[0] : ''}?`}
               className="w-full bg-slate-100/50 border-none rounded-2xl pl-12 pr-4 py-3.5 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-brand-red transition-all outline-none"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -488,16 +410,9 @@ const App: React.FC = () => {
           <div className="bg-white px-5 py-8 overflow-x-auto scrollbar-hide snap-x flex gap-8 items-end">
             {categories.map((cat) => (
               <CategoryItem 
-                key={cat.label} 
-                label={cat.label} 
-                shape={cat.shape}
-                color={cat.color}
+                key={cat.label} label={cat.label} shape={cat.shape} color={cat.color}
                 active={selectedCategory === cat.label}
-                onClick={() => {
-                  setSelectedCategory(cat.label as Category | 'All');
-                  setAiRecommendation(null);
-                  setSearchQuery('');
-                }}
+                onClick={() => { setSelectedCategory(cat.label as Category | 'All'); setAiRecommendation(null); setSearchQuery(''); }}
               />
             ))}
           </div>
@@ -506,10 +421,7 @@ const App: React.FC = () => {
             {quickMoods.map((mood) => (
               <button
                 key={mood}
-                onClick={(e) => {
-                  triggerRipple(e, '#F8446444', true);
-                  askAI(mood);
-                }}
+                onClick={(e) => { triggerRipple(e, '#F8446444', true); askAI(mood); }}
                 className={`px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all border shrink-0 ripple-container ${
                   searchQuery === mood 
                     ? 'bg-brand-red text-white border-brand-red shadow-xl scale-105' 
@@ -526,11 +438,8 @@ const App: React.FC = () => {
               <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl animate-in zoom-in-95 duration-500 min-h-[300px] flex flex-col justify-center">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-brand-red/10 blur-[100px] pointer-events-none"></div>
                 <div className="flex items-center gap-3 mb-8">
-                  <span className="bg-brand-red text-[10px] font-black uppercase tracking-[0.3em] px-4 py-1.5 rounded-full shadow-lg animate-pulse">
-                    AI Curator Insight
-                  </span>
+                  <span className="bg-brand-red text-[10px] font-black uppercase tracking-[0.3em] px-4 py-1.5 rounded-full shadow-lg animate-pulse">AI Curator Insight</span>
                 </div>
-                
                 {isAiLoading ? (
                   <div className="flex flex-col items-center">
                     <div className="w-14 h-14 border-4 border-white/5 border-t-brand-red rounded-full animate-spin"></div>
@@ -562,66 +471,39 @@ const App: React.FC = () => {
               </div>
               <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest leading-none mb-1">{filteredEvents.length} Items</span>
             </div>
-
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 md:gap-8">
-              {filteredEvents.map(event => (
-                <EventCard key={event.id} event={event} onClick={setSelectedEvent} />
-              ))}
+              {filteredEvents.map(event => <EventCard key={event.id} event={event} onClick={setSelectedEvent} />)}
             </div>
           </main>
         </div>
       ) : (
         <div className="animate-in slide-in-from-bottom-8 duration-500">
-          <Dashboard 
-            user={{ ...currentUser, bookings: userBookings }} 
-            onLogout={handleLogout}
-            onOpenAdmin={() => setIsAdminPanelOpen(true)}
-          />
+          <Dashboard user={{ ...currentUser!, bookings: userBookings }} onLogout={handleLogout} onOpenAdmin={() => setIsAdminPanelOpen(true)} />
         </div>
       )}
 
-      {isAdminPanelOpen && (
-        <AdminPanel 
-          events={events} 
-          bookings={globalBookings} 
-          onClose={() => setIsAdminPanelOpen(false)} 
-          onRefresh={refreshData}
-        />
-      )}
+      {isAdminPanelOpen && <AdminPanel events={events} bookings={globalBookings} onClose={() => setIsAdminPanelOpen(false)} onRefresh={refreshData} />}
 
+      {/* Footer Navigation */}
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center bg-white/90 backdrop-blur-xl border border-slate-100 rounded-full px-8 py-4 shadow-2xl z-[100] gap-10 md:hidden">
         <button 
-          onClick={(e) => {
-            triggerRipple(e, '#F8446444', true);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            setCurrentView('home');
-            setSelectedCategory('All');
-            setSearchQuery('');
-            setAiRecommendation(null);
-          }}
+          onClick={(e) => { triggerRipple(e, '#F8446444', true); setCurrentView('home'); setSelectedCategory('All'); setSearchQuery(''); setAiRecommendation(null); }}
           className={`flex flex-col items-center gap-1 transition-colors ripple-container rounded-lg px-2 ${currentView === 'home' && !searchQuery ? 'text-slate-900' : 'text-slate-400'}`}
         >
           <div className={`w-1.5 h-1.5 rounded-full ${currentView === 'home' && !searchQuery ? 'bg-brand-red shadow-[0_0_8px_#F84464]' : 'bg-transparent'}`}></div>
           <span className="text-[10px] font-black uppercase tracking-widest">Home</span>
         </button>
         <button 
-          onClick={(e) => {
-            triggerRipple(e, '#F8446444', true);
-            setCurrentView('home');
-            setTimeout(() => {
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-              searchInputRef.current?.focus();
-            }, 100);
-          }}
+          onClick={(e) => { triggerRipple(e, '#F8446444', true); setCurrentView('home'); setTimeout(() => { searchInputRef.current?.focus(); }, 100); }}
           className={`flex flex-col items-center gap-1 transition-colors ripple-container rounded-lg px-2 ${currentView === 'home' && searchQuery ? 'text-slate-900' : 'text-slate-400'}`}
         >
           <div className={`w-1.5 h-1.5 rounded-full ${currentView === 'home' && searchQuery ? 'bg-brand-red shadow-[0_0_8px_#F84464]' : 'bg-transparent'}`}></div>
           <span className="text-[10px] font-black uppercase tracking-widest">Mood</span>
         </button>
         <button 
-          onClick={(e) => {
-            triggerRipple(e, '#F8446444', true);
-            setIsBookingHistoryOpen(true);
+          onClick={(e) => { 
+            if (!currentUser) { setIsAuthModalOpen(true); return; }
+            triggerRipple(e, '#F8446444', true); setIsBookingHistoryOpen(true); 
           }}
           className={`flex flex-col items-center gap-1 transition-colors relative ripple-container rounded-lg px-2 ${isBookingHistoryOpen ? 'text-slate-900' : 'text-slate-400'}`}
         >
@@ -635,12 +517,58 @@ const App: React.FC = () => {
         </button>
       </div>
 
-      {selectedEvent && (
-        <BookingModal 
-          event={selectedEvent} 
-          onClose={() => setSelectedEvent(null)} 
-          onConfirm={handleBookingConfirm} 
-        />
+      {selectedEvent && <BookingModal event={selectedEvent} onClose={() => setSelectedEvent(null)} onConfirm={handleBookingConfirm} />}
+
+      {/* Auth Modal */}
+      {isAuthModalOpen && (
+        <div className="fixed inset-0 z-[600] flex items-end md:items-center justify-center p-0 md:p-6">
+          <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-md transition-all" onClick={() => setIsAuthModalOpen(false)}></div>
+          <div className="relative w-full max-w-md bg-white rounded-t-[3rem] md:rounded-[3rem] p-10 animate-in slide-in-from-bottom duration-500 shadow-3xl">
+            <div className="flex flex-col items-center text-center mb-8">
+              <ConnectionLogo />
+              <h2 className="mt-4 text-2xl font-black italic tracking-tighter uppercase text-slate-900 leading-none">Join the Sanctuary</h2>
+              <p className="mt-2 text-slate-400 font-bold uppercase tracking-[0.2em] text-[9px]">Sign up with your phone to secure your spot</p>
+            </div>
+            
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-4">Full Name</label>
+                <input required type="text" placeholder="Your name" value={loginForm.name}
+                  className="w-full bg-slate-50 border-2 border-slate-50 focus:border-brand-red focus:bg-white rounded-2xl px-6 py-4 outline-none transition-all font-medium"
+                  onChange={(e) => setLoginForm({...loginForm, name: e.target.value})}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-4">Phone Number</label>
+                <input required type="tel" placeholder="+91 00000 00000" value={loginForm.phone}
+                  className="w-full bg-slate-50 border-2 border-slate-50 focus:border-brand-red focus:bg-white rounded-2xl px-6 py-4 outline-none transition-all font-medium"
+                  onChange={(e) => setLoginForm({...loginForm, phone: e.target.value})}
+                />
+              </div>
+              <div className="pt-2 px-2">
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <div className="relative">
+                    <input type="checkbox" className="sr-only peer" checked={loginForm.isAdmin}
+                      onChange={(e) => setLoginForm({...loginForm, isAdmin: e.target.checked})}
+                    />
+                    <div className="w-10 h-6 bg-slate-200 peer-focus:ring-2 peer-focus:ring-brand-red/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-red"></div>
+                  </div>
+                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">I am the Owner</span>
+                </label>
+              </div>
+              {loginForm.isAdmin && (
+                <div className="space-y-1.5 animate-in slide-in-from-top-2 duration-300">
+                  <label className="text-[9px] font-black uppercase tracking-widest text-emerald-500 ml-4">Owner Passkey</label>
+                  <input required type="password" placeholder="Enter owner passkey" value={loginForm.accessCode}
+                    className="w-full bg-emerald-50/50 border-2 border-emerald-50 focus:border-emerald-500 focus:bg-white rounded-2xl px-6 py-4 outline-none transition-all font-medium"
+                    onChange={(e) => setLoginForm({...loginForm, accessCode: e.target.value})}
+                  />
+                </div>
+              )}
+              <button type="submit" className="w-full py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-xs shadow-2xl active:scale-[0.98] transition-all mt-4 bg-slate-900 text-white">Continue to Checkout</button>
+            </form>
+          </div>
+        </div>
       )}
 
       {isBookingHistoryOpen && (
@@ -662,15 +590,9 @@ const App: React.FC = () => {
                       {b.time}
                     </span>
                     <button 
-                      onClick={async (e) => {
-                        triggerRipple(e, '#F8446444', true);
-                        await api.cancelBooking(b.id);
-                        refreshData();
-                      }}
+                      onClick={async (e) => { triggerRipple(e, '#F8446444', true); await api.cancelBooking(b.id); refreshData(); }}
                       className="text-brand-red opacity-0 group-hover:opacity-100 transition-opacity font-black uppercase text-[10px] ripple-container p-1 rounded"
-                    >
-                      Remove
-                    </button>
+                    >Remove</button>
                   </div>
                 </div>
               ))}

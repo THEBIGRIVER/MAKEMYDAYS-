@@ -24,12 +24,12 @@ export interface Booking {
   time: string;
   bookedAt: string;
   userName?: string;
-  userEmail?: string;
+  userPhone?: string;
 }
 
 export interface User {
   name: string;
-  email: string;
+  phone: string;
   bookings: Booking[];
   role?: 'user' | 'admin';
 }
