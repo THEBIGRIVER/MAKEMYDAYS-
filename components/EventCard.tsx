@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Event } from '../types.ts';
 
@@ -26,9 +25,8 @@ const triggerRipple = (e: React.MouseEvent) => {
   container.appendChild(ripple);
   setTimeout(() => ripple.remove(), 600);
 
-  // Play sound from the shared URL
   const sound = new Audio(TAP_SOUND_URL);
-  sound.volume = 0.3;
+  sound.volume = 0.2;
   sound.play().catch(() => {});
 };
 
@@ -39,25 +37,25 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick }) => {
         triggerRipple(e);
         onClick(event);
       }}
-      className="group cursor-pointer flex flex-col gap-3 animate-in fade-in duration-700 ripple-container rounded-[2rem]"
+      className="group cursor-pointer flex flex-col gap-2 animate-in fade-in duration-700 ripple-container rounded-3xl"
     >
-      <div className="relative aspect-[2/3] md:aspect-[3/4] rounded-[2rem] overflow-hidden shadow-sm transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 active:scale-95">
+      <div className="relative aspect-[4/5] rounded-[1.5rem] md:rounded-[2rem] overflow-hidden shadow-sm transition-all duration-500 hover:shadow-xl active:scale-95">
         <img src={event.image} alt={event.title} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
         
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent"></div>
         
-        <div className="absolute top-4 left-4">
-           <span className="bg-white/20 backdrop-blur-md text-white text-[9px] font-black uppercase px-2.5 py-1 rounded-full border border-white/10">
+        <div className="absolute top-2 left-2 md:top-3 md:left-3">
+           <span className="bg-white/20 backdrop-blur-md text-white text-[7px] md:text-[8px] font-black uppercase px-2 py-0.5 rounded-full border border-white/10">
              {event.category}
            </span>
         </div>
 
-        <div className="absolute bottom-5 left-5 right-5">
-           <h4 className="text-white text-base font-black italic leading-tight truncate mb-1">{event.title}</h4>
+        <div className="absolute bottom-3 left-3 right-3 md:bottom-4 md:left-4 md:right-4">
+           <h4 className="text-white text-xs md:text-sm font-black italic leading-tight truncate mb-0.5">{event.title}</h4>
            <div className="flex items-center justify-between">
-              <span className="text-white font-black text-sm tracking-tight">₹{event.price.toLocaleString('en-IN')}</span>
-              <div className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              <span className="text-white font-black text-[10px] md:text-xs tracking-tight">₹{event.price.toLocaleString('en-IN')}</span>
+              <div className="w-6 h-6 md:w-7 md:h-7 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
               </div>
            </div>
         </div>

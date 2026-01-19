@@ -25,13 +25,17 @@
                 red: '#F84464',
                 dark: '#0A0C10',
                 bg: '#F5F5F5',
-                accent: '#00F5FF'
+                accent: '#00F5FF',
+                lime: '#DFFF00',
+                purple: '#8B5CF6'
               }
             },
             animation: {
               'subtle-pulse': 'subtle-pulse 3s infinite ease-in-out',
               'mesh-flow': 'mesh-flow 20s infinite alternate',
               'scanner': 'scanner 2s infinite linear',
+              'float': 'float 6s infinite ease-in-out',
+              'energy-wave': 'energy-wave 4s infinite linear',
             },
             keyframes: {
               'subtle-pulse': {
@@ -47,6 +51,15 @@
                 '0%': { transform: 'translateY(-100%)', opacity: '0' },
                 '50%': { opacity: '0.5' },
                 '100%': { transform: 'translateY(100%)', opacity: '0' },
+              },
+              'float': {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-20px)' },
+              },
+              'energy-wave': {
+                '0%': { transform: 'translateX(-100%) rotate(45deg)', opacity: '0' },
+                '50%': { opacity: '0.5' },
+                '100%': { transform: 'translateX(100%) rotate(45deg)', opacity: '0' },
               }
             }
           }
@@ -112,6 +125,11 @@
       .ai-glow {
         box-shadow: 0 0 20px rgba(248, 68, 100, 0.2);
       }
+
+      .mood-chip {
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+      .mood-chip:active { transform: scale(0.9); }
     </style>
 <script type="importmap">
 {
