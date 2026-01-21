@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { User } from '../types';
 
@@ -57,6 +58,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout, onOpenAdmin }) =>
                     booking.category === 'Adventure' ? 'bg-blue-50 text-blue-500 border border-blue-100' :
                     booking.category === 'Activity' ? 'bg-orange-50 text-orange-500 border border-orange-100' :
                     booking.category === 'Wellness' ? 'bg-emerald-50 text-emerald-500 border border-emerald-100' :
+                    booking.category === 'Sports' ? 'bg-indigo-50 text-indigo-500 border border-indigo-100' :
                     'bg-slate-50 text-slate-500 border border-slate-100'
                   }`}>
                     {booking.category}

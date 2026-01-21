@@ -9,7 +9,6 @@ import ChatBot from './components/ChatBot.tsx';
 import { api } from './services/api.ts';
 
 // Sound Assets
-const ATMOSPHERE_URL = "https://assets.mixkit.co/sfx/preview/mixkit-forest-ambiance-with-birds-and-wind-1220.mp3"; 
 const TAP_SOUND_URL = "https://static.whatsapp.net/rsrc.php/yv/r/ze2kHBOq8T0.mp3";
 
 const USER_STORAGE_KEY = 'makemydays_user_v1';
@@ -58,37 +57,96 @@ const ConnectionLogo = () => (
   </svg>
 );
 
-const ZenIcon: React.FC<{ active: boolean }> = ({ active }) => (
-  <div className="flex items-center gap-0.5 h-4">
-    {[1, 2, 3, 4].map((i) => (
-      <div 
-        key={i} 
-        className={`w-0.5 rounded-full bg-current transition-all duration-500 ${
-          active ? 'animate-bounce' : 'h-1'
-        }`}
-        style={{ 
-          animationDelay: `${i * 0.1}s`,
-          height: active ? `${Math.random() * 80 + 40}%` : '3px'
-        }}
-      />
-    ))}
-  </div>
-);
+const SensorIcon: React.FC<{ active: boolean; aqi: number }> = ({ active, aqi }) => {
+  const colorClass = aqi <= 50 ? 'text-emerald-500' : aqi <= 100 ? 'text-brand-lime' : 'text-brand-red';
+  return (
+    <div className={`flex items-center gap-1 h-4 ${colorClass}`}>
+      <div className={`w-2 h-2 rounded-full bg-current ${active ? 'animate-pulse' : ''}`} />
+      <span className="text-[10px] font-black">{aqi}</span>
+    </div>
+  );
+};
+
+const WeatherIcon: React.FC<{ status: string }> = ({ status }) => {
+  const s = status.toLowerCase();
+  if (s.includes('clear') || s.includes('sun')) {
+    return (
+      <svg className="w-5 h-5 text-amber-400 animate-sun-spin" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zm1.06-12.37a.996.996 0 00-1.41 0l-1.06 1.06a.996.996 0 101.41 1.41l1.06-1.06a.996.996 0 000-1.41zM5.99 18.36l1.06-1.06a.996.996 0 10-1.41-1.41l-1.06 1.06a.996.996 0 000 1.41c.39.4 1.03.4 1.41 0z" />
+      </svg>
+    );
+  }
+  if (s.includes('cloud')) {
+    return (
+      <svg className="w-5 h-5 text-slate-400 animate-cloud-drift" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z" />
+      </svg>
+    );
+  }
+  if (s.includes('rain')) {
+    return (
+      <svg className="w-5 h-5 text-brand-accent animate-rain-pulse" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M19 15c0-3.87-3.13-7-7-7s-7 3.13-7 7c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4z" />
+        <path d="M12 21a1 1 0 011-1h.01a1 1 0 010 2H13a1 1 0 01-1-1zm-4-1a1 1 0 011-1h.01a1 1 0 010 2H9a1 1 0 01-1-1zm8 0a1 1 0 011-1h.01a1 1 0 010 2H17a1 1 0 01-1-1z" opacity="0.6"/>
+      </svg>
+    );
+  }
+  return <span className="text-xl">🌡️</span>;
+};
 
 const ShapeIcon: React.FC<{ type: string; color: string; active: boolean }> = ({ type, color, active }) => {
   const icons: Record<string, React.ReactNode> = {
     all: (
-      <g>
-        <circle cx="50" cy="50" r="30" stroke="currentColor" strokeWidth="2" fill="none" />
-        <circle cx="50" cy="50" r="15" stroke="currentColor" strokeWidth="4" fill="none" />
+      <g fill="currentColor">
+        <rect x="25" y="25" width="22" height="22" rx="4" />
+        <rect x="53" y="25" width="22" height="22" rx="4" opacity="0.6" />
+        <rect x="25" y="53" width="22" height="22" rx="4" opacity="0.6" />
+        <rect x="53" y="53" width="22" height="22" rx="4" />
       </g>
     ),
-    adventure: <path d="M10 85 L40 25 L60 65 L90 85" stroke="currentColor" strokeWidth="6" fill="none" strokeLinejoin="round" />,
-    activity: <path d="M15 50 L30 50 L40 20 L55 80 L65 40 L75 50 L85 50" stroke="currentColor" strokeWidth="6" fill="none" strokeLinejoin="round" />,
-    wellness: <path d="M50 20 C65 20 80 35 80 55 C80 80 50 90 50 90 C50 90 20 80 20 55 C20 35 35 20 50 20" stroke="currentColor" strokeWidth="6" fill="none" />,
-    mindfulness: <g><circle cx="50" cy="50" r="8" fill="currentColor" /><circle cx="50" cy="50" r="22" stroke="currentColor" strokeWidth="4" fill="none" /></g>,
-    creativearts: <path d="M50 15 L85 50 L50 85 L15 50 Z" stroke="currentColor" strokeWidth="5" fill="none" strokeLinejoin="round" />,
-    teambuilding: <g><circle cx="35" cy="40" r="8" stroke="currentColor" strokeWidth="4" fill="none" /><circle cx="65" cy="40" r="8" stroke="currentColor" strokeWidth="4" fill="none" /><circle cx="50" cy="70" r="8" stroke="currentColor" strokeWidth="4" fill="none" /></g>
+    adventure: (
+      <g fill="currentColor">
+        <path d="M10 80 L40 20 L60 55 L85 20 L85 80 Z" />
+        <circle cx="85" cy="15" r="5" opacity="0.4" />
+      </g>
+    ),
+    activity: (
+      <g fill="currentColor">
+        <path d="M30 10 L65 10 L45 45 L75 45 L40 90 L50 45 L25 45 Z" />
+      </g>
+    ),
+    wellness: (
+      <g fill="currentColor">
+        <path d="M50 90 C50 90 15 65 15 40 C15 22 30 10 50 10 C70 10 85 22 85 40 C85 65 50 90 50 90 Z" />
+        <path d="M50 20 L50 80" stroke="white" strokeWidth="4" strokeLinecap="round" opacity="0.2" />
+      </g>
+    ),
+    mindfulness: (
+      <g fill="currentColor">
+        <circle cx="50" cy="50" r="14" />
+        <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" strokeWidth="4" />
+        <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="4 8" opacity="0.5" />
+      </g>
+    ),
+    creativearts: (
+      <g fill="currentColor">
+        <path d="M50 5 L95 50 L50 95 L5 50 Z" />
+        <path d="M50 25 L75 50 L50 75 L25 50 Z" fill="white" opacity="0.2" />
+      </g>
+    ),
+    teambuilding: (
+      <g fill="currentColor">
+        <path d="M50 10 L85 30 V70 L50 90 L15 70 V30 Z" />
+        <circle cx="50" cy="50" r="12" fill="white" opacity="0.3" />
+      </g>
+    ),
+    sports: (
+      <g fill="currentColor">
+        <circle cx="50" cy="50" r="45" />
+        <path d="M20 50 Q50 20 80 50" fill="none" stroke="white" strokeWidth="6" strokeLinecap="round" opacity="0.2" />
+        <path d="M20 50 Q50 80 80 50" fill="none" stroke="white" strokeWidth="6" strokeLinecap="round" opacity="0.2" />
+      </g>
+    )
   };
 
   const key = type.toLowerCase().replace(/\s/g, '');
@@ -121,10 +179,10 @@ const CategoryItem: React.FC<{
       {active && (
         <div className="absolute inset-0 rounded-3xl blur-2xl opacity-20" style={{ backgroundColor: color }}></div>
       )}
-      <div className={`absolute inset-0 rounded-[1.5rem] border transition-all duration-500 ${
-        active ? 'bg-white shadow-lg border-white' : 'bg-white/40 border-slate-100 group-hover:bg-white'
-      }`} style={{ borderColor: active ? color : '' }}></div>
-      <div className="relative w-8 h-8 md:w-10 md:h-10 z-10">
+      <div className={`absolute inset-0 rounded-[1.5rem] transition-all duration-500 ${
+        active ? 'bg-white shadow-xl shadow-black/5' : 'bg-white/40 group-hover:bg-white/80'
+      }`}></div>
+      <div className="relative w-7 h-7 md:w-9 md:h-9 z-10">
         <ShapeIcon type={shape} color={color} active={active} />
       </div>
     </div>
@@ -148,10 +206,20 @@ const App: React.FC = () => {
   const [userMood, setUserMood] = useState('');
   const [showDashboard, setShowDashboard] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
-  const [isAtmosphereActive, setIsAtmosphereActive] = useState(false);
+  const [aqiData, setAqiData] = useState<{ value: number; status: string; city: string }>({ value: 42, status: 'Good', city: 'Detecting...' });
+  const [weatherData, setWeatherData] = useState<{ temp: number; status: string }>({ temp: 24, status: 'Clear Sky' });
+  const [isAqiLoading, setIsAqiLoading] = useState(true);
   
-  const atmosphereRef = useRef<HTMLAudioElement | null>(null);
   const tapSoundRef = useRef<HTMLAudioElement | null>(null);
+
+  // Derived vibe class for the background
+  const weatherVibeClass = useMemo(() => {
+    const s = weatherData.status.toLowerCase();
+    if (s.includes('clear') || s.includes('sun')) return 'vibe-sunny';
+    if (s.includes('cloud')) return 'vibe-cloudy';
+    if (s.includes('rain')) return 'vibe-rainy';
+    return 'vibe-sunny';
+  }, [weatherData.status]);
 
   useEffect(() => {
     tapSoundRef.current = new Audio(TAP_SOUND_URL);
@@ -180,9 +248,36 @@ const App: React.FC = () => {
     fetchData();
     const storedUser = localStorage.getItem(USER_STORAGE_KEY);
     if (storedUser) setCurrentUser(JSON.parse(storedUser));
+
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        try {
+          const cityNames = ['Mumbai', 'Delhi', 'Bangalore', 'London', 'New York', 'Tokyo'];
+          const randomCity = cityNames[Math.floor(Math.random() * cityNames.length)];
+          
+          const mockAqi = Math.floor(Math.random() * 150) + 15;
+          const statusAqi = mockAqi <= 50 ? 'Good' : mockAqi <= 100 ? 'Moderate' : 'Poor';
+          setAqiData({ value: mockAqi, status: statusAqi, city: randomCity.toUpperCase() });
+
+          const weatherStatuses = ['Clear Sky', 'Partly Cloudy', 'Light Rain', 'Sunny'];
+          const mockTemp = Math.floor(Math.random() * 15) + 18;
+          const mockWeatherStatus = weatherStatuses[Math.floor(Math.random() * weatherStatuses.length)];
+          setWeatherData({ temp: mockTemp, status: mockWeatherStatus });
+
+        } catch (err) {
+          console.error("Environmental Sync Failed", err);
+        } finally {
+          setIsAqiLoading(false);
+        }
+      }, () => {
+        setAqiData(prev => ({ ...prev, city: 'GLOBAL' }));
+        setIsAqiLoading(false);
+      });
+    } else {
+      setIsAqiLoading(false);
+    }
   }, []);
 
-  // Ensure AI recommendations clear if category changes manually to avoid conflicting filters
   useEffect(() => {
     if (aiRec) setAiRec(null);
   }, [selectedCategory]);
@@ -192,7 +287,6 @@ const App: React.FC = () => {
     setIsAiLoading(true);
     setAiRec(null);
     try {
-      // Pass the current state of events to the recommendation API
       const rec = await api.getRecommendations(mood, events);
       setAiRec(rec);
       setTimeout(() => {
@@ -210,8 +304,6 @@ const App: React.FC = () => {
       const matchCat = selectedCategory === 'All' || e.category === selectedCategory;
       const matchSearch = e.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           e.description.toLowerCase().includes(searchQuery.toLowerCase());
-      
-      // If AI has suggestions, we prioritize those.
       const matchAi = aiRec && aiRec.suggestedEventIds.length > 0 
         ? aiRec.suggestedEventIds.includes(e.id) 
         : true;
@@ -220,24 +312,14 @@ const App: React.FC = () => {
     });
   }, [events, selectedCategory, searchQuery, aiRec]);
 
-  const toggleAtmosphere = (e: React.MouseEvent) => {
-    triggerRipple(e, '#F8446444');
-    if (atmosphereRef.current) {
-      if (atmosphereRef.current.paused) {
-        atmosphereRef.current.play().catch(() => {});
-        setIsAtmosphereActive(true);
-      } else {
-        atmosphereRef.current.pause();
-        setIsAtmosphereActive(false);
-      }
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-[#F8F9FA] selection:bg-brand-red selection:text-white pb-20">
-      <audio ref={atmosphereRef} src={ATMOSPHERE_URL} loop />
+    <div className={`min-h-screen bg-[#F8F9FA] selection:bg-brand-red selection:text-white pb-20 mesh-bg ${weatherVibeClass}`}>
+      {/* Environmental Overlays */}
+      <div className="rain-overlay"></div>
+      <div className="sun-shimmer"></div>
       
-      <div className="fixed inset-0 z-0 pointer-events-none opacity-50 mesh-bg animate-mesh-flow"></div>
+      {/* Animated Flow Layer */}
+      <div className="fixed inset-0 z-0 pointer-events-none opacity-40 animate-mesh-flow"></div>
 
       <nav className="fixed top-0 left-0 right-0 z-[100] h-16 glass-card border-b border-white/20">
         <div className="max-w-6xl mx-auto px-6 h-full flex items-center justify-between">
@@ -247,20 +329,32 @@ const App: React.FC = () => {
           >
             <ConnectionLogo />
             <span className="text-xl font-black italic tracking-tighter text-slate-900 group-hover:text-brand-red transition-all">
-              MakeMyDays.
+              MakeMyDays
             </span>
           </div>
 
           <div className="flex items-center gap-4">
-            <button 
-              onClick={toggleAtmosphere}
-              className={`flex items-center gap-2 px-4 py-1.5 rounded-full transition-all border ${
-                isAtmosphereActive ? 'bg-brand-red text-white border-brand-red' : 'bg-white border-slate-100 text-slate-400'
-              }`}
-            >
-              <ZenIcon active={isAtmosphereActive} />
-              <span className="text-[9px] font-black uppercase tracking-widest hidden sm:inline">Zen</span>
-            </button>
+            <div className="hidden sm:flex items-center gap-2">
+                <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-white border border-slate-100 shadow-sm transition-all hover:border-slate-200 group">
+                    <div className="flex items-center gap-2 pr-3 border-r border-slate-100">
+                        <WeatherIcon status={weatherData.status} />
+                        <span className="text-xs font-black italic text-slate-900">{weatherData.temp}°C</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">AQI</span>
+                        <SensorIcon active={!isAqiLoading} aqi={aqiData.value} />
+                    </div>
+                </div>
+                <div className="flex flex-col text-right">
+                  <span className="text-[7px] font-black uppercase tracking-[0.2em] text-slate-400 leading-none">{aqiData.city}</span>
+                  <span className="text-[6px] font-bold text-slate-300 uppercase tracking-widest mt-0.5">{weatherData.status}</span>
+                </div>
+            </div>
+
+            <div className="sm:hidden flex items-center gap-2 px-3 py-1 bg-white border border-slate-100 rounded-full">
+               <WeatherIcon status={weatherData.status} />
+               <span className="text-[10px] font-black">{weatherData.temp}°</span>
+            </div>
             
             {currentUser ? (
               <button 
@@ -375,6 +469,7 @@ const App: React.FC = () => {
             <div className="flex gap-4 overflow-x-auto scrollbar-hide snap-x px-1">
               <CategoryItem label="All" shape="all" color="#64748b" active={selectedCategory === 'All'} onClick={() => setSelectedCategory('All')} />
               <CategoryItem label="Adventure" shape="adventure" color="#3B82F6" active={selectedCategory === 'Adventure'} onClick={() => setSelectedCategory('Adventure')} />
+              <CategoryItem label="Sports" shape="sports" color="#6366F1" active={selectedCategory === 'Sports'} onClick={() => setSelectedCategory('Sports')} />
               <CategoryItem label="Activity" shape="activity" color="#F59E0B" active={selectedCategory === 'Activity'} onClick={() => setSelectedCategory('Activity')} />
               <CategoryItem label="Wellness" shape="wellness" color="#10B981" active={selectedCategory === 'Wellness'} onClick={() => setSelectedCategory('Wellness')} />
               <CategoryItem label="Mindfulness" shape="mindfulness" color="#8B5CF6" active={selectedCategory === 'Mindfulness'} onClick={() => setSelectedCategory('Mindfulness')} />

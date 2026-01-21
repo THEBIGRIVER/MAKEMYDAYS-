@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Event, Booking, Category } from '../types';
 import { api } from '../services/api';
@@ -8,6 +9,16 @@ interface AdminPanelProps {
   onClose: () => void;
   onRefresh: () => void;
 }
+
+const CATEGORY_DEFAULT_IMAGES: Record<string, string> = {
+  'Adventure': 'https://images.unsplash.com/photo-1533240332313-0db36245e4a2?auto=format&fit=crop&w=800',
+  'Activity': 'https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=800',
+  'Wellness': 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=800',
+  'Mindfulness': 'https://images.unsplash.com/photo-1508672019048-805c876b67e2?auto=format&fit=crop&w=800',
+  'Creative Arts': 'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?auto=format&fit=crop&w=800',
+  'Team Building': 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800',
+  'Sports': 'https://images.unsplash.com/photo-1504450758481-7338eba7524a?auto=format&fit=crop&w=800'
+};
 
 const AdminPanel: React.FC<AdminPanelProps> = ({ events, bookings, onClose, onRefresh }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'events' | 'bookings'>('overview');
@@ -32,18 +43,21 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, bookings, onClose, onRe
     e.preventDefault();
     setError('');
 
-    // Verification check as requested by user
     if (adminPasskey !== '2576') {
       setError('Invalid owner passkey. Save denied.');
       return;
     }
 
     if (editingEvent && editingEvent.title && editingEvent.category) {
+      // Auto-populate image if blank
+      const finalImage = editingEvent.image || CATEGORY_DEFAULT_IMAGES[editingEvent.category as string] || CATEGORY_DEFAULT_IMAGES['Activity'];
+
       const eventToSave = {
         ...editingEvent,
         id: editingEvent.id || Math.random().toString(36).substr(2, 9),
         slots: editingEvent.slots || [{ time: '10:00 AM', availableSeats: 10 }],
-        price: Number(editingEvent.price) || 0
+        price: Number(editingEvent.price) || 0,
+        image: finalImage
       } as Event;
       
       await api.saveEvent(eventToSave);
@@ -151,7 +165,11 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, bookings, onClose, onRe
                   <div key={event.id} className="bg-slate-900 border border-slate-800 p-6 rounded-3xl flex items-center justify-between group hover:border-emerald-500/50 transition-all">
                     <div className="flex items-center gap-6">
                       <div className="w-20 h-20 rounded-2xl overflow-hidden bg-slate-800">
-                        <img src={event.image} className="w-full h-full object-cover" onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/150')} />
+                        <img 
+                          src={event.image} 
+                          className="w-full h-full object-cover" 
+                          onError={(e) => (e.currentTarget.src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=60&w=200')} 
+                        />
                       </div>
                       <div>
                         <span className="text-emerald-500 text-[9px] font-black uppercase tracking-widest">{event.category}</span>
@@ -240,6 +258,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, bookings, onClose, onRe
                     <option value="Mindfulness">Mindfulness</option>
                     <option value="Creative Arts">Creative Arts</option>
                     <option value="Team Building">Team Building</option>
+                    <option value="Sports">Sports</option>
                   </select>
                 </div>
                 <div className="space-y-2">
@@ -248,8 +267,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, bookings, onClose, onRe
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Image URL</label>
-                <input type="text" value={editingEvent.image || ''} onChange={(e) => setEditingEvent({...editingEvent, image: e.target.value})} className="w-full bg-slate-800 border-none rounded-2xl px-5 py-4 text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500" />
+                <label className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Image URL (Optional - Defaulted by Category)</label>
+                <input type="text" value={editingEvent.image || ''} placeholder="Leave blank for high-quality suggestion" onChange={(e) => setEditingEvent({...editingEvent, image: e.target.value})} className="w-full bg-slate-800 border-none rounded-2xl px-5 py-4 text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500" />
               </div>
               <div className="space-y-2">
                 <label className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Description</label>

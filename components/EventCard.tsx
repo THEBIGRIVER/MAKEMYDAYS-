@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { Event } from '../types.ts';
 
 interface EventCardProps {
@@ -7,6 +8,7 @@ interface EventCardProps {
 }
 
 const TAP_SOUND_URL = "https://static.whatsapp.net/rsrc.php/yv/r/ze2kHBOq8T0.mp3";
+const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=60&w=800"; // Beautiful abstract gradient
 
 const triggerRipple = (e: React.MouseEvent) => {
   const container = e.currentTarget;
@@ -31,6 +33,16 @@ const triggerRipple = (e: React.MouseEvent) => {
 };
 
 const EventCard: React.FC<EventCardProps> = ({ event, onClick }) => {
+  const [imgSrc, setImgSrc] = useState(event.image);
+  const [hasError, setHasError] = useState(false);
+
+  const handleError = () => {
+    if (!hasError) {
+      setImgSrc(FALLBACK_IMAGE);
+      setHasError(true);
+    }
+  };
+
   return (
     <div 
       onClick={(e) => {
@@ -39,8 +51,13 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick }) => {
       }}
       className="group cursor-pointer flex flex-col gap-2 animate-in fade-in duration-700 ripple-container rounded-3xl"
     >
-      <div className="relative aspect-[4/5] rounded-[1.5rem] md:rounded-[2rem] overflow-hidden shadow-sm transition-all duration-500 hover:shadow-xl active:scale-95">
-        <img src={event.image} alt={event.title} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
+      <div className="relative aspect-[4/5] rounded-[1.5rem] md:rounded-[2rem] overflow-hidden shadow-sm transition-all duration-500 hover:shadow-xl active:scale-95 bg-slate-100">
+        <img 
+          src={imgSrc} 
+          alt={event.title} 
+          onError={handleError}
+          className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
+        />
         
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent"></div>
         
