@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -29,7 +28,8 @@
                 bg: '#F5F5F5',
                 accent: '#00F5FF',
                 lime: '#DFFF00',
-                purple: '#8B5CF6'
+                purple: '#8B5CF6',
+                earth: '#B45309'
               }
             },
             animation: {
@@ -43,6 +43,10 @@
               'rain-pulse': 'rain-pulse 1.5s infinite ease-in-out',
               'weather-drift': 'weather-drift 30s infinite linear',
               'rain-fall': 'rain-fall 1s infinite linear',
+              'mist-drift': 'mist-drift 8s infinite ease-in-out',
+              'lightning-flash': 'lightning-flash 5s infinite ease-in-out',
+              'rhythm-bounce': 'rhythm-bounce 0.8s infinite cubic-bezier(0.4, 0, 0.6, 1)',
+              'tabla-pulse': 'tabla-pulse 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
             },
             keyframes: {
               'subtle-pulse': {
@@ -87,6 +91,23 @@
               'rain-fall': {
                 '0%': { transform: 'translateY(-100%)' },
                 '100%': { transform: 'translateY(100%)' }
+              },
+              'mist-drift': {
+                '0%, 100%': { transform: 'translateX(-10%) translateY(0)', opacity: 0.3 },
+                '50%': { transform: 'translateX(10%) translateY(5px)', opacity: 0.6 },
+              },
+              'lightning-flash': {
+                '0%, 94%, 96%, 98%, 100%': { opacity: '0' },
+                '95%, 97%': { opacity: '0.2', backgroundColor: '#fff' },
+              },
+              'rhythm-bounce': {
+                '0%, 100%': { transform: 'scale(1)' },
+                '50%': { transform: 'scale(1.15)' },
+              },
+              'tabla-pulse': {
+                '0%': { transform: 'scale(1)', opacity: '0.4' },
+                '50%': { transform: 'scale(1.02)', opacity: '0.6' },
+                '100%': { transform: 'scale(1)', opacity: '0.4' }
               }
             }
           }
@@ -133,12 +154,29 @@
                     radial-gradient(at 0% 100%, rgba(248, 250, 252, 0.3) 0px, transparent 50%);
       }
 
-      /* Rainy Vibe */
-      .vibe-rainy {
-        background: radial-gradient(at 0% 0%, rgba(0, 245, 255, 0.2) 0px, transparent 50%),
-                    radial-gradient(at 100% 0%, rgba(30, 64, 175, 0.15) 0px, transparent 50%),
-                    radial-gradient(at 100% 100%, rgba(15, 23, 42, 0.2) 0px, transparent 50%),
-                    radial-gradient(at 0% 100%, rgba(14, 165, 233, 0.1) 0px, transparent 50%);
+      /* Sea Vibe */
+      .vibe-sea {
+        background: radial-gradient(at 0% 0%, rgba(45, 212, 191, 0.2) 0px, transparent 50%),
+                    radial-gradient(at 100% 0%, rgba(14, 165, 233, 0.15) 0px, transparent 50%),
+                    radial-gradient(at 100% 100%, rgba(20, 184, 166, 0.2) 0px, transparent 50%),
+                    radial-gradient(at 0% 100%, rgba(255, 255, 255, 0.3) 0px, transparent 50%);
+      }
+
+      /* Storm Vibe */
+      .vibe-storm {
+        background: radial-gradient(at 0% 0%, rgba(31, 41, 55, 0.4) 0px, transparent 50%),
+                    radial-gradient(at 100% 0%, rgba(17, 24, 39, 0.3) 0px, transparent 50%),
+                    radial-gradient(at 100% 100%, rgba(55, 65, 81, 0.25) 0px, transparent 50%),
+                    radial-gradient(at 0% 100%, rgba(10, 10, 10, 0.4) 0px, transparent 50%);
+      }
+
+      /* Tabla Vibe (Earthy/Cultural) */
+      .vibe-tabla {
+        background: radial-gradient(at 0% 0%, rgba(180, 83, 9, 0.3) 0px, transparent 50%),
+                    radial-gradient(at 100% 0%, rgba(146, 64, 14, 0.25) 0px, transparent 50%),
+                    radial-gradient(at 100% 100%, rgba(120, 53, 15, 0.2) 0px, transparent 50%),
+                    radial-gradient(at 0% 100%, rgba(251, 191, 36, 0.15) 0px, transparent 50%);
+        animation: tabla-pulse 0.8s infinite cubic-bezier(0.4, 0, 0.2, 1);
       }
 
       /* Rain Overlay Effect */
@@ -152,9 +190,36 @@
         opacity: 0;
         transition: opacity 2s ease;
       }
-      .vibe-rainy .rain-overlay {
+      .vibe-storm .rain-overlay {
         opacity: 1;
         animation: rain-fall 1s infinite linear;
+      }
+
+      /* Lightning Overlay */
+      .lightning-overlay {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 2;
+        opacity: 0;
+      }
+      .vibe-storm .lightning-overlay {
+        animation: lightning-flash 8s infinite;
+      }
+
+      /* Sea Mist Effect */
+      .sea-mist {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background: radial-gradient(ellipse at bottom, rgba(255, 255, 255, 0.3), transparent 70%);
+        z-index: 1;
+        opacity: 0;
+        transition: opacity 2s ease;
+      }
+      .vibe-sea .sea-mist {
+        opacity: 1;
+        animation: mist-drift 8s infinite ease-in-out;
       }
 
       /* Sun Shimmer Effect */
@@ -181,6 +246,12 @@
         background: rgba(10, 12, 16, 0.8);
         backdrop-filter: blur(20px);
         border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .clear-glass-card {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.25);
       }
 
       .scrollbar-hide::-webkit-scrollbar { display: none; }

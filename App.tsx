@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Event, Category, Booking, Slot, AIRecommendation, User } from './types.ts';
 import EventCard from './components/EventCard.tsx';
@@ -8,8 +7,15 @@ import AdminPanel from './components/AdminPanel.tsx';
 import ChatBot from './components/ChatBot.tsx';
 import { api } from './services/api.ts';
 
-// Sound Assets
-const TAP_SOUND_URL = "https://static.whatsapp.net/rsrc.php/yv/r/ze2kHBOq8T0.mp3";
+// Atmospheric Sound Assets
+// Using high-quality Tabla samples for BOLs
+const TABLA_DHA = "https://cdn.freesound.org/previews/178/178657_2515431-lq.mp3"; // Deep bass
+const TABLA_NA = "https://cdn.freesound.org/previews/178/178660_2515431-lq.mp3"; // Sharp rim
+const TABLA_TI = "https://cdn.freesound.org/previews/178/178661_2515431-lq.mp3"; // Light middle tap
+
+const AMBIENT_STORM_URL = "https://assets.mixkit.co/sfx/preview/mixkit-thunder-and-rain-loop-2410.mp3";
+const AMBIENT_SEA_URL = "https://assets.mixkit.co/sfx/preview/mixkit-sea-waves-loop-1196.mp3";
+const AMBIENT_TABLA_URL = "https://cdn.pixabay.com/download/audio/2022/03/10/audio_f5f6479632.mp3";
 
 const USER_STORAGE_KEY = 'makemydays_user_v1';
 
@@ -21,6 +27,8 @@ const PRESET_MOODS = [
   { label: 'Hyper', icon: '⚡', color: '#DFFF00' },
   { label: 'Escape', icon: '🏙️', color: '#3B82F6' }
 ];
+
+const AURA_STATES = ["TRUE", "SYNCED", "ZEN", "OPTIMAL", "PURE", "RESONATING", "FLUID", "DEEP"];
 
 const triggerRipple = (e: React.MouseEvent | React.TouchEvent, color?: string) => {
   const container = e.currentTarget;
@@ -48,13 +56,68 @@ const triggerRipple = (e: React.MouseEvent | React.TouchEvent, color?: string) =
   setTimeout(() => ripple.remove(), 600);
 };
 
-const ConnectionLogo = () => (
-  <svg viewBox="0 0 100 100" className="w-8 h-8 fill-current text-brand-red">
+// Global sound helper to trigger Tabla Bols
+const playTablaBol = (bol: 'dha' | 'na' | 'ti') => {
+  const urls = { dha: TABLA_DHA, na: TABLA_NA, ti: TABLA_TI };
+  const audio = new Audio(urls[bol]);
+  audio.volume = bol === 'dha' ? 0.5 : 0.3;
+  audio.play().catch(() => {});
+};
+
+const ConnectionLogo = ({ className = "w-8 h-8" }: { className?: string }) => (
+  <svg 
+    viewBox="0 0 100 100" 
+    className={`${className} fill-current text-brand-red cursor-pointer active:scale-95 transition-transform`}
+    onClick={() => playTablaBol('dha')}
+  >
     <circle cx="30" cy="50" r="10" />
     <circle cx="70" cy="50" r="10" />
     <circle cx="50" cy="30" r="10" />
     <path d="M30 50 L50 30 L70 50" fill="none" stroke="currentColor" strokeWidth="8" strokeLinecap="round" />
   </svg>
+);
+
+const StormIcon = ({ active }: { active: boolean }) => (
+  <div className={`relative transition-all duration-500 ${active ? 'scale-110' : ''}`}>
+    {active && (
+      <div className="absolute inset-0 bg-slate-400/30 blur-lg animate-pulse rounded-full"></div>
+    )}
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-5 h-5 ${active ? 'text-slate-200' : 'text-slate-400'}`}>
+      <path d="M17.5 19c.703 0 1.352-.367 1.732-1a2 2 0 0 0 .268-1.5 2.5 2.5 0 1 0-4.5-1.5" />
+      <path d="M4.5 19c-.703 0-1.352-.367-1.732-1a2 2 0 0 1-.268-1.5 2.5 2.5 0 1 1 4.5-1.5" />
+      <path d="M12 19c-.703 0-1.352-.367-1.732-1a2 2 0 0 1-.268-1.5 2.5 2.5 0 1 1 4.5-1.5" />
+      <path d="M8 13V9a4 4 0 1 1 8 0v4" />
+      <path d="m13 15-3 5h4l-3 5" className={active ? 'animate-pulse' : ''} />
+    </svg>
+  </div>
+);
+
+const WaveIcon = ({ active }: { active: boolean }) => (
+  <div className={`relative transition-all duration-500 ${active ? 'scale-110' : ''}`}>
+    {active && (
+      <div className="absolute inset-0 bg-teal-400/40 blur-lg animate-pulse rounded-full"></div>
+    )}
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-5 h-5 transition-colors ${active ? 'text-teal-500' : 'text-slate-400'}`}>
+      <path className={active ? 'animate-[mist-drift_3s_infinite_linear]' : ''} d="M2 6c.6.5 1.2 1 2.5 1 1.3 0 2.5-1.5 4-1.5s2.7 1.5 4 1.5c1.3 0 2.5-1.5 4-1.5s2.7 1.5 4 1.5c1.3 0 2.5-1 3.1-1.5" />
+      <path className={active ? 'animate-[mist-drift_4s_infinite_linear]' : ''} d="M2 12c.6.5 1.2 1 2.5 1 1.3 0 2.5-1.5 4-1.5s2.7 1.5 4 1.5c1.3 0 2.5-1.5 4-1.5s2.7 1.5 4 1.5c1.3 0 2.5-1 3.1-1.5" />
+      <path className={active ? 'animate-[mist-drift_2s_infinite_linear]' : ''} d="M2 18c.6.5 1.2 1 2.5 1 1.3 0 2.5-1.5 4-1.5s2.7 1.5 4 1.5c1.3 0 2.5-1.5 4-1.5s2.7 1.5 4 1.5c1.3 0 2.5-1 3.1-1.5" />
+    </svg>
+  </div>
+);
+
+const TablaIcon = ({ active }: { active: boolean }) => (
+  <div className={`relative transition-all duration-500 ${active ? 'animate-rhythm-bounce' : ''}`}>
+    {active && (
+      <div className="absolute inset-0 bg-amber-600/30 blur-lg rounded-full"></div>
+    )}
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-5 h-5 ${active ? 'text-amber-600' : 'text-slate-400'}`}>
+      <path d="M12 2v20" />
+      <path d="M7 6c0-1.1.9-2 2-2h6a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V6z" />
+      <path d="M7 8h10" />
+      <path d="M7 16h10" />
+      <circle cx="12" cy="12" r="2" />
+    </svg>
+  </div>
 );
 
 const SensorIcon: React.FC<{ active: boolean; aqi: number }> = ({ active, aqi }) => {
@@ -73,7 +136,7 @@ const WeatherIcon: React.FC<{ status: string }> = ({ status }) => {
     return (
       <svg className="w-5 h-5 text-amber-400 animate-sun-spin" viewBox="0 0 24 24" fill="currentColor">
         <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zm1.06-12.37a.996.996 0 00-1.41 0l-1.06 1.06a.996.996 0 101.41 1.41l1.06-1.06a.996.996 0 000-1.41zM5.99 18.36l1.06-1.06a.996.996 0 10-1.41-1.41l-1.06 1.06a.996.996 0 000 1.41c.39.4 1.03.4 1.41 0z" />
-      </svg>
+    </svg>
     );
   }
   if (s.includes('cloud')) {
@@ -98,53 +161,56 @@ const ShapeIcon: React.FC<{ type: string; color: string; active: boolean }> = ({
   const icons: Record<string, React.ReactNode> = {
     all: (
       <g fill="currentColor">
-        <rect x="25" y="25" width="22" height="22" rx="4" />
-        <rect x="53" y="25" width="22" height="22" rx="4" opacity="0.6" />
-        <rect x="25" y="53" width="22" height="22" rx="4" opacity="0.6" />
-        <rect x="53" y="53" width="22" height="22" rx="4" />
+        <rect x="20" y="20" width="25" height="25" rx="6" />
+        <rect x="55" y="20" width="25" height="25" rx="6" opacity="0.4" />
+        <rect x="20" y="55" width="25" height="25" rx="6" opacity="0.4" />
+        <rect x="55" y="55" width="25" height="25" rx="6" />
       </g>
     ),
     adventure: (
       <g fill="currentColor">
-        <path d="M10 80 L40 20 L60 55 L85 20 L85 80 Z" />
-        <circle cx="85" cy="15" r="5" opacity="0.4" />
+        <path d="M10 85 L40 15 L60 55 L80 25 L90 85 Z" />
+        <circle cx="75" cy="15" r="8" fill="none" stroke="currentColor" strokeWidth="3" opacity="0.4" />
       </g>
     ),
     activity: (
       <g fill="currentColor">
-        <path d="M30 10 L65 10 L45 45 L75 45 L40 90 L50 45 L25 45 Z" />
+        <path d="M45 5 L85 45 L50 45 L65 95 L25 55 L55 55 Z" />
       </g>
     ),
     wellness: (
       <g fill="currentColor">
-        <path d="M50 90 C50 90 15 65 15 40 C15 22 30 10 50 10 C70 10 85 22 85 40 C85 65 50 90 50 90 Z" />
-        <path d="M50 20 L50 80" stroke="white" strokeWidth="4" strokeLinecap="round" opacity="0.2" />
+        <path d="M50 95 C20 75 10 50 10 30 C10 15 25 5 50 25 C75 5 90 15 90 30 C90 50 80 75 50 95 Z" />
+        <circle cx="50" cy="40" r="10" fill="white" opacity="0.3" />
       </g>
     ),
     mindfulness: (
       <g fill="currentColor">
-        <circle cx="50" cy="50" r="14" />
-        <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" strokeWidth="4" />
-        <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="4 8" opacity="0.5" />
+        <circle cx="50" cy="50" r="12" />
+        <circle cx="50" cy="50" r="28" fill="none" stroke="currentColor" strokeWidth="6" opacity="0.6" />
+        <circle cx="50" cy="50" r="44" fill="none" stroke="currentColor" strokeWidth="3" strokeDasharray="8 8" opacity="0.3" />
       </g>
     ),
     creativearts: (
       <g fill="currentColor">
         <path d="M50 5 L95 50 L50 95 L5 50 Z" />
-        <path d="M50 25 L75 50 L50 75 L25 50 Z" fill="white" opacity="0.2" />
+        <path d="M50 20 L80 50 L50 80 L20 50 Z" fill="white" opacity="0.3" />
+        <rect x="42" y="42" width="16" height="16" fill="white" opacity="0.4" />
       </g>
     ),
     teambuilding: (
       <g fill="currentColor">
-        <path d="M50 10 L85 30 V70 L50 90 L15 70 V30 Z" />
-        <circle cx="50" cy="50" r="12" fill="white" opacity="0.3" />
+        <path d="M50 10 L85 30 V70 L50 90 L15 70 V30 Z" stroke="currentColor" strokeWidth="4" fill="none" />
+        <circle cx="50" cy="50" r="12" />
+        <path d="M50 10 V30 M15 30 L35 40 M85 30 L65 40" stroke="currentColor" strokeWidth="4" />
       </g>
     ),
     sports: (
       <g fill="currentColor">
-        <circle cx="50" cy="50" r="45" />
-        <path d="M20 50 Q50 20 80 50" fill="none" stroke="white" strokeWidth="6" strokeLinecap="round" opacity="0.2" />
-        <path d="M20 50 Q50 80 80 50" fill="none" stroke="white" strokeWidth="6" strokeLinecap="round" opacity="0.2" />
+        <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="6" />
+        <path d="M20 50 Q50 10 80 50" fill="none" stroke="currentColor" strokeWidth="4" opacity="0.4" />
+        <path d="M20 50 Q50 90 80 50" fill="none" stroke="currentColor" strokeWidth="4" opacity="0.4" />
+        <circle cx="50" cy="50" r="10" />
       </g>
     )
   };
@@ -169,6 +235,7 @@ const CategoryItem: React.FC<{
   <button 
     onClick={(e) => {
       triggerRipple(e, `${color}44`);
+      playTablaBol('ti'); // Light tap for category selection
       onClick(e);
     }}
     className="flex flex-col items-center gap-2 group transition-all shrink-0 snap-center focus:outline-none ripple-container"
@@ -209,35 +276,121 @@ const App: React.FC = () => {
   const [aqiData, setAqiData] = useState<{ value: number; status: string; city: string }>({ value: 42, status: 'Good', city: 'Detecting...' });
   const [weatherData, setWeatherData] = useState<{ temp: number; status: string }>({ temp: 24, status: 'Clear Sky' });
   const [isAqiLoading, setIsAqiLoading] = useState(true);
+  const [auraIndex, setAuraIndex] = useState(0);
   
-  const tapSoundRef = useRef<HTMLAudioElement | null>(null);
+  const [isStormActive, setIsStormActive] = useState(false);
+  const [isSeaActive, setIsSeaActive] = useState(false);
+  const [isTablaActive, setIsTablaActive] = useState(false);
+  
+  const stormAmbientRef = useRef<HTMLAudioElement | null>(null);
+  const seaAmbientRef = useRef<HTMLAudioElement | null>(null);
+  const tablaAmbientRef = useRef<HTMLAudioElement | null>(null);
 
-  // Derived vibe class for the background
-  const weatherVibeClass = useMemo(() => {
+  // Cycle Aura State
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAuraIndex((prev) => (prev + 1) % AURA_STATES.length);
+    }, 4500);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Derived vibe class for the background - prioritized by atmospheric toggles
+  const vibeClass = useMemo(() => {
+    if (isTablaActive) return 'vibe-tabla';
+    if (isStormActive) return 'vibe-storm';
+    if (isSeaActive) return 'vibe-sea';
+    
     const s = weatherData.status.toLowerCase();
     if (s.includes('clear') || s.includes('sun')) return 'vibe-sunny';
     if (s.includes('cloud')) return 'vibe-cloudy';
-    if (s.includes('rain')) return 'vibe-rainy';
+    if (s.includes('rain')) return 'vibe-storm'; 
     return 'vibe-sunny';
-  }, [weatherData.status]);
+  }, [isStormActive, isSeaActive, isTablaActive, weatherData.status]);
 
   useEffect(() => {
-    tapSoundRef.current = new Audio(TAP_SOUND_URL);
-    tapSoundRef.current.load();
-    const handleGlobalTap = () => {
-      if (tapSoundRef.current) {
-        tapSoundRef.current.currentTime = 0;
-        tapSoundRef.current.volume = 0.2;
-        tapSoundRef.current.play().catch(() => {});
-      }
+    stormAmbientRef.current = new Audio(AMBIENT_STORM_URL);
+    stormAmbientRef.current.loop = true;
+    stormAmbientRef.current.volume = 0.5;
+    stormAmbientRef.current.load();
+
+    seaAmbientRef.current = new Audio(AMBIENT_SEA_URL);
+    seaAmbientRef.current.loop = true;
+    seaAmbientRef.current.volume = 0.7; 
+    seaAmbientRef.current.load();
+
+    tablaAmbientRef.current = new Audio(AMBIENT_TABLA_URL);
+    tablaAmbientRef.current.loop = true;
+    tablaAmbientRef.current.volume = 0.6;
+    tablaAmbientRef.current.load();
+
+    const handleGlobalTap = (e: MouseEvent | TouchEvent) => {
+      // Don't play default sound if clicking interactive elements (handled separately)
+      const target = e.target as HTMLElement;
+      if (target.closest('button, a, input, [role="button"]')) return;
+      
+      playTablaBol('na'); // Default light rhythmic bol for background taps
     };
+    
     window.addEventListener('mousedown', handleGlobalTap);
     window.addEventListener('touchstart', handleGlobalTap);
     return () => {
       window.removeEventListener('mousedown', handleGlobalTap);
       window.removeEventListener('touchstart', handleGlobalTap);
+      if (stormAmbientRef.current) stormAmbientRef.current.pause();
+      if (seaAmbientRef.current) seaAmbientRef.current.pause();
+      if (tablaAmbientRef.current) tablaAmbientRef.current.pause();
     };
   }, []);
+
+  // Audio Toggle Handlers
+  const toggleStorm = () => {
+    const audio = stormAmbientRef.current;
+    if (!audio) return;
+    if (audio.paused) {
+      audio.play().catch(e => console.error("Storm playback error:", e));
+      setIsStormActive(true);
+      playTablaBol('dha');
+    } else {
+      audio.pause();
+      setIsStormActive(false);
+    }
+  };
+
+  const toggleSea = () => {
+    const audio = seaAmbientRef.current;
+    if (!audio) return;
+    if (audio.paused) {
+      audio.play().then(() => {
+        setIsSeaActive(true);
+        playTablaBol('ti');
+      }).catch(e => {
+        console.error("Sea frequency sync error:", e);
+        audio.load();
+        audio.play().then(() => setIsSeaActive(true));
+      });
+    } else {
+      audio.pause();
+      setIsSeaActive(false);
+    }
+  };
+
+  const toggleTabla = () => {
+    const audio = tablaAmbientRef.current;
+    if (!audio) return;
+    if (audio.paused) {
+      audio.play().then(() => {
+        setIsTablaActive(true);
+        playTablaBol('dha');
+      }).catch(e => {
+        console.error("Tabla frequency sync error:", e);
+        audio.load();
+        audio.play().then(() => setIsTablaActive(true));
+      });
+    } else {
+      audio.pause();
+      setIsTablaActive(false);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -286,9 +439,11 @@ const App: React.FC = () => {
     if (!mood.trim()) return;
     setIsAiLoading(true);
     setAiRec(null);
+    playTablaBol('dha'); // Deep bass for AI calibration start
     try {
       const rec = await api.getRecommendations(mood, events);
       setAiRec(rec);
+      playTablaBol('na'); // Crisp hit for success
       setTimeout(() => {
         document.getElementById('ai-recommendation-target')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 300);
@@ -313,9 +468,11 @@ const App: React.FC = () => {
   }, [events, selectedCategory, searchQuery, aiRec]);
 
   return (
-    <div className={`min-h-screen bg-[#F8F9FA] selection:bg-brand-red selection:text-white pb-20 mesh-bg ${weatherVibeClass}`}>
+    <div className={`min-h-screen bg-[#F8F9FA] selection:bg-brand-red selection:text-white pb-10 mesh-bg ${vibeClass}`}>
       {/* Environmental Overlays */}
       <div className="rain-overlay"></div>
+      <div className="lightning-overlay"></div>
+      <div className="sea-mist"></div>
       <div className="sun-shimmer"></div>
       
       {/* Animated Flow Layer */}
@@ -325,7 +482,13 @@ const App: React.FC = () => {
         <div className="max-w-6xl mx-auto px-6 h-full flex items-center justify-between">
           <div 
             className="flex items-center gap-3 cursor-pointer group"
-            onClick={() => { setShowDashboard(false); setShowAdmin(false); setAiRec(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+            onClick={() => { 
+              playTablaBol('dha');
+              setShowDashboard(false); 
+              setShowAdmin(false); 
+              setAiRec(null); 
+              window.scrollTo({ top: 0, behavior: 'smooth' }); 
+            }}
           >
             <ConnectionLogo />
             <span className="text-xl font-black italic tracking-tighter text-slate-900 group-hover:text-brand-red transition-all">
@@ -345,32 +508,49 @@ const App: React.FC = () => {
                         <SensorIcon active={!isAqiLoading} aqi={aqiData.value} />
                     </div>
                 </div>
-                <div className="flex flex-col text-right">
-                  <span className="text-[7px] font-black uppercase tracking-[0.2em] text-slate-400 leading-none">{aqiData.city}</span>
-                  <span className="text-[6px] font-bold text-slate-300 uppercase tracking-widest mt-0.5">{weatherData.status}</span>
-                </div>
             </div>
 
-            <div className="sm:hidden flex items-center gap-2 px-3 py-1 bg-white border border-slate-100 rounded-full">
-               <WeatherIcon status={weatherData.status} />
-               <span className="text-[10px] font-black">{weatherData.temp}°</span>
+            <div className="flex items-center gap-1 sm:gap-2">
+              <div className="flex items-center bg-slate-900/5 p-1 rounded-2xl gap-1">
+                <button 
+                  onClick={toggleStorm}
+                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${isStormActive ? 'bg-white shadow-md' : 'hover:bg-white/50'}`}
+                  title="Storm Frequency"
+                >
+                  <StormIcon active={isStormActive} />
+                </button>
+                <button 
+                  onClick={toggleSea}
+                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${isSeaActive ? 'bg-white shadow-md' : 'hover:bg-white/50'}`}
+                  title="Sea Frequency"
+                >
+                  <WaveIcon active={isSeaActive} />
+                </button>
+                <button 
+                  onClick={toggleTabla}
+                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${isTablaActive ? 'bg-white shadow-md' : 'hover:bg-white/50'}`}
+                  title="Tabla Rhythm"
+                >
+                  <TablaIcon active={isTablaActive} />
+                </button>
+              </div>
+              
+              {currentUser ? (
+                <button 
+                  onClick={() => { playTablaBol('ti'); setShowDashboard(!showDashboard); }}
+                  className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black italic text-lg shadow-lg active:scale-90"
+                >
+                  {currentUser.name[0]}
+                </button>
+              ) : (
+                <button 
+                  onClick={() => { const name = prompt("Name?") || "User"; setCurrentUser({ name, phone: "000", bookings: [], role: 'user' }); }}
+                  className="px-6 py-2 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg hover:bg-brand-red transition-all"
+                >
+                  Join
+                </button>
+              )}
             </div>
-            
-            {currentUser ? (
-              <button 
-                onClick={() => setShowDashboard(!showDashboard)}
-                className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black italic text-lg shadow-lg active:scale-90"
-              >
-                {currentUser.name[0]}
-              </button>
-            ) : (
-              <button 
-                onClick={() => { const name = prompt("Name?") || "User"; setCurrentUser({ name, phone: "000", bookings: [], role: 'user' }); }}
-                className="px-6 py-2 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg hover:bg-brand-red transition-all"
-              >
-                Join
-              </button>
-            )}
           </div>
         </div>
       </nav>
@@ -382,21 +562,21 @@ const App: React.FC = () => {
           <Dashboard user={currentUser} onLogout={() => { setCurrentUser(null); localStorage.removeItem(USER_STORAGE_KEY); }} onOpenAdmin={() => setShowAdmin(true)} />
         </div>
       ) : (
-        <main className="relative z-10 pt-24 px-6 max-w-6xl mx-auto">
+        <main className="relative z-10 pt-24 px-6 max-w-6xl mx-auto min-h-[calc(100vh-16rem)]">
           
           <section className="mb-12 relative">
              <div className="flex flex-col items-center text-center space-y-6">
                 <div className="relative inline-block animate-float">
                   <div className="absolute inset-0 bg-brand-lime/20 blur-xl"></div>
                   <div className="relative glass-card px-4 py-1 rounded-full border border-brand-lime/20">
-                    <span className="text-slate-900 text-[9px] font-black uppercase tracking-[0.3em] italic">AI Calibrated: TRUE</span>
+                    <span className="text-slate-900 text-[9px] font-black uppercase tracking-[0.3em] italic transition-all duration-1000">Aura: {AURA_STATES[auraIndex]}</span>
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <h1 className="text-4xl md:text-7xl font-display font-black italic tracking-tighter leading-none text-slate-900 uppercase">
                     Mood-Based <br/>
-                    <span className="text-brand-red">Reality.</span>
+                    <span className="text-brand-red">Experience</span>
                   </h1>
                 </div>
 
@@ -405,7 +585,12 @@ const App: React.FC = () => {
                      {PRESET_MOODS.map((m) => (
                        <button
                          key={m.label}
-                         onClick={(e) => { triggerRipple(e, m.color + '44'); setUserMood(m.label); handleMoodSearch(m.label); }}
+                         onClick={(e) => { 
+                           triggerRipple(e, m.color + '44'); 
+                           playTablaBol('ti');
+                           setUserMood(m.label); 
+                           handleMoodSearch(m.label); 
+                         }}
                          className={`mood-chip flex items-center gap-2 px-4 py-2 rounded-full border font-black uppercase text-[8px] tracking-widest transition-all ${
                            userMood === m.label 
                             ? 'bg-slate-900 border-slate-900 text-white shadow-xl -translate-y-0.5' 
@@ -494,8 +679,35 @@ const App: React.FC = () => {
         </main>
       )}
 
+      {/* Minimalist Dock Footer */}
+      <footer className="mt-20 h-10 glass-card border-t border-white/20">
+        <div className="max-w-6xl mx-auto px-6 h-full flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ConnectionLogo className="w-4 h-4" />
+            <span className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-900 italic">MakeMyDays</span>
+          </div>
+          
+          <div className="flex flex-col items-center text-center">
+            <p className="text-slate-500 text-[7px] font-black uppercase tracking-[0.2em] flex items-center gap-1">
+              Created by <span className="text-slate-900 border-b border-slate-900/10">Beneme</span> 
+              <span className="text-brand-red animate-pulse inline-block">❤️</span> 
+            </p>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:flex items-center gap-1.5 border-r border-slate-200 pr-4">
+              <div className="w-1 h-1 rounded-full bg-emerald-500"></div>
+              <span className="text-[7px] font-black uppercase tracking-widest text-slate-400">AURA</span>
+            </div>
+            <p className="text-slate-400 text-[7px] font-black uppercase tracking-widest">
+              &copy; 2026
+            </p>
+          </div>
+        </div>
+      </footer>
+
       {selectedEvent && (
-        <BookingModal event={selectedEvent} onClose={() => setSelectedEvent(null)} onConfirm={async (slot) => {
+        <BookingModal event={selectedEvent} onClose={() => setSelectedEvent(null)} onConfirm={async (slot, date) => {
           if (!selectedEvent) return;
           let user = currentUser;
           if (!user) {
@@ -510,6 +722,7 @@ const App: React.FC = () => {
             eventTitle: selectedEvent.title,
             category: selectedEvent.category,
             time: slot.time,
+            eventDate: date,
             price: selectedEvent.price,
             bookedAt: new Date().toISOString(),
             userName: user.name,
