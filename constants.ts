@@ -3,6 +3,20 @@ import { Event } from './types.ts';
 
 export const INITIAL_EVENTS: Event[] = [
   {
+    id: 'shot-1',
+    title: 'Pulse: 1-Rupee Energy Shot',
+    category: 'Activity',
+    image: 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&q=80&w=1200',
+    description: 'A rapid 5-minute high-intensity metabolic burst to reset your nervous system. Limited time offer for new explorers to test their frequency.',
+    price: 1,
+    slots: [
+      { time: '10:00 AM', availableSeats: 100 },
+      { time: '12:00 PM', availableSeats: 100 },
+      { time: '02:00 PM', availableSeats: 100 },
+      { time: '04:00 PM', availableSeats: 100 }
+    ]
+  },
+  {
     id: 'm1',
     title: 'Interstellar: 10th Anniversary Screening',
     category: 'Movie',
