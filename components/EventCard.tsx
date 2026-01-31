@@ -1,9 +1,11 @@
+
 import React, { useState } from 'react';
 import { Event } from '../types.ts';
 
 interface EventCardProps {
   event: Event;
   onClick: (event: Event) => void;
+  id?: string;
 }
 
 const TABLA_NA = "https://cdn.freesound.org/previews/178/178660_2515431-lq.mp3";
@@ -32,7 +34,7 @@ const triggerRipple = (e: React.MouseEvent) => {
   sound.play().catch(() => {});
 };
 
-const EventCard: React.FC<EventCardProps> = ({ event, onClick }) => {
+const EventCard: React.FC<EventCardProps> = ({ event, onClick, id }) => {
   const [imgSrc, setImgSrc] = useState(event.image);
   const [hasError, setHasError] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
@@ -51,6 +53,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick }) => {
 
   return (
     <div 
+      id={id}
       onClick={(e) => {
         triggerRipple(e);
         onClick(event);

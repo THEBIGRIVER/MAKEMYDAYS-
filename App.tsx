@@ -7,6 +7,7 @@ import Dashboard from './components/Dashboard.tsx';
 import AdminPanel from './components/AdminPanel.tsx';
 import ChatBot from './components/ChatBot.tsx';
 import LegalModal, { PolicyType } from './components/LegalModal.tsx';
+import OnboardingTour from './components/OnboardingTour.tsx';
 import { api } from './services/api.ts';
 
 // Interaction Sound Assets
@@ -15,43 +16,9 @@ const TABLA_NA = "https://cdn.freesound.org/previews/178/178660_2515431-lq.mp3";
 const TABLA_TI = "https://cdn.freesound.org/previews/178/178661_2515431-lq.mp3"; // Light middle tap
 
 const USER_STORAGE_KEY = 'makemydays_user_v1';
-
-const PRESET_MOODS = [
-  { label: 'Burnout', icon: '🕯️', color: '#8B5CF6' },
-  { label: 'Nature', icon: '🌲', color: '#10B981' },
-  { label: 'Adrenaline', icon: '🔥', color: '#F84464' },
-  { label: 'Creative', icon: '🎨', color: '#EC4899' },
-  { label: 'Hyper', icon: '⚡', color: '#DFFF00' },
-  { label: 'Escape', icon: '🏙️', color: '#3B82F6' }
-];
+const ONBOARDING_KEY = 'mmd_onboarding_v1';
 
 const AURA_STATES = ["TRUE", "SYNCED", "ZEN", "OPTIMAL", "PURE", "RESONATING", "FLUID", "DEEP"];
-
-const triggerRipple = (e: React.MouseEvent | React.TouchEvent, color?: string) => {
-  const container = e.currentTarget;
-  const rect = container.getBoundingClientRect();
-  
-  let x, y;
-  if ('touches' in e) {
-    x = (e as React.TouchEvent).touches[0].clientX - rect.left;
-    y = (e as React.TouchEvent).touches[0].clientY - rect.top;
-  } else {
-    x = (e as React.MouseEvent).clientX - rect.left;
-    y = (e as React.MouseEvent).clientY - rect.top;
-  }
-
-  const ripple = document.createElement('span');
-  ripple.className = 'ripple-wave';
-  if (color) ripple.style.background = color;
-  
-  const size = Math.max(rect.width, rect.height);
-  ripple.style.width = ripple.style.height = `${size}px`;
-  ripple.style.left = `${x - size / 2}px`;
-  ripple.style.top = `${y - size / 2}px`;
-
-  container.appendChild(ripple);
-  setTimeout(() => ripple.remove(), 600);
-};
 
 const playTablaBol = (bol: 'dha' | 'na' | 'ti') => {
   const urls = { dha: TABLA_DHA, na: TABLA_NA, ti: TABLA_TI };
@@ -73,28 +40,6 @@ const ConnectionLogo = ({ className = "w-8 h-8" }: { className?: string }) => (
   </svg>
 );
 
-const SensorIcon: React.FC<{ active: boolean; aqi: number }> = ({ active, aqi }) => {
-  const colorClass = aqi <= 50 ? 'text-emerald-500' : aqi <= 100 ? 'text-brand-lime' : 'text-brand-red';
-  return (
-    <div className={`flex items-center gap-1 h-4 ${colorClass}`}>
-      <div className={`w-2 h-2 rounded-full bg-current ${active ? 'animate-pulse' : ''}`} />
-      <span className="text-[10px] font-black">{aqi}</span>
-    </div>
-  );
-};
-
-const WeatherIcon: React.FC<{ status: string }> = ({ status }) => {
-  const s = status.toLowerCase();
-  if (s.includes('clear') || s.includes('sun')) {
-    return (
-      <svg className="w-5 h-5 text-amber-400 animate-sun-spin" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37a.996.996 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zm1.06-12.37a.996.996 0 00-1.41 0l-1.06 1.06a.996.996 0 101.41 1.41l1.06-1.06a.996.996 0 000-1.41zM5.99 18.36l1.06-1.06a.996.996 0 10-1.41-1.41l-1.06 1.06a.996.996 0 000 1.41c.39.4 1.03.4 1.41 0z" />
-    </svg>
-    );
-  }
-  return <span className="text-xl">🌡️</span>;
-};
-
 const App: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [globalBookings, setGlobalBookings] = useState<Booking[]>([]);
@@ -107,11 +52,10 @@ const App: React.FC = () => {
   const [userMood, setUserMood] = useState('');
   const [showDashboard, setShowDashboard] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
-  const [aqiData, setAqiData] = useState<{ value: number; status: string; city: string }>({ value: 42, status: 'Good', city: 'Detecting...' });
   const [weatherData, setWeatherData] = useState<{ temp: number; status: string }>({ temp: 24, status: 'Clear Sky' });
-  const [isAqiLoading, setIsAqiLoading] = useState(true);
   const [auraIndex, setAuraIndex] = useState(0);
   const [activePolicy, setActivePolicy] = useState<PolicyType | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -137,6 +81,11 @@ const App: React.FC = () => {
     fetchData();
     const storedUser = localStorage.getItem(USER_STORAGE_KEY);
     if (storedUser) setCurrentUser(JSON.parse(storedUser));
+
+    const onboardingDone = localStorage.getItem(ONBOARDING_KEY);
+    if (!onboardingDone) {
+      setTimeout(() => setShowOnboarding(true), 2000);
+    }
   }, []);
 
   const handleMoodSearch = async (mood: string) => {
@@ -171,6 +120,12 @@ const App: React.FC = () => {
     });
   }, [events, selectedCategory, searchQuery, aiRec]);
 
+  const completeOnboarding = () => {
+    localStorage.setItem(ONBOARDING_KEY, 'true');
+    setShowOnboarding(false);
+    playTablaBol('ti');
+  };
+
   return (
     <div className={`flex flex-col min-h-screen bg-[#F8F9FA] selection:bg-brand-red selection:text-white mesh-bg ${vibeClass}`}>
       <div className="rain-overlay"></div>
@@ -199,6 +154,7 @@ const App: React.FC = () => {
           <div className="flex items-center gap-4">
             {currentUser ? (
               <button 
+                id="user-sanctuary-trigger"
                 onClick={() => { playTablaBol('ti'); setShowDashboard(!showDashboard); }}
                 className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black italic text-lg shadow-lg active:scale-90"
               >
@@ -206,6 +162,7 @@ const App: React.FC = () => {
               </button>
             ) : (
               <button 
+                id="user-sanctuary-trigger"
                 onClick={() => { const name = prompt("Name?") || "User"; setCurrentUser({ name, phone: "000", bookings: [], role: 'user' }); }}
                 className="px-6 py-2 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg hover:bg-brand-red transition-all"
               >
@@ -239,7 +196,7 @@ const App: React.FC = () => {
                 Mood-Based <br/>
                 <span className="text-brand-red">Experience</span>
               </h1>
-              <div className="w-full max-w-2xl mx-auto relative space-y-6">
+              <div id="mood-search-container" className="w-full max-w-2xl mx-auto relative space-y-6">
                  <div className="relative dark-glass-card rounded-[2rem] p-3 flex flex-col md:flex-row items-center gap-2 ai-glow overflow-hidden">
                     <div className="flex-1 w-full px-4 py-2 flex items-center gap-3 z-10">
                        <input 
@@ -273,29 +230,40 @@ const App: React.FC = () => {
               </div>
             </section>
             
-            <section className="grid grid-cols-2 gap-4 md:gap-8 pb-10">
-              {filteredEvents.map((event) => (
-                <EventCard key={event.id} event={event} onClick={(e) => setSelectedEvent(e)} />
+            <section id="event-grid-container" className="grid grid-cols-2 gap-4 md:gap-8 pb-10">
+              {filteredEvents.map((event, index) => (
+                <EventCard 
+                  key={event.id} 
+                  event={event} 
+                  onClick={(e) => setSelectedEvent(e)} 
+                  id={index === 0 ? "first-event-card" : undefined}
+                />
               ))}
             </section>
           </div>
         )}
       </main>
 
-      {/* ULTRA-MINIMALISTIC FOOTER */}
-      <footer className="relative z-[100] mt-10 py-10 w-full border-t border-slate-100 bg-white/50 backdrop-blur-sm">
-        <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-3">
-            <ConnectionLogo className="w-5 h-5" />
-            <span className="text-sm font-black italic tracking-tighter text-slate-900 uppercase">MAKEMYDAYS</span>
+      <footer className="relative z-[100] mt-20 py-8 w-full border-t border-slate-100/50">
+        <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5 opacity-30 hover:opacity-100 transition-opacity duration-500">
+            <ConnectionLogo className="w-4 h-4" />
+            <span className="text-[10px] font-black tracking-[0.3em] text-slate-900 uppercase italic">MAKEMYDAYS</span>
           </div>
           
-          <div className="flex items-center gap-6">
-            <p className="text-slate-400 text-[9px] font-black uppercase tracking-[0.2em]">
-              &copy; 2024 • Created by <span className="text-slate-900">Beneme</span>
-            </p>
-            <div className="h-3 w-px bg-slate-200"></div>
-            <span className="text-[9px] font-black uppercase tracking-[0.3em] text-brand-red animate-pulse">Frequency v2.5</span>
+          <div className="flex items-center gap-5 text-[8px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+            <span>&copy; 2025</span>
+            <div className="w-1 h-1 rounded-full bg-slate-200"></div>
+            <div className="flex items-center gap-1.5 group cursor-default">
+              <span>MADE WITH</span>
+              <svg 
+                className="w-3 h-3 text-brand-red fill-current transition-transform group-hover:scale-125 group-hover:animate-pulse" 
+                viewBox="0 0 24 24"
+              >
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+              </svg>
+              <span>BY BENEME</span>
+            </div>
           </div>
         </div>
       </footer>
@@ -333,6 +301,10 @@ const App: React.FC = () => {
           setGlobalBookings(prev => [booking, ...prev]);
           setSelectedEvent(null);
         }} />
+      )}
+
+      {showOnboarding && (
+        <OnboardingTour onComplete={completeOnboarding} />
       )}
 
       <ChatBot />
