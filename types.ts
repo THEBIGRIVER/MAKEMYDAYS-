@@ -1,5 +1,5 @@
 
-export type Category = "Team Building" | "Activity" | "Wellness" | "Mindfulness" | "Adventure" | "Creative Arts" | "Sports" | "Movie" | "Therapy";
+export type Category = "Movie" | "Activity" | "Therapy" | "Workshop" | "Wellness";
 
 export interface Slot {
   time: string;
@@ -15,7 +15,8 @@ export interface Event {
   price: number;
   originalPrice?: number;
   slots: Slot[];
-  date?: string; // Optional: if provided, event is restricted to this specific date
+  date?: string;
+  hostPhone: string; // The mobile number of the creator
 }
 
 export interface Booking {

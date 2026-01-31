@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { Event, Category, Booking, Slot, AIRecommendation, User } from './types.ts';
 import EventCard from './components/EventCard.tsx';
 import BookingModal from './components/BookingModal.tsx';
@@ -8,15 +8,25 @@ import AdminPanel from './components/AdminPanel.tsx';
 import ChatBot from './components/ChatBot.tsx';
 import LegalModal, { PolicyType } from './components/LegalModal.tsx';
 import OnboardingTour from './components/OnboardingTour.tsx';
+import AuthModal from './components/AuthModal.tsx'; 
 import { api } from './services/api.ts';
 
-// Interaction Sound Assets
-const TABLA_DHA = "https://cdn.freesound.org/previews/178/178657_2515431-lq.mp3"; // Deep bass
-const TABLA_NA = "https://cdn.freesound.org/previews/178/178660_2515431-lq.mp3"; // Sharp rim
-const TABLA_TI = "https://cdn.freesound.org/previews/178/178661_2515431-lq.mp3"; // Light middle tap
+const TABLA_DHA = "https://cdn.freesound.org/previews/178/178657_2515431-lq.mp3";
+const TABLA_NA = "https://cdn.freesound.org/previews/178/178660_2515431-lq.mp3";
+const TABLA_TI = "https://cdn.freesound.org/previews/178/178661_2515431-lq.mp3";
 
 const USER_STORAGE_KEY = 'makemydays_user_v1';
 const ONBOARDING_KEY = 'mmd_onboarding_v1';
+
+const MOODS = [
+  { label: "Chill", emoji: "🧘", color: "bg-blue-50 text-blue-600 border-blue-100" },
+  { label: "Energetic", emoji: "⚡", color: "bg-orange-50 text-orange-600 border-orange-100" },
+  { label: "Stressed", emoji: "🤯", color: "bg-red-50 text-red-600 border-red-100" },
+  { label: "Inspired", emoji: "✨", color: "bg-purple-50 text-purple-600 border-purple-100" },
+  { label: "Bored", emoji: "🙄", color: "bg-slate-50 text-slate-600 border-slate-100" }
+];
+
+const CATEGORIES: (Category | 'All')[] = ['All', 'Movie', 'Activity', 'Therapy', 'Workshop', 'Wellness'];
 
 const AURA_STATES = ["TRUE", "SYNCED", "ZEN", "OPTIMAL", "PURE", "RESONATING", "FLUID", "DEEP"];
 
@@ -52,6 +62,7 @@ const App: React.FC = () => {
   const [userMood, setUserMood] = useState('');
   const [showDashboard, setShowDashboard] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [weatherData, setWeatherData] = useState<{ temp: number; status: string }>({ temp: 24, status: 'Clear Sky' });
   const [auraIndex, setAuraIndex] = useState(0);
   const [activePolicy, setActivePolicy] = useState<PolicyType | null>(null);
@@ -72,12 +83,13 @@ const App: React.FC = () => {
     return 'vibe-sunny';
   }, [weatherData.status]);
 
+  const fetchData = useCallback(async () => {
+    const [evs, bks] = await Promise.all([api.getEvents(), api.getBookings()]);
+    setEvents(evs || []);
+    setGlobalBookings(bks || []);
+  }, []);
+
   useEffect(() => {
-    const fetchData = async () => {
-      const [evs, bks] = await Promise.all([api.getEvents(), api.getBookings()]);
-      setEvents(evs || []);
-      setGlobalBookings(bks || []);
-    };
     fetchData();
     const storedUser = localStorage.getItem(USER_STORAGE_KEY);
     if (storedUser) setCurrentUser(JSON.parse(storedUser));
@@ -86,7 +98,14 @@ const App: React.FC = () => {
     if (!onboardingDone) {
       setTimeout(() => setShowOnboarding(true), 2000);
     }
-  }, []);
+  }, [fetchData]);
+
+  const handleAuthSuccess = (user: User) => {
+    setCurrentUser(user);
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+    setShowAuthModal(false);
+    playTablaBol('ti');
+  };
 
   const handleMoodSearch = async (mood: string) => {
     if (!mood.trim()) return;
@@ -143,6 +162,7 @@ const App: React.FC = () => {
               setShowDashboard(false); 
               setShowAdmin(false); 
               setAiRec(null); 
+              setSelectedCategory('All');
               window.scrollTo({ top: 0, behavior: 'smooth' }); 
             }}
           >
@@ -163,10 +183,10 @@ const App: React.FC = () => {
             ) : (
               <button 
                 id="user-sanctuary-trigger"
-                onClick={() => { const name = prompt("Name?") || "User"; setCurrentUser({ name, phone: "000", bookings: [], role: 'user' }); }}
+                onClick={() => setShowAuthModal(true)}
                 className="px-6 py-2 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg hover:bg-brand-red transition-all"
               >
-                Join
+                Join with Mobile
               </button>
             )}
           </div>
@@ -175,13 +195,16 @@ const App: React.FC = () => {
 
       <main className="flex-1 relative z-10 pt-24 px-6 max-w-6xl mx-auto w-full">
         {showAdmin && currentUser?.role === 'admin' ? (
-          <AdminPanel events={events} bookings={globalBookings} onClose={() => setShowAdmin(false)} onRefresh={async () => setEvents(await api.getEvents())} />
+          <AdminPanel events={events} bookings={globalBookings} onClose={() => setShowAdmin(false)} onRefresh={fetchData} />
         ) : showDashboard && currentUser ? (
           <Dashboard 
             user={currentUser} 
+            events={events}
+            bookings={globalBookings}
             onLogout={() => { setCurrentUser(null); localStorage.removeItem(USER_STORAGE_KEY); }} 
             onOpenAdmin={() => setShowAdmin(true)} 
             onOpenPolicy={setActivePolicy}
+            onRefreshEvents={fetchData}
           />
         ) : (
           <div className="space-y-12">
@@ -193,10 +216,11 @@ const App: React.FC = () => {
                 </div>
               </div>
               <h1 className="text-4xl md:text-7xl font-display font-black italic tracking-tighter leading-none text-slate-900 uppercase">
-                Mood-Based <br/>
-                <span className="text-brand-red">Experience</span>
+                Find Your <br/>
+                <span className="text-brand-red">Frequency</span>
               </h1>
-              <div id="mood-search-container" className="w-full max-w-2xl mx-auto relative space-y-6">
+              
+              <div id="mood-search-container" className="w-full max-w-2xl mx-auto relative space-y-8">
                  <div className="relative dark-glass-card rounded-[2rem] p-3 flex flex-col md:flex-row items-center gap-2 ai-glow overflow-hidden">
                     <div className="flex-1 w-full px-4 py-2 flex items-center gap-3 z-10">
                        <input 
@@ -215,30 +239,96 @@ const App: React.FC = () => {
                       {isAiLoading ? 'Calibrating...' : 'Sync'}
                     </button>
                  </div>
+
+                 {/* Mood Chips */}
+                 <div className="flex flex-wrap justify-center gap-3">
+                    {MOODS.map(mood => (
+                      <button
+                        key={mood.label}
+                        onClick={() => {
+                          setUserMood(mood.label);
+                          handleMoodSearch(mood.label);
+                        }}
+                        className={`px-4 py-2.5 rounded-2xl border text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 flex items-center gap-2 ${mood.color}`}
+                      >
+                        <span>{mood.emoji}</span>
+                        {mood.label}
+                      </button>
+                    ))}
+                 </div>
+
                  {aiRec && (
-                   <div id="ai-recommendation-target" className="relative group animate-in slide-in-from-top-4 duration-500">
-                     <div className="relative bg-white rounded-3xl p-5 text-left border border-slate-100 shadow-xl flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center shrink-0">
-                           <span className="text-lg animate-bounce">✨</span>
+                   <div id="ai-recommendation-target" className="relative group animate-in slide-in-from-top-4 duration-500 pt-4">
+                     <div className="relative bg-white rounded-3xl p-6 text-left border border-slate-100 shadow-xl flex items-center gap-5">
+                        <div className="w-12 h-12 rounded-full bg-slate-900 flex items-center justify-center shrink-0 shadow-lg">
+                           <span className="text-xl animate-bounce">✨</span>
                         </div>
                         <div className="flex-1">
-                          <p className="text-xs font-bold italic text-slate-600">"{aiRec.reasoning}"</p>
+                          <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1 italic">AI Recommendation</p>
+                          <p className="text-sm font-bold italic text-slate-800 leading-relaxed">"{aiRec.reasoning}"</p>
                         </div>
+                        <button 
+                          onClick={() => setAiRec(null)}
+                          className="text-slate-300 hover:text-slate-600 transition-colors"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
                      </div>
                    </div>
                  )}
               </div>
             </section>
+
+            {/* Category Filter Bar */}
+            <section className="sticky top-20 z-[90] pb-2">
+              <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide py-2 px-1">
+                {CATEGORIES.map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => {
+                      setSelectedCategory(cat);
+                      playTablaBol('ti');
+                    }}
+                    className={`whitespace-nowrap px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border-2 ${
+                      selectedCategory === cat
+                        ? 'bg-slate-900 border-slate-900 text-white shadow-xl translate-y-[-2px]'
+                        : 'bg-white/50 border-white/20 text-slate-400 hover:border-slate-300'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            </section>
             
             <section id="event-grid-container" className="grid grid-cols-2 gap-4 md:gap-8 pb-10">
-              {filteredEvents.map((event, index) => (
-                <EventCard 
-                  key={event.id} 
-                  event={event} 
-                  onClick={(e) => setSelectedEvent(e)} 
-                  id={index === 0 ? "first-event-card" : undefined}
-                />
-              ))}
+              {filteredEvents.length > 0 ? (
+                filteredEvents.map((event, index) => (
+                  <EventCard 
+                    key={event.id} 
+                    event={event} 
+                    onClick={(e) => setSelectedEvent(e)} 
+                    id={index === 0 ? "first-event-card" : undefined}
+                  />
+                ))
+              ) : (
+                <div className="col-span-2 py-32 text-center space-y-6">
+                   <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto opacity-50">
+                      <svg className="w-10 h-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                   </div>
+                   <h3 className="text-xl font-black italic uppercase tracking-tighter text-slate-400">No Frequencies Found</h3>
+                   <button 
+                    onClick={() => { setSelectedCategory('All'); setAiRec(null); }}
+                    className="text-brand-red text-[10px] font-black uppercase tracking-widest underline"
+                   >
+                     Reset Discovery
+                   </button>
+                </div>
+              )}
             </section>
           </div>
         )}
@@ -275,12 +365,9 @@ const App: React.FC = () => {
       {selectedEvent && (
         <BookingModal event={selectedEvent} onClose={() => setSelectedEvent(null)} onConfirm={async (slot, date) => {
           if (!selectedEvent) return;
-          let user = currentUser;
-          if (!user) {
-            const name = prompt("Name?") || "Explorer";
-            user = { name, phone: "000", bookings: [], role: 'user' };
-            setCurrentUser(user);
-            localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+          if (!currentUser) {
+            setShowAuthModal(true);
+            return;
           }
           const booking: Booking = {
             id: Math.random().toString(36).substr(2, 9),
@@ -291,16 +378,23 @@ const App: React.FC = () => {
             eventDate: date,
             price: selectedEvent.price,
             bookedAt: new Date().toISOString(),
-            userName: user.name,
-            userPhone: user.phone
+            userName: currentUser.name,
+            userPhone: currentUser.phone
           };
           await api.saveBooking(booking);
-          const updatedUser = { ...user, bookings: [booking, ...user.bookings] };
+          const updatedUser = { ...currentUser, bookings: [booking, ...currentUser.bookings] };
           setCurrentUser(updatedUser);
           localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updatedUser));
           setGlobalBookings(prev => [booking, ...prev]);
           setSelectedEvent(null);
         }} />
+      )}
+
+      {showAuthModal && (
+        <AuthModal 
+          onSuccess={handleAuthSuccess} 
+          onClose={() => setShowAuthModal(false)} 
+        />
       )}
 
       {showOnboarding && (
