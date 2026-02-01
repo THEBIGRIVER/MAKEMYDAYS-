@@ -1,9 +1,9 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Event, AIRecommendation } from "../types.ts";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 export const getAIRecommendations = async (userMood: string, allEvents: Event[]): Promise<AIRecommendation | null> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  
   const eventContext = allEvents.map(e => ({
     id: e.id,
     title: e.title,
@@ -21,8 +21,8 @@ export const getAIRecommendations = async (userMood: string, allEvents: Event[])
       YOUR TASK:
       1. Analyze the user's mood.
       2. Select 1 to 3 events from the list below that would either COMPLEMENT or IMPROVE their current state.
-      3. For "Stressed" or "Tired", prioritize Wellness/Mindfulness.
-      4. For "Bored" or "Energetic", prioritize Activity/Adventure/Creative Arts.
+      3. For "Stressed" or "Tired", prioritize Wellness/Mindfulness/Therapy.
+      4. For "Bored" or "Energetic", prioritize Activity/Adventure/Shows/Workshops/Creative Arts.
       5. Provide a highly empathetic and punchy 1-sentence reasoning.
       
       Events available: ${JSON.stringify(eventContext)}`,

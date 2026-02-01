@@ -1,5 +1,4 @@
-
-export type Category = "Movie" | "Activity" | "Therapy" | "Workshop" | "Wellness";
+export type Category = "Shows" | "Activity" | "Therapy" | "Mindfulness" | "Workshop";
 
 export interface Slot {
   time: string;
@@ -15,8 +14,8 @@ export interface Event {
   price: number;
   originalPrice?: number;
   slots: Slot[];
-  date?: string;
-  hostPhone: string; // The mobile number of the creator
+  dates: string[]; 
+  hostPhone: string;
 }
 
 export interface Booking {
@@ -31,6 +30,7 @@ export interface Booking {
   userName?: string;
   userPhone?: string;
   confirmationEmail?: string;
+  reminderSent?: boolean;
 }
 
 export interface User {
@@ -38,6 +38,10 @@ export interface User {
   phone: string;
   bookings: Booking[];
   role?: 'user' | 'admin';
+  preferences?: {
+    emailReminders: boolean;
+    smsReminders: boolean;
+  };
 }
 
 export interface AIRecommendation {

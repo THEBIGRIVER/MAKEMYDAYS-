@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
-import { Event, Booking, Category } from '../types';
-import { api } from '../services/api';
+import { Event, Booking, Category } from '../types.ts';
+import { api } from '../services/api.ts';
 
 interface AdminPanelProps {
   events: Event[];
@@ -10,16 +9,6 @@ interface AdminPanelProps {
   onRefresh: () => void;
 }
 
-const CATEGORY_DEFAULT_IMAGES: Record<string, string> = {
-  'Adventure': 'https://images.unsplash.com/photo-1533240332313-0db36245e4a2?auto=format&fit=crop&w=800',
-  'Activity': 'https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=800',
-  'Wellness': 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=800',
-  'Mindfulness': 'https://images.unsplash.com/photo-1508672019048-805c876b67e2?auto=format&fit=crop&w=800',
-  'Creative Arts': 'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?auto=format&fit=crop&w=800',
-  'Team Building': 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800',
-  'Sports': 'https://images.unsplash.com/photo-1504450758481-7338eba7524a?auto=format&fit=crop&w=800'
-};
-
 const AdminPanel: React.FC<AdminPanelProps> = ({ events, bookings, onClose, onRefresh }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'events' | 'bookings'>('overview');
   const [editingEvent, setEditingEvent] = useState<Partial<Event> | null>(null);
@@ -27,273 +16,125 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, bookings, onClose, onRe
   const [error, setError] = useState('');
 
   const totalRevenue = bookings.reduce((acc, curr) => acc + (curr.price || 0), 0);
-  const totalCustomers = new Set(bookings.map(b => b.userPhone)).size;
-
-  const handleDeleteEvent = async (id: string) => {
-    const confirmPass = prompt('Enter Owner Passkey to confirm deletion:');
-    if (confirmPass === '2576') {
-      await api.deleteEvent(id);
-      onRefresh();
-    } else if (confirmPass !== null) {
-      alert('Invalid passkey. Deletion aborted.');
-    }
-  };
 
   const handleSaveEvent = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-
     if (adminPasskey !== '2576') {
-      setError('Invalid owner passkey. Save denied.');
+      setError('Invalid passkey.');
       return;
     }
-
-    if (editingEvent && editingEvent.title && editingEvent.category) {
-      // Auto-populate image if blank
-      const finalImage = editingEvent.image || CATEGORY_DEFAULT_IMAGES[editingEvent.category as string] || CATEGORY_DEFAULT_IMAGES['Activity'];
-
-      const eventToSave = {
+    if (editingEvent?.title && editingEvent?.category) {
+      await api.saveEvent({
         ...editingEvent,
         id: editingEvent.id || Math.random().toString(36).substr(2, 9),
         slots: editingEvent.slots || [{ time: '10:00 AM', availableSeats: 10 }],
         price: Number(editingEvent.price) || 0,
-        image: finalImage
-      } as Event;
-      
-      await api.saveEvent(eventToSave);
+        image: editingEvent.image || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=60&w=800',
+        description: editingEvent.description || '',
+        hostPhone: editingEvent.hostPhone || '917686924919'
+      } as Event);
       setEditingEvent(null);
+      setError('');
       setAdminPasskey('');
       onRefresh();
     }
   };
 
   return (
-    <div className="fixed inset-0 z-[300] bg-slate-950 flex flex-col animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[300] bg-slate-950 flex flex-col font-sans">
       <header className="bg-slate-900 border-b border-slate-800 px-8 py-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-            </svg>
-          </div>
-          <div>
-            <h2 className="text-white font-black italic uppercase tracking-tight text-xl">Owner's Console</h2>
-            <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Platform Management v1.0</p>
-          </div>
-        </div>
-        <button onClick={onClose} className="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Exit Panel</button>
+        <h2 className="text-white font-black italic uppercase tracking-tight text-xl">Admin Console</h2>
+        <button onClick={onClose} className="text-white text-[10px] font-black uppercase tracking-widest bg-slate-800 px-4 py-2 rounded-lg">Exit</button>
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        <aside className="w-64 bg-slate-900/50 border-r border-slate-800 p-6 flex flex-col gap-2">
-          {[
-            { id: 'overview', label: 'Overview', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
-            { id: 'events', label: 'Experiences', icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10' },
-            { id: 'bookings', label: 'Bookings', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' }
-          ].map(tab => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all ${activeTab === tab.id ? 'bg-emerald-500 text-white font-bold' : 'text-slate-500 hover:bg-slate-800 hover:text-slate-300'}`}>
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={tab.icon} /></svg>
-              <span className="text-sm">{tab.label}</span>
-            </button>
-          ))}
+        <aside className="w-64 bg-slate-900/50 border-r border-slate-800 p-6 flex flex-col gap-4">
+          <button onClick={() => setActiveTab('overview')} className={`text-left px-4 py-3 rounded-xl transition-all ${activeTab === 'overview' ? 'bg-brand-red text-white' : 'text-slate-400 hover:bg-slate-800'}`}>Overview</button>
+          <button onClick={() => setActiveTab('events')} className={`text-left px-4 py-3 rounded-xl transition-all ${activeTab === 'events' ? 'bg-brand-red text-white' : 'text-slate-400 hover:bg-slate-800'}`}>Experiences</button>
+          <button onClick={() => setActiveTab('bookings')} className={`text-left px-4 py-3 rounded-xl transition-all ${activeTab === 'bookings' ? 'bg-brand-red text-white' : 'text-slate-400 hover:bg-slate-800'}`}>Bookings</button>
         </aside>
 
         <main className="flex-1 overflow-y-auto p-10 bg-[#0a0c10]">
           {activeTab === 'overview' && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-slate-900 p-8 rounded-3xl border border-slate-800 shadow-2xl">
-                  <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Total Gross Revenue</p>
-                  <p className="text-4xl font-black text-white italic">₹{totalRevenue.toLocaleString()}</p>
-                </div>
-                <div className="bg-slate-900 p-8 rounded-3xl border border-slate-800 shadow-2xl">
-                  <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Unique Customers</p>
-                  <p className="text-4xl font-black text-white italic">{totalCustomers}</p>
-                </div>
-                <div className="bg-slate-900 p-8 rounded-3xl border border-slate-800 shadow-2xl">
-                  <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Total Tickets Sold</p>
-                  <p className="text-4xl font-black text-white italic">{bookings.length}</p>
-                </div>
+            <div className="grid grid-cols-2 gap-6">
+              <div className="bg-slate-900 p-8 rounded-3xl border border-slate-800">
+                <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Platform Revenue</p>
+                <div className="text-white text-4xl font-black italic">₹{totalRevenue.toLocaleString()}</div>
               </div>
-              <div className="bg-slate-900 rounded-3xl border border-slate-800 overflow-hidden shadow-2xl">
-                <div className="p-6 border-b border-slate-800 flex justify-between items-center">
-                  <h3 className="text-white font-bold">Latest Booking Activity</h3>
-                  <span className="text-emerald-500 text-[10px] font-bold">REAL-TIME FEED</span>
-                </div>
-                <div className="p-0 overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr className="text-slate-500 text-[10px] font-black uppercase tracking-widest border-b border-slate-800">
-                        <th className="px-6 py-4">Customer</th>
-                        <th className="px-6 py-4">Experience</th>
-                        <th className="px-6 py-4">Session</th>
-                        <th className="px-6 py-4 text-right">Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody className="text-slate-300 divide-y divide-slate-800">
-                      {bookings.slice(0, 10).map(b => (
-                        <tr key={b.id} className="hover:bg-slate-800/30">
-                          <td className="px-6 py-4">
-                            <p className="font-bold text-white">{b.userName || 'Anonymous'}</p>
-                            <p className="text-[10px] text-slate-500">{b.userPhone}</p>
-                          </td>
-                          <td className="px-6 py-4 font-bold">{b.eventTitle}</td>
-                          <td className="px-6 py-4 text-xs">{b.time}</td>
-                          <td className="px-6 py-4 text-right">
-                             <p className="font-black text-white">₹{b.price.toLocaleString()}</p>
-                             <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-500 text-[8px] font-black rounded-full border border-emerald-500/20 uppercase">Paid</span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+              <div className="bg-slate-900 p-8 rounded-3xl border border-slate-800">
+                <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Total Tickets</p>
+                <div className="text-white text-4xl font-black italic">{bookings.length}</div>
               </div>
             </div>
           )}
           {activeTab === 'events' && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="flex justify-between items-end">
-                <div>
-                  <h3 className="text-2xl font-black text-white italic uppercase">Experience Catalog</h3>
-                  <p className="text-slate-500 text-xs">Manage your storefront items.</p>
-                </div>
-                <button onClick={() => { setEditingEvent({}); setError(''); setAdminPasskey(''); }} className="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 transition-all">Create New Experience</button>
-              </div>
+            <div className="space-y-6">
+              <button onClick={() => { setEditingEvent({}); setError(''); }} className="bg-brand-red text-white px-6 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg">New Experience</button>
               <div className="grid grid-cols-1 gap-4">
                 {events.map(event => (
-                  <div key={event.id} className="bg-slate-900 border border-slate-800 p-6 rounded-3xl flex items-center justify-between group hover:border-emerald-500/50 transition-all">
-                    <div className="flex items-center gap-6">
-                      <div className="w-20 h-20 rounded-2xl overflow-hidden bg-slate-800">
-                        <img 
-                          src={event.image} 
-                          className="w-full h-full object-cover" 
-                          onError={(e) => (e.currentTarget.src = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=60&w=200')} 
-                        />
-                      </div>
-                      <div>
-                        <span className="text-emerald-500 text-[9px] font-black uppercase tracking-widest">{event.category}</span>
-                        <h4 className="text-white font-bold text-lg">{event.title}</h4>
-                        <p className="text-slate-500 text-xs">₹{event.price.toLocaleString()}</p>
-                      </div>
+                  <div key={event.id} className="bg-slate-900 p-6 rounded-3xl border border-slate-800 flex justify-between items-center group hover:border-brand-red/50 transition-all">
+                    <div>
+                      <span className="text-brand-red text-[8px] font-black uppercase tracking-widest">{event.category}</span>
+                      <h4 className="text-white font-bold text-lg italic uppercase">{event.title}</h4>
                     </div>
-                    <div className="flex gap-2">
-                      <button onClick={() => { setEditingEvent(event); setError(''); setAdminPasskey(''); }} className="p-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition-all">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                      </button>
-                      <button onClick={() => handleDeleteEvent(event.id)} className="p-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl transition-all">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                      </button>
-                    </div>
+                    <button onClick={() => setEditingEvent(event)} className="bg-slate-800 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase hover:bg-brand-red transition-all">Edit</button>
                   </div>
                 ))}
               </div>
             </div>
           )}
           {activeTab === 'bookings' && (
-            <div className="bg-slate-900 rounded-3xl border border-slate-800 overflow-hidden shadow-2xl animate-in fade-in duration-500">
-               <div className="p-8 border-b border-slate-800">
-                  <h3 className="text-white font-black italic text-xl uppercase tracking-tight">Full Platform Booking Ledger</h3>
-                  <p className="text-slate-500 text-xs mt-1">Audit-ready records for all platform transactions.</p>
-               </div>
-               <div className="overflow-x-auto">
-                 <table className="w-full text-left">
-                    <thead>
-                      <tr className="text-slate-500 text-[10px] font-black uppercase tracking-widest border-b border-slate-800 bg-slate-900/50">
-                        <th className="px-8 py-5">Customer Details</th>
-                        <th className="px-8 py-5">Experience Reserved</th>
-                        <th className="px-8 py-5">Session Details</th>
-                        <th className="px-8 py-5 text-right">Price</th>
-                      </tr>
-                    </thead>
-                    <tbody className="text-slate-300 divide-y divide-slate-800">
-                      {bookings.map(b => (
-                        <tr key={b.id} className="hover:bg-slate-800/20">
-                          <td className="px-8 py-6">
-                            <p className="font-bold text-white">{b.userName || 'Anonymous User'}</p>
-                            <p className="text-[10px] text-emerald-500 font-mono">{b.userPhone}</p>
-                          </td>
-                          <td className="px-8 py-6">
-                            <p className="font-bold text-white">{b.eventTitle}</p>
-                            <p className="text-[9px] uppercase font-black text-slate-500">{b.category}</p>
-                          </td>
-                          <td className="px-8 py-6">
-                            <p className="text-sm">{b.time}</p>
-                            <p className="text-[9px] text-slate-500 uppercase tracking-tighter">{new Date(b.bookedAt).toLocaleString()}</p>
-                          </td>
-                          <td className="px-8 py-6 text-right">
-                             <p className="font-black text-white text-lg">₹{b.price.toLocaleString()}</p>
-                             <span className="text-[9px] text-emerald-500 font-black uppercase">Confirmed</span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                 </table>
-                 {bookings.length === 0 && (
-                   <div className="p-20 text-center text-slate-600 uppercase font-black tracking-widest text-[10px]">No bookings found in platform history.</div>
-                 )}
-               </div>
-            </div>
+             <div className="bg-slate-900 rounded-3xl border border-slate-800 overflow-hidden">
+               <table className="w-full text-left">
+                 <thead>
+                   <tr className="border-b border-slate-800 text-slate-500 text-[10px] font-black uppercase tracking-widest bg-slate-900/50">
+                     <th className="px-6 py-4">Bearer</th>
+                     <th className="px-6 py-4">Experience</th>
+                     <th className="px-6 py-4 text-right">Price</th>
+                   </tr>
+                 </thead>
+                 <tbody className="divide-y divide-slate-800 text-slate-300">
+                   {bookings.map(b => (
+                     <tr key={b.id}>
+                       <td className="px-6 py-4">{b.userName}</td>
+                       <td className="px-6 py-4">{b.eventTitle}</td>
+                       <td className="px-6 py-4 text-right">₹{b.price}</td>
+                     </tr>
+                   ))}
+                 </tbody>
+               </table>
+             </div>
           )}
         </main>
       </div>
+
       {editingEvent && (
         <div className="fixed inset-0 z-[400] flex items-center justify-center p-6">
-          <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-xl" onClick={() => setEditingEvent(null)}></div>
-          <div className="relative bg-slate-900 border border-slate-800 w-full max-w-xl rounded-[2.5rem] shadow-3xl overflow-hidden p-10 animate-in zoom-in-95 duration-300">
-            <h3 className="text-2xl font-black italic text-white uppercase mb-8">{editingEvent.id ? 'Edit Experience' : 'New Experience'}</h3>
-            <form onSubmit={handleSaveEvent} className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Title</label>
-                <input type="text" value={editingEvent.title || ''} onChange={(e) => setEditingEvent({...editingEvent, title: e.target.value})} className="w-full bg-slate-800 border-none rounded-2xl px-5 py-4 text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500" required />
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setEditingEvent(null)}></div>
+          <form onSubmit={handleSaveEvent} className="relative bg-slate-900 p-10 rounded-[3rem] w-full max-w-lg space-y-6 border border-slate-800 shadow-3xl">
+            <h3 className="text-2xl font-black italic text-white uppercase tracking-tighter">Experience Details</h3>
+            <div className="space-y-4">
+              <input type="text" placeholder="Title" value={editingEvent.title || ''} onChange={e => setEditingEvent({...editingEvent, title: e.target.value})} className="w-full bg-slate-800 p-4 rounded-xl text-white outline-none focus:ring-1 focus:ring-brand-red" required />
+              <select value={editingEvent.category || ''} onChange={e => setEditingEvent({...editingEvent, category: e.target.value as Category})} className="w-full bg-slate-800 p-4 rounded-xl text-white outline-none focus:ring-1 focus:ring-brand-red" required>
+                <option value="">Category</option>
+                <option value="Shows">Shows</option>
+                <option value="Activity">Activity</option>
+                <option value="Therapy">Therapy</option>
+                <option value="Mindfulness">Mindfulness</option>
+                <option value="Workshop">Workshop</option>
+              </select>
+              <input type="number" placeholder="Price (₹)" value={editingEvent.price || ''} onChange={e => setEditingEvent({...editingEvent, price: Number(e.target.value)})} className="w-full bg-slate-800 p-4 rounded-xl text-white outline-none focus:ring-1 focus:ring-brand-red" required />
+              <textarea placeholder="Description" value={editingEvent.description || ''} onChange={e => setEditingEvent({...editingEvent, description: e.target.value})} className="w-full bg-slate-800 p-4 rounded-xl text-white outline-none focus:ring-1 focus:ring-brand-red h-24" />
+              <div className="pt-4 border-t border-slate-800">
+                <input type="password" placeholder="Admin Passkey" value={adminPasskey} onChange={e => setAdminPasskey(e.target.value)} className="w-full bg-slate-800 p-4 rounded-xl text-white outline-none focus:ring-1 focus:ring-brand-red" required />
+                {error && <p className="text-brand-red text-[10px] font-black uppercase mt-2">{error}</p>}
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Category</label>
-                  <select value={editingEvent.category || ''} onChange={(e) => setEditingEvent({...editingEvent, category: e.target.value as Category})} className="w-full bg-slate-800 border-none rounded-2xl px-5 py-4 text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500" required>
-                    <option value="">Select...</option>
-                    <option value="Adventure">Adventure</option>
-                    <option value="Activity">Activity</option>
-                    <option value="Wellness">Wellness</option>
-                    <option value="Mindfulness">Mindfulness</option>
-                    <option value="Creative Arts">Creative Arts</option>
-                    <option value="Team Building">Team Building</option>
-                    <option value="Sports">Sports</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Price (₹)</label>
-                  <input type="number" value={editingEvent.price || ''} onChange={(e) => setEditingEvent({...editingEvent, price: Number(e.target.value)})} className="w-full bg-slate-800 border-none rounded-2xl px-5 py-4 text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500" required />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Image URL (Optional - Defaulted by Category)</label>
-                <input type="text" value={editingEvent.image || ''} placeholder="Leave blank for high-quality suggestion" onChange={(e) => setEditingEvent({...editingEvent, image: e.target.value})} className="w-full bg-slate-800 border-none rounded-2xl px-5 py-4 text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Description</label>
-                <textarea value={editingEvent.description || ''} onChange={(e) => setEditingEvent({...editingEvent, description: e.target.value})} rows={3} className="w-full bg-slate-800 border-none rounded-2xl px-5 py-4 text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500 resize-none" />
-              </div>
-              
-              <div className="space-y-2 pt-4 border-t border-slate-800">
-                <label className="text-emerald-500 text-[10px] font-black uppercase tracking-widest">Verification Passkey</label>
-                <input 
-                  type="password" 
-                  placeholder="Enter 4-digit Owner Key" 
-                  value={adminPasskey} 
-                  onChange={(e) => setAdminPasskey(e.target.value)} 
-                  className="w-full bg-slate-800 border-none rounded-2xl px-5 py-4 text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500" 
-                  required 
-                />
-                {error && <p className="text-red-500 text-[9px] font-bold uppercase tracking-widest mt-1">{error}</p>}
-              </div>
-
-              <div className="flex gap-4 pt-4">
-                <button type="button" onClick={() => setEditingEvent(null)} className="flex-1 py-4 bg-slate-800 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest">Cancel</button>
-                <button type="submit" className="flex-1 py-4 bg-emerald-500 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-emerald-500/20">Authorize & Save</button>
-              </div>
-            </form>
-          </div>
+            </div>
+            <div className="flex gap-3">
+              <button type="button" onClick={() => setEditingEvent(null)} className="flex-1 py-4 bg-slate-800 text-white rounded-xl font-black uppercase text-[10px]">Discard</button>
+              <button type="submit" className="flex-1 py-4 bg-brand-red text-white rounded-xl font-black uppercase text-[10px]">Authorize</button>
+            </div>
+          </form>
         </div>
       )}
     </div>

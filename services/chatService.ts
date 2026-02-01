@@ -1,23 +1,26 @@
-
 import { GoogleGenAI, Chat } from "@google/genai";
 import { INITIAL_EVENTS } from "../constants.ts";
 
 export class ChatService {
-  private ai: GoogleGenAI;
+  private ai: GoogleGenAI | null = null;
   private chat: Chat | null = null;
 
-  constructor() {
-    this.ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  private getClient() {
+    if (!this.ai) {
+      this.ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    }
+    return this.ai;
   }
 
   private initChat() {
     const eventContext = INITIAL_EVENTS.map(e => `${e.title} (${e.category}): ${e.description}`).join('\n');
+    const ai = this.getClient();
     
-    this.chat = this.ai.chats.create({
-      model: 'gemini-3-pro-preview',
+    this.chat = ai.chats.create({
+      model: 'gemini-3-flash-preview',
       config: {
         systemInstruction: `You are the MAKEMYDAYS AI Concierge. 
-        You help users find unconventional wellness and high-energy natural activities.
+        You help users find unconventional wellness, entertainment shows, high-energy natural activities, Mindfulness sessions, and creative Workshops.
         
         Available Experiences:
         ${eventContext}
