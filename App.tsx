@@ -69,7 +69,7 @@ const App: React.FC = () => {
       const [evs, bks] = await Promise.all([api.getEvents(), api.getBookings()]);
       setEvents(evs || []);
       setGlobalBookings(bks || []);
-      // Auto-clear AI filters on refresh to show new community launches
+      // Keep feed open, just clear the specific mood recommendations to show everything
       setAiRec(null);
     } catch (e) { console.error(e); }
   }, []);
@@ -216,7 +216,7 @@ const App: React.FC = () => {
             </section>
 
             <section id="event-grid-container" className="space-y-10">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/5 pb-8">
                 <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide py-2">
                   {CATEGORIES.map(cat => (
                     <button key={cat} onClick={() => { setSelectedCategory(cat); setAiRec(null); }} className={`whitespace-nowrap px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border-2 ${selectedCategory === cat ? 'bg-slate-100 border-slate-100 text-slate-800 shadow-xl translate-y-[-2px]' : 'bg-slate-900/50 border-white/10 text-slate-400 hover:border-white/30 hover:text-slate-200'}`}>
@@ -224,9 +224,13 @@ const App: React.FC = () => {
                     </button>
                   ))}
                 </div>
-                <div className="hidden md:flex items-center gap-2">
-                   <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                   <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{events.length} Live Frequencies</span>
+                <div className="flex items-center gap-4 bg-white/5 px-4 py-2 rounded-full border border-white/10">
+                   <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                      <span className="text-[8px] font-black text-emerald-500 uppercase tracking-[0.3em]">Live Pulse</span>
+                   </div>
+                   <div className="h-3 w-[1px] bg-white/10"></div>
+                   <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]">{events.length} Community Streams</span>
                 </div>
               </div>
               
@@ -239,16 +243,25 @@ const App: React.FC = () => {
                   {filteredEvents.map(event => (<EventCard key={event.id} event={event} onClick={setSelectedEvent} />))}
                 </div>
               )}
+              
+              <div className="pt-10 text-center">
+                 <p className="text-[8px] font-black uppercase tracking-[0.5em] text-slate-600 mb-6">Open Sanctuary Protocols Enabled</p>
+                 <div className="flex justify-center gap-2">
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} className="w-1 h-1 bg-slate-800 rounded-full"></div>
+                    ))}
+                 </div>
+              </div>
             </section>
           </div>
         )}
       </main>
 
-      <footer className="py-12 px-6 border-t border-white/5">
+      <footer className="py-12 px-6 border-t border-white/5 bg-black/50 backdrop-blur-md">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] font-black tracking-[0.3em] text-slate-400 uppercase italic">
           <div className="flex flex-col md:flex-row items-center gap-4">
             <span className="text-slate-300">MAKEMYDAYS © 2024</span>
-            <span className="text-slate-500">MADE WITH <span className="text-brand-red scale-110 inline-block">❤️</span> BY BENEME INC.</span>
+            <span className="text-slate-500">PEER-TO-PEER SANCTUARY NETWORK</span>
           </div>
           <div className="flex gap-8">
             {['Terms', 'Privacy'].map(l => (<button key={l} className="hover:text-brand-red transition-colors">{l}</button>))}
@@ -258,12 +271,30 @@ const App: React.FC = () => {
 
       {activePolicy && <LegalModal type={activePolicy} onClose={() => setActivePolicy(null)} />}
       {selectedEvent && <BookingModal event={selectedEvent} onClose={() => setSelectedEvent(null)} onConfirm={async (slot, date) => {
-          if (!selectedEvent || !currentUser) return;
-          const booking: Booking = { id: Math.random().toString(36).substr(2, 9), eventId: selectedEvent.id, eventTitle: selectedEvent.title, category: selectedEvent.category, time: slot.time, eventDate: date, price: selectedEvent.price, bookedAt: new Date().toISOString(), userName: currentUser.name, userPhone: currentUser.phone };
+          if (!selectedEvent) return;
+          
+          // Allow guest bookings if not logged in
+          const booking: Booking = { 
+            id: Math.random().toString(36).substr(2, 9), 
+            eventId: selectedEvent.id, 
+            eventTitle: selectedEvent.title, 
+            category: selectedEvent.category, 
+            time: slot.time, 
+            eventDate: date, 
+            price: selectedEvent.price, 
+            bookedAt: new Date().toISOString(), 
+            userName: currentUser?.name || 'Anonymous Guest', 
+            userPhone: currentUser?.phone || 'Guest Line' 
+          };
+          
           await api.saveBooking(booking);
-          const updatedUser = { ...currentUser, bookings: [booking, ...currentUser.bookings] };
-          setCurrentUser(updatedUser);
-          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updatedUser));
+          
+          if (currentUser) {
+            const updatedUser = { ...currentUser, bookings: [booking, ...currentUser.bookings] };
+            setCurrentUser(updatedUser);
+            localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updatedUser));
+          }
+          
           setGlobalBookings(prev => [booking, ...prev]);
           setSelectedEvent(null);
       }} />}
