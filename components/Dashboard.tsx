@@ -41,7 +41,6 @@ const compressImage = (base64Str: string): Promise<string> => {
       canvas.height = height;
       const ctx = canvas.getContext('2d');
       ctx?.drawImage(img, 0, 0, width, height);
-      // Reduce quality to 0.7 to save massive space
       resolve(canvas.toDataURL('image/jpeg', 0.7));
     };
   });
@@ -74,7 +73,6 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
       const reader = new FileReader();
       reader.onloadend = async () => {
         const base64String = reader.result as string;
-        // Compress immediately to prevent lag during form fill
         const compressed = await compressImage(base64String);
         setImagePreview(compressed);
         setFormData(prev => ({ ...prev, image: compressed }));
@@ -164,9 +162,7 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
         slots: occurrenceType === 'single' ? [formData.slots[0]] : formData.slots
       };
 
-      // Ensure the save is actually finished
       await api.saveEvent(newEvent);
-      // Small artificial delay for premium feel and state sync
       await new Promise(resolve => setTimeout(resolve, 800));
       onSuccess();
       onClose();
@@ -185,6 +181,7 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
           <div className="relative z-10">
             <span className="text-brand-red text-[8px] font-black uppercase tracking-[0.4em] mb-2 block">Provider Portal</span>
             <h2 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter">Event Experience</h2>
+            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-1">This experience will be live globally upon submission.</p>
           </div>
           <button onClick={onClose} className="relative z-10 text-slate-400 hover:text-slate-200 transition-all transform hover:rotate-90">
             <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -311,9 +308,9 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
             {isSubmitting ? (
               <>
                 <div className="w-5 h-5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin"></div>
-                Calibrating...
+                Calibrating Global Stream...
               </>
-            ) : 'Create Event'}
+            ) : 'Create & Sync Global Event'}
           </button>
         </form>
       </div>
@@ -411,7 +408,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, events, bookings, onLogout,
           {activeTab === 'hosting' && (
             <div className="space-y-10">
               <div className="flex flex-col md:flex-row justify-between items-center gap-6 glass-card p-8 rounded-[2.5rem] border border-white/10">
-                <div className="max-w-md"><h3 className="text-xl font-black italic uppercase tracking-tight text-slate-100 mb-2">Host New Experience</h3><p className="text-slate-400 text-xs font-bold uppercase tracking-widest leading-relaxed">Host your unique event frequency to the community.</p></div>
+                <div className="max-w-md">
+                  <h3 className="text-xl font-black italic uppercase tracking-tight text-slate-100 mb-2">Host New Experience</h3>
+                  <p className="text-slate-400 text-xs font-bold uppercase tracking-widest leading-relaxed">Your events will be immediately live on the home page for all users to see and book.</p>
+                </div>
                 <button onClick={() => setShowCreateModal(true)} className="bg-slate-200 text-slate-900 px-10 py-5 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl hover:bg-brand-red hover:text-slate-200 transition-all">Create Event</button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -420,7 +420,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, events, bookings, onLogout,
                     <div className="relative h-48 overflow-hidden"><img src={event.image} alt={event.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" /><div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div></div>
                     <div className="p-8 border-t border-white/10 bg-black/20 backdrop-blur-md">
                       <h4 className="text-slate-200 font-black italic uppercase tracking-tight text-xl mb-4">{event.title}</h4>
-                      <button className="w-full py-4 bg-slate-800/50 hover:bg-brand-red text-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-white/10 transition-all shadow-lg" onClick={async () => { if (confirm("Terminate this event?")) { await api.deleteEvent(event.id); onRefreshEvents?.(); } }}>Terminate</button>
+                      <p className="text-[8px] font-black text-emerald-500 uppercase tracking-widest mb-4">● Live on Global Feed</p>
+                      <button className="w-full py-4 bg-slate-800/50 hover:bg-brand-red text-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-white/10 transition-all shadow-lg" onClick={async () => { if (confirm("Terminate this event? It will be removed from the global feed.")) { await api.deleteEvent(event.id); onRefreshEvents?.(); } }}>Terminate</button>
                     </div>
                   </div>
                 ))}
