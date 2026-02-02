@@ -14,6 +14,39 @@ interface DashboardProps {
   onRefreshEvents?: () => void;
 }
 
+const compressImage = (base64Str: string): Promise<string> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.src = base64Str;
+    img.onload = () => {
+      const MAX_WIDTH = 1200;
+      const MAX_HEIGHT = 1200;
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
+
+      if (width > height) {
+        if (width > MAX_WIDTH) {
+          height *= MAX_WIDTH / width;
+          width = MAX_WIDTH;
+        }
+      } else {
+        if (height > MAX_HEIGHT) {
+          width *= MAX_HEIGHT / height;
+          height = MAX_HEIGHT;
+        }
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx?.drawImage(img, 0, 0, width, height);
+      // Reduce quality to 0.7 to save massive space
+      resolve(canvas.toDataURL('image/jpeg', 0.7));
+    };
+  });
+};
+
 const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: () => void }> = ({ user, onClose, onSuccess }) => {
   const [occurrenceType, setOccurrenceType] = useState<'single' | 'range'>('single');
   const [formData, setFormData] = useState<Partial<Event>>({
@@ -35,14 +68,16 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
+      reader.onloadend = async () => {
         const base64String = reader.result as string;
-        setImagePreview(base64String);
-        setFormData(prev => ({ ...prev, image: base64String }));
+        // Compress immediately to prevent lag during form fill
+        const compressed = await compressImage(base64String);
+        setImagePreview(compressed);
+        setFormData(prev => ({ ...prev, image: compressed }));
       };
       reader.readAsDataURL(file);
     }
@@ -116,22 +151,30 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
     
     setIsSubmitting(true);
 
-    const newEvent: Event = {
-      id: `user-event-${Math.random().toString(36).substr(2, 9)}`,
-      title: formData.title || '',
-      category: formData.category as Category || 'Activity',
-      price: Number(formData.price),
-      description: formData.description || '',
-      image: formData.image || '',
-      dates: finalDates,
-      hostPhone: user.phone,
-      slots: occurrenceType === 'single' ? [formData.slots[0]] : formData.slots
-    };
+    try {
+      const newEvent: Event = {
+        id: `user-event-${Math.random().toString(36).substr(2, 9)}`,
+        title: formData.title || '',
+        category: formData.category as Category || 'Activity',
+        price: Number(formData.price),
+        description: formData.description || '',
+        image: formData.image || '',
+        dates: finalDates,
+        hostPhone: user.phone,
+        slots: occurrenceType === 'single' ? [formData.slots[0]] : formData.slots
+      };
 
-    await api.saveEvent(newEvent);
-    setIsSubmitting(false);
-    onSuccess();
-    onClose();
+      // Ensure the save is actually finished
+      await api.saveEvent(newEvent);
+      // Small artificial delay for premium feel and state sync
+      await new Promise(resolve => setTimeout(resolve, 800));
+      onSuccess();
+      onClose();
+    } catch (err) {
+      alert("Transmission failed. The visual aura may be too complex. Try a different image.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -152,11 +195,11 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1">Title</label>
-              <input required type="text" placeholder="e.g. Midnight Forest Bathing" className="w-full bg-slate-800/50 border-2 border-white/5 rounded-2xl px-6 py-4 text-sm font-bold text-slate-200 outline-none focus:border-brand-red transition-all shadow-sm" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} />
+              <input required type="text" placeholder="e.g. Midnight Forest Bathing" className="w-full bg-slate-800/50 border-2 border-white/5 rounded-2xl px-6 py-4 text-sm font-bold text-slate-200 outline-none focus:border-brand-red transition-all shadow-sm" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} disabled={isSubmitting} />
             </div>
             <div className="space-y-2">
               <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1">Category</label>
-              <select className="w-full bg-slate-800/50 border-2 border-white/5 rounded-2xl px-6 py-4 text-sm font-bold text-slate-200 outline-none focus:border-brand-red transition-all" value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value as Category})}>
+              <select className="w-full bg-slate-800/50 border-2 border-white/5 rounded-2xl px-6 py-4 text-sm font-bold text-slate-200 outline-none focus:border-brand-red transition-all" value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value as Category})} disabled={isSubmitting}>
                 <option value="Shows">Shows</option>
                 <option value="Activity">Activity</option>
                 <option value="MMD Originals">MMD Originals</option>
@@ -170,25 +213,25 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
             <div className="flex items-center justify-between px-1">
               <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Temporal Cadence</label>
               <div className="flex bg-white/5 p-1 rounded-xl">
-                 <button type="button" onClick={() => setOccurrenceType('single')} className={`px-4 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${occurrenceType === 'single' ? 'bg-slate-200 text-slate-900 shadow-lg' : 'text-slate-400'}`}>Single Day</button>
-                 <button type="button" onClick={() => setOccurrenceType('range')} className={`px-4 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${occurrenceType === 'range' ? 'bg-slate-200 text-slate-900 shadow-lg' : 'text-slate-400'}`}>Date Range</button>
+                 <button type="button" onClick={() => setOccurrenceType('single')} className={`px-4 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${occurrenceType === 'single' ? 'bg-slate-200 text-slate-900 shadow-lg' : 'text-slate-400'}`} disabled={isSubmitting}>Single Day</button>
+                 <button type="button" onClick={() => setOccurrenceType('range')} className={`px-4 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${occurrenceType === 'range' ? 'bg-slate-200 text-slate-900 shadow-lg' : 'text-slate-400'}`} disabled={isSubmitting}>Date Range</button>
                </div>
             </div>
 
             {occurrenceType === 'single' ? (
               <div className="animate-in slide-in-from-left duration-500">
                 <label className="text-[9px] font-black uppercase tracking-widest text-slate-300 block mb-2 px-1">Select Event Date</label>
-                <input type="date" className="w-full bg-slate-800/50 border-2 border-white/5 rounded-2xl px-6 py-4 text-sm font-bold text-slate-200 outline-none focus:border-brand-red transition-all" value={singleDate} onChange={(e) => setSingleDate(e.target.value)} />
+                <input type="date" className="w-full bg-slate-800/50 border-2 border-white/5 rounded-2xl px-6 py-4 text-sm font-bold text-slate-200 outline-none focus:border-brand-red transition-all" value={singleDate} onChange={(e) => setSingleDate(e.target.value)} disabled={isSubmitting} />
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-4 animate-in slide-in-from-right duration-500">
                 <div className="space-y-2">
                   <label className="text-[9px] font-black uppercase tracking-widest text-slate-300 px-1">Start Date</label>
-                  <input type="date" className="w-full bg-slate-800/50 border-2 border-white/5 rounded-2xl px-6 py-4 text-sm font-bold text-slate-200 outline-none focus:border-brand-red transition-all" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                  <input type="date" className="w-full bg-slate-800/50 border-2 border-white/5 rounded-2xl px-6 py-4 text-sm font-bold text-slate-200 outline-none focus:border-brand-red transition-all" value={startDate} onChange={(e) => setStartDate(e.target.value)} disabled={isSubmitting} />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[9px] font-black uppercase tracking-widest text-slate-300 px-1">End Date</label>
-                  <input type="date" className="w-full bg-slate-800/50 border-2 border-white/5 rounded-2xl px-6 py-4 text-sm font-bold text-slate-200 outline-none focus:border-brand-red transition-all" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                  <input type="date" className="w-full bg-slate-800/50 border-2 border-white/5 rounded-2xl px-6 py-4 text-sm font-bold text-slate-200 outline-none focus:border-brand-red transition-all" value={endDate} onChange={(e) => setEndDate(e.target.value)} disabled={isSubmitting} />
                 </div>
               </div>
             )}
@@ -198,7 +241,7 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
             <div className="flex items-center justify-between px-1">
               <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">{occurrenceType === 'single' ? 'Session Time' : 'Time Sequence Grid'}</label>
               {occurrenceType === 'range' && (
-                <button type="button" onClick={addSlot} className="text-[9px] font-black uppercase tracking-widest text-brand-red hover:underline">+ Add Sequence</button>
+                <button type="button" onClick={addSlot} className="text-[9px] font-black uppercase tracking-widest text-brand-red hover:underline" disabled={isSubmitting}>+ Add Sequence</button>
               )}
             </div>
             
@@ -206,14 +249,14 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
               {(occurrenceType === 'single' ? [formData.slots![0]] : formData.slots!).map((slot, index) => (
                 <div key={index} className="flex items-center gap-3 animate-in slide-in-from-bottom duration-500">
                   <div className="flex-1 bg-slate-800/50 border-2 border-white/5 rounded-2xl px-4 py-3 flex items-center justify-between">
-                    <input type="time" className="bg-transparent text-sm font-bold outline-none text-slate-200" value={slot.time} onChange={(e) => updateSlot(index, 'time', e.target.value)} />
+                    <input type="time" className="bg-transparent text-sm font-bold outline-none text-slate-200" value={slot.time} onChange={(e) => updateSlot(index, 'time', e.target.value)} disabled={isSubmitting} />
                     <div className="flex items-center gap-2">
                        <span className="text-[8px] font-black text-slate-400 uppercase">Cap</span>
-                       <input type="number" className="bg-slate-900 rounded-lg text-sm font-bold outline-none w-12 text-center py-1 text-slate-200" value={slot.availableSeats} onChange={(e) => updateSlot(index, 'availableSeats', Number(e.target.value))} />
+                       <input type="number" className="bg-slate-900 rounded-lg text-sm font-bold outline-none w-12 text-center py-1 text-slate-200" value={slot.availableSeats} onChange={(e) => updateSlot(index, 'availableSeats', Number(e.target.value))} disabled={isSubmitting} />
                     </div>
                   </div>
                   {occurrenceType === 'range' && formData.slots!.length > 1 && (
-                    <button type="button" onClick={() => removeSlot(index)} className="p-3 text-slate-500 hover:text-brand-red transition-colors">
+                    <button type="button" onClick={() => removeSlot(index)} className="p-3 text-slate-500 hover:text-brand-red transition-colors" disabled={isSubmitting}>
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                     </button>
                   )}
@@ -224,30 +267,32 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
 
           <div className="space-y-2">
             <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1">Energy Settlement (₹)</label>
-            <input required type="number" className="w-full bg-slate-800/50 border-2 border-white/5 rounded-2xl px-6 py-4 text-sm font-bold text-slate-200 outline-none focus:border-brand-red transition-all" value={formData.price} onChange={(e) => setFormData({...formData, price: Number(e.target.value)})} />
+            <input required type="number" className="w-full bg-slate-800/50 border-2 border-white/5 rounded-2xl px-6 py-4 text-sm font-bold text-slate-200 outline-none focus:border-brand-red transition-all" value={formData.price} onChange={(e) => setFormData({...formData, price: Number(e.target.value)})} disabled={isSubmitting} />
           </div>
 
           <div className="space-y-4">
             <div className="flex items-center justify-between px-1">
                <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Visual Aura</label>
                <div className="flex bg-white/5 p-1 rounded-xl">
-                 <button type="button" onClick={() => setImageInputMode('url')} className={`px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${imageInputMode === 'url' ? 'bg-slate-200 text-slate-900 shadow-sm' : 'text-slate-400'}`}>URL</button>
-                 <button type="button" onClick={() => setImageInputMode('file')} className={`px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${imageInputMode === 'file' ? 'bg-slate-200 text-slate-900 shadow-sm' : 'text-slate-400'}`}>Upload</button>
+                 <button type="button" onClick={() => setImageInputMode('url')} className={`px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${imageInputMode === 'url' ? 'bg-slate-200 text-slate-900 shadow-sm' : 'text-slate-400'}`} disabled={isSubmitting}>URL</button>
+                 <button type="button" onClick={() => setImageInputMode('file')} className={`px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${imageInputMode === 'file' ? 'bg-slate-200 text-slate-900 shadow-sm' : 'text-slate-400'}`} disabled={isSubmitting}>Upload</button>
                </div>
             </div>
 
             {imageInputMode === 'url' ? (
-              <input type="text" placeholder="https://images.unsplash.com/..." className="w-full bg-slate-800/50 border-2 border-white/5 rounded-2xl px-6 py-4 text-sm font-bold text-slate-200 outline-none focus:border-brand-red transition-all shadow-sm" value={formData.image} onChange={handleUrlChange} />
+              <input type="text" placeholder="https://images.unsplash.com/..." className="w-full bg-slate-800/50 border-2 border-white/5 rounded-2xl px-6 py-4 text-sm font-bold text-slate-200 outline-none focus:border-brand-red transition-all shadow-sm" value={formData.image} onChange={handleUrlChange} disabled={isSubmitting} />
             ) : (
               <>
-                <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
-                <div onClick={() => fileInputRef.current?.click()} className="w-full h-32 bg-slate-800/50 border-2 border-dashed border-white/10 rounded-2xl flex items-center justify-center cursor-pointer hover:border-brand-red/50 transition-all overflow-hidden relative group">
+                <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} disabled={isSubmitting} />
+                <div onClick={() => !isSubmitting && fileInputRef.current?.click()} className="w-full h-32 bg-slate-800/50 border-2 border-dashed border-white/10 rounded-2xl flex items-center justify-center cursor-pointer hover:border-brand-red/50 transition-all overflow-hidden relative group">
                    {imagePreview ? (
                      <div className="w-full h-full">
                        <img src={imagePreview} className="w-full h-full object-cover transition-transform group-hover:scale-105" alt="Preview" />
-                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <span className="text-slate-200 text-[8px] font-black uppercase tracking-widest bg-slate-900/50 px-3 py-1.5 rounded-full">Change Identity</span>
-                       </div>
+                       {!isSubmitting && (
+                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span className="text-slate-200 text-[8px] font-black uppercase tracking-widest bg-slate-900/50 px-3 py-1.5 rounded-full">Change Identity</span>
+                         </div>
+                       )}
                      </div>
                    ) : (
                      <span className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Select Visual Identity</span>
@@ -259,11 +304,16 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
 
           <div className="space-y-2">
             <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1">Resonance Context (Description)</label>
-            <textarea required rows={3} className="w-full bg-slate-800/50 border-2 border-white/5 rounded-2xl px-6 py-4 text-sm font-bold text-slate-200 outline-none focus:border-brand-red resize-none" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} />
+            <textarea required rows={3} className="w-full bg-slate-800/50 border-2 border-white/5 rounded-2xl px-6 py-4 text-sm font-bold text-slate-200 outline-none focus:border-brand-red resize-none" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} disabled={isSubmitting} />
           </div>
 
-          <button type="submit" disabled={isSubmitting} className="w-full py-6 bg-slate-200 text-slate-900 rounded-[2rem] font-black uppercase text-[12px] tracking-[0.2em] shadow-2xl hover:bg-brand-red hover:text-white transition-all active:scale-[0.98] disabled:opacity-50">
-            {isSubmitting ? 'Establishing Connection...' : 'Create Event'}
+          <button type="submit" disabled={isSubmitting} className="w-full py-6 bg-slate-200 text-slate-900 rounded-[2rem] font-black uppercase text-[12px] tracking-[0.2em] shadow-2xl hover:bg-brand-red hover:text-white transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3">
+            {isSubmitting ? (
+              <>
+                <div className="w-5 h-5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin"></div>
+                Calibrating...
+              </>
+            ) : 'Create Event'}
           </button>
         </form>
       </div>
@@ -368,7 +418,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, events, bookings, onLogout,
                 {userEvents.map(event => (
                   <div key={event.id} className="glass-card rounded-[2.5rem] border border-white/10 overflow-hidden shadow-sm group hover:border-white/20 transition-all hover:-translate-y-1">
                     <div className="relative h-48 overflow-hidden"><img src={event.image} alt={event.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" /><div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div></div>
-                    <div className="p-8"><h4 className="text-slate-200 font-black italic uppercase tracking-tight text-xl mb-4">{event.title}</h4><button className="w-full py-4 bg-slate-800 hover:bg-brand-red text-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg" onClick={async () => { if (confirm("Terminate this event?")) { await api.deleteEvent(event.id); onRefreshEvents?.(); } }}>Terminate</button></div>
+                    <div className="p-8 border-t border-white/10 bg-black/20 backdrop-blur-md">
+                      <h4 className="text-slate-200 font-black italic uppercase tracking-tight text-xl mb-4">{event.title}</h4>
+                      <button className="w-full py-4 bg-slate-800/50 hover:bg-brand-red text-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-white/10 transition-all shadow-lg" onClick={async () => { if (confirm("Terminate this event?")) { await api.deleteEvent(event.id); onRefreshEvents?.(); } }}>Terminate</button>
+                    </div>
                   </div>
                 ))}
               </div>
