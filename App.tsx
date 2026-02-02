@@ -22,7 +22,7 @@ const MOODS = [
   { label: "Peaceful", emoji: "🍃", glow: "rgba(16,185,129,0.5)", bg: "bg-emerald-500" }
 ];
 
-const CATEGORIES: (Category | 'All')[] = ['All', 'Shows', 'Activity', 'Therapy', 'Mindfulness', 'Workshop'];
+const CATEGORIES: (Category | 'All')[] = ['All', 'Shows', 'Activity', 'MMD Originals', 'Mindfulness', 'Workshop'];
 const AURA_STATES = ["TRUE", "SYNCED", "OPTIMAL", "PURE", "RESONATING", "FLUID", "DEEP"];
 
 const ConnectionLogo = ({ className = "w-8 h-8" }: { className?: string }) => (
@@ -39,7 +39,7 @@ const Visualizer = ({ isPlaying }: { isPlaying: boolean }) => (
     {[0.2, 0.5, 0.8, 0.4, 0.6].map((delay, i) => (
       <div 
         key={i} 
-        className={`w-[2.5px] rounded-full transition-all duration-300 ${isPlaying ? 'bg-brand-red animate-music-visualizer' : 'bg-slate-300 h-1'}`}
+        className={`w-[2.5px] rounded-full transition-all duration-300 ${isPlaying ? 'bg-brand-red animate-music-visualizer' : 'bg-slate-700 h-1'}`}
         style={{ animationDelay: `${delay}s` }}
       />
     ))}
@@ -118,28 +118,28 @@ const App: React.FC = () => {
   }, [events, selectedCategory, searchQuery, aiRec]);
 
   return (
-    <div className={`flex flex-col min-h-screen mesh-bg vibe-sunny selection:bg-brand-red selection:text-white`}>
-      <nav className="fixed top-0 left-0 right-0 z-[100] h-16 glass-card border-b border-white/20">
+    <div className={`flex flex-col min-h-screen bg-black mesh-bg vibe-sunny selection:bg-brand-red selection:text-slate-200`}>
+      <nav className="fixed top-0 left-0 right-0 z-[100] h-16 glass-card border-b border-white/10">
         <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer group" onClick={() => { setShowDashboard(false); setShowAdmin(false); setAiRec(null); setSelectedCategory('All'); }}>
             <ConnectionLogo />
-            <span className="text-xl font-black italic tracking-tighter text-slate-900 group-hover:text-brand-red transition-all">MakeMyDays</span>
+            <span className="text-xl font-black italic tracking-tighter text-slate-200 group-hover:text-brand-red transition-all">MakeMyDays</span>
           </div>
 
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-3">
-               <button onClick={toggleMusic} className={`relative group w-11 h-11 flex items-center justify-center rounded-full transition-all duration-500 border-2 ${isMusicPlaying ? 'bg-slate-900 border-brand-red shadow-lg' : 'bg-white border-slate-100 hover:border-slate-300'}`}>
+               <button onClick={toggleMusic} aria-label="Toggle Atmosphere" className={`relative group w-11 h-11 flex items-center justify-center rounded-full transition-all duration-500 border-2 ${isMusicPlaying ? 'bg-slate-900 border-brand-red shadow-lg' : 'bg-slate-800 border-white/10 hover:border-white/30'}`}>
                 {isMusicPlaying && <div className="absolute inset-0 rounded-full border border-brand-red/40 animate-music-pulse" />}
                 <div className="relative z-10 transition-transform group-hover:scale-110"><Visualizer isPlaying={isMusicPlaying} /></div>
                </button>
             </div>
 
             {currentUser ? (
-              <button onClick={() => setShowDashboard(!showDashboard)} className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black italic text-lg shadow-lg">
+              <button id="user-sanctuary-trigger" onClick={() => setShowDashboard(!showDashboard)} className="w-10 h-10 rounded-xl bg-slate-100 text-slate-800 flex items-center justify-center font-black italic text-lg shadow-lg hover:bg-slate-200 transition-colors">
                 {currentUser.name[0]}
               </button>
             ) : (
-              <button onClick={() => setShowAuthModal(true)} className="px-6 py-2 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg hover:bg-brand-red transition-all">Join</button>
+              <button onClick={() => setShowAuthModal(true)} className="px-6 py-2 bg-slate-100 text-slate-800 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg hover:bg-brand-red hover:text-slate-200 transition-all">Join</button>
             )}
           </div>
         </div>
@@ -158,12 +158,12 @@ const App: React.FC = () => {
           <div className="space-y-12 pb-20">
             <section className="text-center space-y-10">
               <div className="inline-block relative">
-                <div className="absolute inset-0 bg-brand-lime/20 blur-xl"></div>
-                <div className="relative glass-card px-4 py-1 rounded-full border border-brand-lime/20 animate-float">
-                  <span className="text-slate-900 text-[9px] font-black uppercase tracking-[0.3em] italic">Aura: {AURA_STATES[auraIndex]}</span>
+                <div className="absolute inset-0 bg-brand-lime/10 blur-xl"></div>
+                <div className="relative glass-card px-4 py-1 rounded-full border border-white/10 animate-float">
+                  <span className="text-slate-200 text-[9px] font-black uppercase tracking-[0.3em] italic">Aura: {AURA_STATES[auraIndex]}</span>
                 </div>
               </div>
-              <h1 className="text-5xl md:text-8xl font-display font-black italic tracking-tighter leading-none text-slate-900 uppercase">
+              <h1 className="text-5xl md:text-8xl font-display font-black italic tracking-tighter leading-none text-slate-200 uppercase">
                 Find Your <br /><span className="frequency-text-gradient animate-freq-pulse">Frequency</span>
               </h1>
               
@@ -172,14 +172,13 @@ const App: React.FC = () => {
                     <div className="flex-1 w-full px-5 py-3 flex items-center gap-4 z-10">
                        <input 
                          type="text" placeholder="How is your energy today?..."
-                         className="w-full bg-transparent border-none text-white text-lg font-medium placeholder:text-slate-500 focus:outline-none"
+                         className="w-full bg-transparent border-none text-slate-200 text-lg font-medium placeholder:text-slate-600 focus:outline-none"
                          value={userMood} onChange={(e) => setUserMood(e.target.value)}
                          onKeyDown={(e) => e.key === 'Enter' && handleMoodSearch(userMood)}
                        />
                     </div>
-                    {/* Sync Aura Button: Royal Blue */}
-                    <button onClick={() => handleMoodSearch(userMood)} className="w-full md:w-auto px-10 py-4 bg-brand-royal text-white rounded-[1.5rem] font-black uppercase text-[11px] tracking-[0.2em] transition-all hover:bg-brand-red hover:text-white shadow-2xl shadow-brand-royal/40">
-                      {isAiLoading ? 'Calibrating...' : 'Sync Aura'}
+                    <button onClick={() => handleMoodSearch(userMood)} className="w-full md:w-auto px-10 py-4 bg-blue-600 text-slate-200 rounded-[1.5rem] font-black uppercase text-[11px] tracking-[0.2em] transition-all hover:bg-blue-500 hover:text-slate-200 shadow-2xl shadow-blue-600/40">
+                      {isAiLoading ? 'Calibrating...' : 'SEARCH 🔍'}
                     </button>
                  </div>
 
@@ -194,9 +193,9 @@ const App: React.FC = () => {
                           style={{ minWidth: '80px' }}
                         >
                           <div className={`absolute inset-0 rounded-[1.5rem] blur-xl opacity-0 transition-opacity duration-500 group-hover:opacity-30 ${isActive ? 'opacity-50' : ''}`} style={{ backgroundColor: mood.glow }}></div>
-                          <div className={`relative z-10 w-full h-full p-2.5 rounded-[1.5rem] backdrop-blur-xl border transition-all duration-300 flex flex-col items-center gap-1.5 ${isActive ? `${mood.bg} border-transparent shadow-lg` : 'bg-white/40 border-white/50'}`}>
+                          <div className={`relative z-10 w-full h-full p-2.5 rounded-[1.5rem] backdrop-blur-xl border transition-all duration-300 flex flex-col items-center gap-1.5 ${isActive ? `${mood.bg} border-transparent shadow-lg` : 'bg-slate-900/40 border-white/10'}`}>
                             <span className={`text-2xl transition-transform duration-300 group-hover:scale-110 ${isActive ? 'animate-bounce' : ''}`}>{mood.emoji}</span>
-                            <span className={`text-[8px] font-black uppercase tracking-[0.15em] italic ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-slate-900'}`}>{mood.label}</span>
+                            <span className={`text-[8px] font-black uppercase tracking-[0.15em] italic ${isActive ? 'text-slate-200' : 'text-slate-400 group-hover:text-slate-200'}`}>{mood.label}</span>
                           </div>
                         </button>
                       );
@@ -205,20 +204,20 @@ const App: React.FC = () => {
 
                  {aiRec && (
                    <div className="animate-in slide-in-from-top-6 duration-700 pt-4">
-                     <div className="relative bg-white rounded-[3rem] p-8 border border-slate-100 shadow-3xl flex flex-col md:flex-row items-center gap-8">
-                        <div className="w-16 h-16 rounded-full bg-slate-900 flex items-center justify-center shrink-0 shadow-2xl relative"><span className="text-2xl animate-pulse">✨</span></div>
-                        <div className="flex-1 text-center md:text-left"><p className="text-[11px] font-black uppercase tracking-[0.3em] text-brand-red mb-2 italic">Frequency Harmonization</p><p className="text-lg font-bold italic text-slate-900 leading-tight">"{aiRec.reasoning}"</p></div>
-                        <button onClick={() => setAiRec(null)} className="p-3 text-slate-300 hover:text-brand-red transition-all transform hover:rotate-90"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12"/></svg></button>
+                     <div className="relative glass-card rounded-[3rem] p-8 border border-white/10 shadow-3xl flex flex-col md:flex-row items-center gap-8">
+                        <div className="w-16 h-16 rounded-full bg-brand-red flex items-center justify-center shrink-0 shadow-2xl relative"><span className="text-2xl animate-pulse">✨</span></div>
+                        <div className="flex-1 text-center md:text-left"><p className="text-[11px] font-black uppercase tracking-[0.3em] text-brand-red mb-2 italic">Frequency Harmonization</p><p className="text-lg font-bold italic text-slate-100 leading-tight">"{aiRec.reasoning}"</p></div>
+                        <button onClick={() => setAiRec(null)} className="p-3 text-slate-400 hover:text-brand-red transition-all transform hover:rotate-90"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12"/></svg></button>
                      </div>
                    </div>
                  )}
               </div>
             </section>
 
-            <section className="space-y-10">
+            <section id="event-grid-container" className="space-y-10">
               <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide py-2">
                 {CATEGORIES.map(cat => (
-                  <button key={cat} onClick={() => setSelectedCategory(cat)} className={`whitespace-nowrap px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border-2 ${selectedCategory === cat ? 'bg-slate-900 border-slate-900 text-white shadow-xl translate-y-[-2px]' : 'bg-white/50 border-white/20 text-slate-400 hover:border-slate-300'}`}>
+                  <button key={cat} onClick={() => setSelectedCategory(cat)} className={`whitespace-nowrap px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border-2 ${selectedCategory === cat ? 'bg-slate-100 border-slate-100 text-slate-800 shadow-xl translate-y-[-2px]' : 'bg-slate-900/50 border-white/10 text-slate-400 hover:border-white/30 hover:text-slate-200'}`}>
                     {cat}
                   </button>
                 ))}
@@ -231,11 +230,11 @@ const App: React.FC = () => {
         )}
       </main>
 
-      <footer className="py-12 px-6 border-t border-slate-100/50">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] font-black tracking-[0.3em] text-slate-900 uppercase italic">
+      <footer className="py-12 px-6 border-t border-white/5">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] font-black tracking-[0.3em] text-slate-400 uppercase italic">
           <div className="flex flex-col md:flex-row items-center gap-4">
-            <span>MAKEMYDAYS © 2024</span>
-            <span className="text-slate-400">MADE WITH <span className="text-brand-red scale-110 inline-block">❤️</span> BY BENEME INC.</span>
+            <span className="text-slate-300">MAKEMYDAYS © 2024</span>
+            <span className="text-slate-500">MADE WITH <span className="text-brand-red scale-110 inline-block">❤️</span> BY BENEME INC.</span>
           </div>
           <div className="flex gap-8">
             {['Terms', 'Privacy'].map(l => (<button key={l} className="hover:text-brand-red transition-colors">{l}</button>))}

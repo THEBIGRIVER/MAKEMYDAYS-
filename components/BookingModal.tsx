@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Event, Slot } from '../types.ts';
 
@@ -24,10 +25,12 @@ const BookingModal: React.FC<BookingModalProps> = ({ event, onClose, onConfirm }
       return event.dates.map(dateStr => {
         const parts = dateStr.split(' ');
         const dayNum = parseInt(parts[0]);
+        
+        // Handle "Every Monday" or "25 Dec"
         return {
           full: dateStr,
-          day: (parts[1] || '').toUpperCase(),
-          date: dayNum || 0
+          day: (parts[1] || 'DATE').toUpperCase(),
+          date: isNaN(dayNum) ? parts[0] : dayNum
         };
       });
     }
@@ -39,7 +42,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ event, onClose, onConfirm }
       d.setDate(d.getDate() + i);
       dates.push({
         full: d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
-        day: d.toLocaleDateString('en-IN', { weekday: 'short' }),
+        day: d.toLocaleDateString('en-IN', { weekday: 'short' }).toUpperCase(),
         date: d.getDate()
       });
     }
@@ -47,13 +50,13 @@ const BookingModal: React.FC<BookingModalProps> = ({ event, onClose, onConfirm }
   }, [event.dates]);
 
   useEffect(() => {
-    if (availableDates.length > 0 && !selectedDate) {
+    if (availableDates.length > 0 && (!selectedDate || !availableDates.find(d => d.full === selectedDate))) {
       setSelectedDate(availableDates[0].full);
     }
-    if (event.slots.length === 1 && !selectedSlot) {
+    if (event.slots.length > 0 && (!selectedSlot || !event.slots.find(s => s.time === selectedSlot.time))) {
       setSelectedSlot(event.slots[0]);
     }
-  }, [availableDates, event.slots, selectedDate, selectedSlot]);
+  }, [availableDates, event.slots]);
 
   const generateBookingId = () => {
     return `MMD-${Math.random().toString(36).substr(2, 6).toUpperCase()}-${Date.now().toString().slice(-4)}`;
@@ -111,54 +114,72 @@ Ref ID: ${bookingId}`;
   }, [event, selectedSlot, selectedDate, onConfirm]);
 
   if (modalState === 'success') {
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(generatedBookingId)}&color=0f172a&bgcolor=ffffff`;
+
     return (
-      <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 sm:p-0">
-        <div className="absolute inset-0 bg-slate-950/95 backdrop-blur-2xl transition-opacity animate-in fade-in duration-700"></div>
-        <div className="relative bg-white w-full max-w-md rounded-[3rem] shadow-3xl overflow-hidden animate-in zoom-in-95 duration-500 transform-gpu">
-          <div className="h-2 bg-emerald-500 w-full"></div>
-          <div className="p-10 text-center">
-            <div className="relative w-24 h-24 mx-auto mb-8">
-              <div className="absolute inset-0 bg-emerald-100 rounded-full animate-ping opacity-25"></div>
-              <div className="relative w-24 h-24 bg-emerald-500 rounded-full flex items-center justify-center shadow-2xl shadow-emerald-500/40">
-                <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" />
-                </svg>
+      <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
+        <div className="absolute inset-0 bg-slate-950/98 backdrop-blur-3xl animate-in fade-in duration-700"></div>
+        <div className="relative bg-white w-full max-w-sm rounded-[3rem] shadow-3xl overflow-hidden animate-in zoom-in-95 duration-500 transform-gpu flex flex-col">
+          <div className="bg-emerald-500 p-8 text-center relative overflow-hidden">
+             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+             <div className="relative z-10">
+               <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 animate-music-pulse">
+                  <svg className="w-8 h-8 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" />
+                  </svg>
+               </div>
+               <h2 className="text-2xl font-black italic tracking-tighter uppercase text-slate-200 leading-none">Confirmed.</h2>
+               <p className="text-slate-200/80 text-[8px] font-black uppercase tracking-[0.3em] mt-2">Access Granted to Sanctuary</p>
+             </div>
+          </div>
+
+          <div className="flex-1 p-8 text-center flex flex-col gap-6">
+            <div className="mx-auto p-4 bg-white border-4 border-slate-50 rounded-[2.5rem] shadow-sm animate-in fade-in zoom-in duration-700 delay-300">
+              <img src={qrUrl} alt="Booking QR Code" className="w-32 h-32 opacity-90" />
+            </div>
+
+            <div className="space-y-1">
+              <span className="text-[8px] font-black uppercase tracking-[0.4em] text-slate-300">Identity Reference</span>
+              <div className="text-xl font-mono font-black text-slate-900 tracking-tighter select-all border-y border-dashed border-slate-100 py-3">
+                {generatedBookingId}
               </div>
             </div>
-            <h2 className="text-3xl font-black italic tracking-tighter uppercase mb-2 text-slate-900 leading-tight">Confirmed.</h2>
-            <p className="text-slate-400 font-medium italic mb-8 px-4 text-sm">
-              Your resonance for <span className="text-slate-900 font-black">{event.title}</span> is now active.
-            </p>
-            <div className="bg-slate-50 rounded-[2rem] p-6 mb-8 border border-slate-100 text-left relative">
-              <div className="space-y-4">
-                <div className="flex justify-between items-start">
-                  <div className="flex flex-col">
-                    <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 mb-1">Calibration</span>
-                    <span className="text-xs font-black italic text-slate-900 uppercase line-clamp-1">{event.title}</span>
+
+            <div className="bg-slate-50 rounded-[2rem] p-5 text-left border border-slate-100 relative">
+               <div className="space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div className="flex flex-col">
+                      <span className="text-[7px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Session</span>
+                      <span className="text-[10px] font-black italic text-slate-900 uppercase line-clamp-1">{event.title}</span>
+                    </div>
+                    <div className="text-right flex flex-col">
+                      <span className="text-[7px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Frequency Date</span>
+                      <span className="text-[10px] font-black text-slate-900">{selectedDate}</span>
+                    </div>
                   </div>
-                  <div className="text-right flex flex-col">
-                    <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 mb-1">Time Sync</span>
-                    <span className="text-xs font-black text-slate-900">{selectedDate}, {selectedSlot?.time}</span>
+                  <div className="flex justify-between items-end pt-3 border-t border-slate-200/50 border-dashed">
+                    <div className="flex flex-col">
+                      <span className="text-[7px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Temporal Sync</span>
+                      <span className="text-[10px] font-black text-slate-900">{selectedSlot?.time}</span>
+                    </div>
+                    <div className="text-right">
+                       <span className="text-[11px] font-black text-brand-red">₹{event.price}</span>
+                    </div>
                   </div>
-                </div>
-                <div className="pt-4 border-t border-slate-200/50 border-dashed flex justify-between items-center">
-                  <div className="flex flex-col">
-                    <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 mb-1">Reference</span>
-                    <span className="text-[11px] font-mono font-black text-brand-red tracking-tight">{generatedBookingId}</span>
-                  </div>
-                  <div className="text-right flex flex-col">
-                    <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 mb-1">Status</span>
-                    <span className="text-xs font-black text-slate-900 uppercase tracking-tighter">Verified</span>
-                  </div>
-                </div>
-              </div>
+               </div>
             </div>
+
             <button 
               onClick={onClose}
-              className="w-full py-5 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase text-[10px] tracking-[0.2em] transition-all active:scale-95 shadow-xl"
+              className="w-full py-5 bg-slate-900 text-slate-200 rounded-[1.5rem] font-black uppercase text-[10px] tracking-[0.2em] transition-all active:scale-95 shadow-2xl hover:bg-brand-red"
             >
               Enter Sanctuary
             </button>
+          </div>
+          <div className="bg-slate-50 py-4 border-t border-dashed border-slate-200 flex justify-center gap-1">
+            {[...Array(20)].map((_, i) => (
+              <div key={i} className="w-1 h-1 rounded-full bg-slate-200" />
+            ))}
           </div>
         </div>
       </div>
@@ -175,7 +196,7 @@ Ref ID: ${bookingId}`;
                <img src={event.image} alt={event.title} className="w-full h-full object-cover" />
                <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-black/20"></div>
                <div className="absolute bottom-0 left-0 p-8 md:p-10 flex flex-col items-start">
-                  <span className="bg-brand-red text-white text-[8px] font-black uppercase px-3 py-1.5 rounded-full border border-white/20 shadow-lg mb-3">
+                  <span className="bg-brand-red text-slate-200 text-[8px] font-black uppercase px-3 py-1.5 rounded-full border border-white/20 shadow-lg mb-3">
                     {event.category}
                   </span>
                   <h2 className="text-2xl md:text-3xl font-black italic tracking-tighter leading-none text-slate-900">
@@ -186,43 +207,67 @@ Ref ID: ${bookingId}`;
 
             <div className="p-8 md:p-10 pt-6">
               <div className="mb-8">
-                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4">Select Target Date</h4>
-                <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 snap-x">
-                  {availableDates.map((dateObj, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setSelectedDate(dateObj.full)}
-                      className={`flex flex-col items-center justify-center min-w-[70px] py-4 rounded-2xl border-2 transition-all snap-center ${
-                        selectedDate === dateObj.full
-                          ? 'border-slate-900 bg-slate-900 text-white shadow-lg'
-                          : 'border-slate-50 bg-slate-50 text-slate-400 hover:border-slate-200'
-                      }`}
-                    >
-                      <span className="text-[8px] font-black uppercase mb-1">{dateObj.day}</span>
-                      <span className="text-lg font-black">{dateObj.date}</span>
-                    </button>
-                  ))}
-                </div>
+                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4">
+                  {availableDates.length === 1 ? 'Event Anchor' : 'Select Target Date'}
+                </h4>
+                {availableDates.length === 1 ? (
+                  <div className="bg-slate-900 text-slate-200 rounded-2xl p-6 flex flex-col items-start gap-1 shadow-xl border border-white/5 animate-in slide-in-from-left duration-500">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-brand-red">Single Frequency Fixed</span>
+                    <span className="text-xl font-black italic">{availableDates[0].full}</span>
+                  </div>
+                ) : (
+                  <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 snap-x">
+                    {availableDates.map((dateObj, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setSelectedDate(dateObj.full)}
+                        className={`flex flex-col items-center justify-center min-w-[70px] py-4 rounded-2xl border-2 transition-all snap-center ${
+                          selectedDate === dateObj.full
+                            ? 'border-slate-900 bg-slate-900 text-slate-200 shadow-lg'
+                            : 'border-slate-50 bg-slate-50 text-slate-400 hover:border-slate-200'
+                        }`}
+                      >
+                        <span className="text-[8px] font-black uppercase mb-1">{dateObj.day}</span>
+                        <span className="text-lg font-black">{dateObj.date}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="space-y-4 mb-10">
-                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Select Session Time</h4>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {event.slots.map((slot, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setSelectedSlot(slot)}
-                      className={`px-4 py-4 rounded-2xl border-2 transition-all duration-300 flex flex-col items-center gap-1 ${
-                        selectedSlot === slot 
-                          ? 'border-brand-red bg-brand-red/5 text-slate-900' 
-                          : 'border-slate-50 bg-slate-50 text-slate-400 hover:border-slate-200'
-                      }`}
-                    >
-                      <span className="font-black text-sm">{slot.time}</span>
-                      <span className="text-[8px] uppercase font-bold opacity-60">{slot.availableSeats} slots free</span>
-                    </button>
-                  ))}
-                </div>
+                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                  {event.slots.length === 1 ? 'Temporal Sync' : 'Select Session Time'}
+                </h4>
+                {event.slots.length === 1 ? (
+                  <div className="bg-slate-50 border-2 border-slate-100 rounded-2xl p-6 flex items-center justify-between animate-in slide-in-from-right duration-500">
+                    <div>
+                      <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 block mb-0.5">Standard Time</span>
+                      <span className="text-xl font-black italic text-slate-900">{event.slots[0].time}</span>
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <span className="text-[8px] font-black uppercase text-emerald-500">Status</span>
+                      <span className="text-[10px] font-black text-slate-400 uppercase">Confirmed</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {event.slots.map((slot, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setSelectedSlot(slot)}
+                        className={`px-4 py-4 rounded-2xl border-2 transition-all duration-300 flex flex-col items-center gap-1 ${
+                          selectedSlot?.time === slot.time 
+                            ? 'border-brand-red bg-brand-red/5 text-slate-900' 
+                            : 'border-slate-50 bg-slate-50 text-slate-400 hover:border-slate-200'
+                        }`}
+                      >
+                        <span className="font-black text-sm">{slot.time}</span>
+                        <span className="text-[8px] uppercase font-bold opacity-60">{slot.availableSeats} slots free</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="flex flex-col gap-3">
@@ -232,7 +277,7 @@ Ref ID: ${bookingId}`;
                   className={`w-full h-16 rounded-2xl transition-all transform active:scale-95 flex items-center justify-center gap-3 border shadow-xl ${
                     !selectedSlot || !selectedDate 
                       ? 'opacity-40 grayscale pointer-events-none bg-slate-100 text-slate-300' 
-                      : 'bg-black text-white hover:bg-slate-900 active:bg-slate-950'
+                      : 'bg-black text-slate-200 hover:bg-slate-900 active:bg-slate-950'
                   }`}
                 >
                   <span className="font-black uppercase tracking-[0.2em] text-[11px]">Pay with GPay</span>
@@ -244,10 +289,10 @@ Ref ID: ${bookingId}`;
                   className={`w-full h-14 rounded-2xl transition-all transform active:scale-95 flex items-center justify-center gap-2 border-2 ${
                     !selectedSlot || !selectedDate 
                       ? 'opacity-40 grayscale pointer-events-none bg-slate-50 border-slate-100 text-slate-300' 
-                      : 'border-[#25D366] bg-[#25D366] text-white hover:bg-[#1ebd5b] shadow-lg shadow-[#25D366]/20'
+                      : 'border-[#25D366] bg-[#25D366] text-slate-200 hover:bg-[#1ebd5b] shadow-lg shadow-[#25D366]/20'
                   }`}
                 >
-                  <svg className="w-5 h-5 fill-current text-white" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 fill-current text-slate-200" viewBox="0 0 24 24">
                     <path d="M12.031 2c-5.511 0-9.997 4.486-9.997 9.998 0 1.764.459 3.42 1.261 4.867l-1.295 4.729 4.839-1.269c1.401.761 2.993 1.192 4.686 1.192 5.511 0 9.997-4.487 9.997-9.999 0-5.511-4.486-9.998-9.991-9.998zm4.647 14.129c-.19.539-1.107 1.033-1.532 1.096-.379.056-.874.093-2.314-.492-1.841-.75-3.033-2.615-3.125-2.738-.093-.123-.756-.997-.756-1.99 0-1.011.528-1.508.718-1.714.19-.205.412-.256.549-.256.136 0 .273.003.391.008.123.006.289-.046.452.348.169.412.576 1.402.625 1.502.051.099.083.216.017.348-.067.132-.099.213-.199.329-.099.117-.21.261-.299.35-.099.099-.202.207-.087.402.116.196.516.852 1.107 1.38.761.68 1.4 1.127 1.6 1.226.2.099.317.084.434-.051.117-.135.501-.581.635-.779.135-.199.27-.166.455-.099.184.067 1.171.554 1.373.655.202.102.336.152.386.236.05.084.05.485-.14.1.1.1.1.1.1z"/>
                   </svg>
                   <span className="font-black uppercase tracking-[0.15em] text-[10px]">Connect to Host</span>

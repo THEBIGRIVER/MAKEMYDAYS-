@@ -21,7 +21,7 @@ const steps = [
   {
     targetId: 'event-grid-container',
     title: "Experience Stream",
-    description: "Browse curated events from Elite Paintball to Somatic Therapy. Each session is designed for maximum presence.",
+    description: "Browse curated events from Elite Paintball to MMD Originals. Each session is designed for maximum presence.",
     position: 'top'
   },
   {
@@ -50,7 +50,6 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete }) => {
           height: rect.height
         });
         
-        // Ensure the element is visible
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }
@@ -68,10 +67,8 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete }) => {
 
   return (
     <div className="fixed inset-0 z-[1000] pointer-events-none">
-      {/* Dim Overlay with Spotlight */}
       <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-[2px] pointer-events-auto transition-opacity duration-500" />
       
-      {/* Focused Spotlight (SVG Mask) */}
       {step.targetId && (
         <svg className="absolute inset-0 w-full h-full pointer-events-none z-[1001]">
           <defs>
@@ -92,40 +89,39 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete }) => {
         </svg>
       )}
 
-      {/* Tour Card */}
       <div 
         className={`absolute z-[1002] pointer-events-auto transition-all duration-700 ease-in-out w-full max-w-sm px-6
           ${!step.targetId ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' : ''}
         `}
         style={step.targetId ? {
           top: step.position === 'top' ? coords.top - window.scrollY - 200 : coords.top + coords.height - window.scrollY + 20,
-          left: coords.left + coords.width / 2 - 192, // 192 is half of 384 (max-w-sm)
+          left: coords.left + coords.width / 2 - 192, 
         } : {}}
       >
         <div className="glass-card rounded-[2.5rem] p-8 shadow-3xl border border-white/20 animate-in zoom-in-95 duration-500">
           <div className="flex items-center justify-between mb-4">
             <span className="text-[8px] font-black uppercase tracking-[0.4em] text-brand-red">Step {currentStep + 1} of {steps.length}</span>
-            <button onClick={onComplete} className="text-slate-400 hover:text-slate-900 transition-colors">
+            <button onClick={onComplete} className="text-slate-400 hover:text-slate-100 transition-colors">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
           </div>
           
-          <h3 className="text-2xl font-black italic tracking-tighter uppercase text-slate-900 mb-3">{step.title}</h3>
-          <p className="text-slate-500 text-xs font-medium italic leading-relaxed mb-8">
+          <h3 className="text-2xl font-black italic tracking-tighter uppercase text-slate-100 mb-3">{step.title}</h3>
+          <p className="text-slate-400 text-xs font-medium italic leading-relaxed mb-8">
             {step.description}
           </p>
 
           <div className="flex items-center gap-3">
             <button 
               onClick={handleNext}
-              className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition-all"
+              className="flex-1 py-4 bg-slate-100 text-slate-800 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition-all"
             >
               {currentStep === steps.length - 1 ? "Initiate" : "Synchronize"}
             </button>
             {currentStep < steps.length - 1 && (
               <button 
                 onClick={onComplete}
-                className="px-6 py-4 text-slate-400 hover:text-slate-900 text-[10px] font-black uppercase tracking-widest transition-all"
+                className="px-6 py-4 text-slate-400 hover:text-slate-100 text-[10px] font-black uppercase tracking-widest transition-all"
               >
                 Skip
               </button>
@@ -134,7 +130,6 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete }) => {
         </div>
       </div>
       
-      {/* Animated Beacon */}
       {step.targetId && (
         <div 
           className="absolute z-[1001] w-4 h-4 bg-brand-red rounded-full animate-ping opacity-75 transition-all duration-700"

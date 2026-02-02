@@ -1,3 +1,4 @@
+
 import { Event } from './types.ts';
 
 const DEFAULT_HOST = '917686924919';
@@ -30,8 +31,8 @@ export const INITIAL_EVENTS: Event[] = [
   },
   {
     id: 't1',
-    title: 'Deep Tissue Somatic Therapy',
-    category: 'Therapy',
+    title: 'Deep Tissue Somatic MMD Original',
+    category: 'MMD Originals',
     image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&q=80&w=1200',
     description: 'Targeted physical release to unlock trapped emotional frequencies and restore muscular harmony.',
     price: 3500,
@@ -114,7 +115,7 @@ export const INITIAL_EVENTS: Event[] = [
   {
     id: 'b4',
     title: 'Herbal Infusion Tasting',
-    category: 'Therapy',
+    category: 'MMD Originals',
     image: 'https://images.unsplash.com/photo-1594631252845-29fc4586d517?auto=format&fit=crop&q=80&w=1200',
     description: 'A sensory journey through natural herbs and their healing frequencies. Taste, smell, and heal.',
     price: 89,
@@ -124,8 +125,8 @@ export const INITIAL_EVENTS: Event[] = [
   },
   {
     id: 'b5',
-    title: 'Laughter Therapy Circle',
-    category: 'Therapy',
+    title: 'Laughter Circle MMD Original',
+    category: 'MMD Originals',
     image: 'https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&q=80&w=800',
     description: 'Release built-up stress through a guided laughter yoga session. High frequency, low cost.',
     price: 39,

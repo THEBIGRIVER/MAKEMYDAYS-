@@ -31,7 +31,7 @@ const ChatBot: React.FC = () => {
     <div className="fixed bottom-6 right-6 z-[300]">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-12 h-12 bg-black text-white flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-xl"
+        className="w-12 h-12 bg-white text-slate-800 flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-[0_10px_30px_rgba(0,0,0,0.5)]"
       >
         {isOpen ? (
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -41,17 +41,17 @@ const ChatBot: React.FC = () => {
       </button>
 
       {isOpen && (
-        <div className="absolute bottom-16 right-0 w-[calc(100vw-3rem)] md:w-80 h-[450px] bg-white border border-slate-100 shadow-2xl flex flex-col animate-slide-up">
-          <div className="p-5 border-b border-slate-50 flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-widest">Assistant</span>
-            <div className="w-2 h-2 rounded-full bg-slate-100" />
+        <div className="absolute bottom-16 right-0 w-[calc(100vw-3rem)] md:w-80 h-[450px] bg-slate-900 border border-white/10 shadow-2xl flex flex-col animate-slide-up rounded-[2rem] overflow-hidden">
+          <div className="p-5 border-b border-white/5 flex items-center justify-between bg-black/40">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-200">Assistant</span>
+            <div className="w-2 h-2 rounded-full bg-brand-red animate-pulse" />
           </div>
 
-          <div className="flex-1 overflow-y-auto p-5 space-y-4 scrollbar-hide bg-white">
+          <div className="flex-1 overflow-y-auto p-5 space-y-4 scrollbar-hide bg-slate-900">
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[90%] px-4 py-2 text-xs leading-relaxed ${
-                  m.role === 'user' ? 'bg-slate-50 text-black' : 'bg-white border border-slate-100 text-slate-600'
+                <div className={`max-w-[90%] px-4 py-3 text-xs leading-relaxed rounded-2xl ${
+                  m.role === 'user' ? 'bg-brand-royal text-slate-200' : 'bg-slate-800 text-slate-200 border border-white/5'
                 }`}>
                   {m.text}
                 </div>
@@ -59,19 +59,19 @@ const ChatBot: React.FC = () => {
             ))}
             {isTyping && (
               <div className="flex justify-start">
-                <div className="px-4 py-2 text-[10px] font-bold uppercase text-slate-300 animate-pulse">Thinking...</div>
+                <div className="px-4 py-2 text-[10px] font-bold uppercase text-slate-500 animate-pulse">Thinking...</div>
               </div>
             )}
             <div ref={messagesEndRef} />
           </div>
 
-          <form onSubmit={handleSend} className="p-4 border-t border-slate-50 flex gap-2">
+          <form onSubmit={handleSend} className="p-4 border-t border-white/5 flex gap-2 bg-black/40">
             <input
               type="text" value={input} onChange={(e) => setInput(e.target.value)}
               placeholder="Ask me..."
-              className="flex-1 bg-transparent text-xs outline-none"
+              className="flex-1 bg-transparent text-xs outline-none text-slate-200 placeholder:text-slate-600"
             />
-            <button type="submit" disabled={!input.trim()} className="text-[10px] font-bold uppercase tracking-widest text-black hover:opacity-50 disabled:opacity-20">Send</button>
+            <button type="submit" disabled={!input.trim()} className="text-[10px] font-bold uppercase tracking-widest text-slate-200 hover:text-brand-red disabled:opacity-20 transition-colors">Send</button>
           </form>
         </div>
       )}

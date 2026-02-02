@@ -17,31 +17,31 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick, id }) => {
     <div 
       id={id}
       onClick={() => onClick(event)}
-      className="group cursor-pointer animate-slide-up flex flex-col gap-4 select-none glass-card p-4 rounded-[2.5rem] hover:shadow-2xl transition-all hover:-translate-y-1"
+      className="group cursor-pointer animate-slide-up flex flex-col gap-4 select-none bg-white p-4 rounded-[2.5rem] hover:shadow-[0_30px_60px_rgba(0,0,0,0.5)] transition-all hover:-translate-y-1"
     >
-      <div className="relative aspect-[1/1] overflow-hidden rounded-[2rem] bg-slate-50 transition-all duration-500">
+      <div className="relative aspect-[1/1] overflow-hidden rounded-[2rem] bg-slate-100 transition-all duration-500">
         <img 
           src={imgSrc} 
           alt={event.title} 
           onError={() => setImgSrc(FALLBACK_IMAGE)}
-          className="w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-110" 
+          className="w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-110 opacity-100" 
         />
         <div className="absolute top-4 left-4">
-           <span className="bg-slate-900/80 backdrop-blur-md text-white text-[8px] font-black uppercase tracking-wider px-3 py-1.5 rounded-full border border-white/20">
+           <span className="bg-black/80 backdrop-blur-md text-slate-200 text-[8px] font-black uppercase tracking-wider px-3 py-1.5 rounded-full border border-white/10 shadow-lg">
             {event.category}
            </span>
         </div>
       </div>
 
-      <div className="px-2 space-y-1">
-        <h4 className="text-base font-black italic uppercase tracking-tighter leading-tight text-slate-900">
+      <div className="px-2 pb-2 space-y-1.5">
+        <h4 className="text-base font-black italic uppercase tracking-tighter leading-tight text-slate-800 group-hover:text-brand-red transition-colors">
           {event.title}
         </h4>
         <div className="flex items-center justify-between pt-1">
-          <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
+          <span className="text-slate-500 text-[10px] font-black uppercase tracking-widest group-hover:text-slate-800 transition-colors">
             ₹{event.price.toLocaleString('en-IN')}
           </span>
-          <div className="w-8 h-[2px] bg-slate-100 group-hover:bg-brand-red transition-all group-hover:w-12" />
+          <div className="w-8 h-[2px] bg-slate-100 group-hover:bg-brand-red transition-all group-hover:w-12 rounded-full" />
         </div>
       </div>
     </div>

@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { Event, Booking, AIRecommendation } from '../types.ts';
 import { INITIAL_EVENTS } from '../constants.ts';
@@ -44,7 +45,7 @@ export const api = {
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
         contents: `USER MOOD: "${mood}". 
-        VALID CATEGORIES: Shows, Activity, Therapy, Mindfulness, Workshop.
+        VALID CATEGORIES: Shows, Activity, MMD Originals, Mindfulness, Workshop.
         AVAILABLE EVENTS: ${JSON.stringify(eventContext)}
         
         INSTRUCTIONS:

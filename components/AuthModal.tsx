@@ -42,9 +42,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, onClose }) => {
       <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-xl animate-in fade-in duration-500" onClick={onClose}></div>
       
       <div className="relative w-full max-w-md bg-white rounded-[3rem] shadow-3xl overflow-hidden animate-in zoom-in-95 duration-300">
-        <div className="bg-slate-900 p-10 text-white relative overflow-hidden">
+        <div className="bg-slate-900 p-10 text-slate-200 relative overflow-hidden">
           <div className="absolute top-0 right-0 p-6 z-10">
-            <button onClick={onClose} className="text-slate-500 hover:text-white transition-colors">
+            <button onClick={onClose} className="text-slate-500 hover:text-slate-200 transition-colors">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -53,7 +53,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, onClose }) => {
 
           <div className="relative z-10">
             <span className="text-brand-red text-[9px] font-black uppercase tracking-[0.4em] mb-2 block">Identity Sanctuary</span>
-            <h2 className="text-3xl font-black italic uppercase tracking-tighter leading-none">
+            <h2 className="text-3xl font-black italic uppercase tracking-tighter leading-none text-slate-200">
               {isProcessing ? 'Calibrating...' : 'Join the Frequency'}
             </h2>
             <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-2">
@@ -97,7 +97,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, onClose }) => {
           <button 
             onClick={handleJoin}
             disabled={isProcessing}
-            className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] shadow-xl active:scale-95 transition-all flex items-center justify-center gap-3 group disabled:opacity-50"
+            className="w-full py-5 bg-slate-900 text-slate-200 rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] shadow-xl active:scale-95 transition-all flex items-center justify-center gap-3 group disabled:opacity-50"
           >
             {isProcessing ? (
               <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>

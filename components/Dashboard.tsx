@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { User, Booking, Event, Category, Slot } from '../types.ts';
 import { PolicyType } from './LegalModal.tsx';
@@ -14,6 +15,7 @@ interface DashboardProps {
 }
 
 const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: () => void }> = ({ user, onClose, onSuccess }) => {
+  const [occurrenceType, setOccurrenceType] = useState<'single' | 'range'>('single');
   const [formData, setFormData] = useState<Partial<Event>>({
     title: '',
     category: 'Activity',
@@ -23,7 +25,11 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
     dates: [],
     slots: [{ time: '10:00', availableSeats: 20 }]
   });
-  const [newDateInput, setNewDateInput] = useState('');
+  
+  const [singleDate, setSingleDate] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageInputMode, setImageInputMode] = useState<'file' | 'url'>('url');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -48,30 +54,6 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
     setImagePreview(url);
   };
 
-  const addDate = () => {
-    if (!newDateInput) return;
-    const dateObj = new Date(newDateInput);
-    const formattedDate = dateObj.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-    
-    if (formData.dates?.includes(formattedDate)) {
-      alert("This date is already anchored.");
-      return;
-    }
-
-    setFormData(prev => ({
-      ...prev,
-      dates: [...(prev.dates || []), formattedDate]
-    }));
-    setNewDateInput('');
-  };
-
-  const removeDate = (dateToRemove: string) => {
-    setFormData(prev => ({
-      ...prev,
-      dates: prev.dates?.filter(d => d !== dateToRemove)
-    }));
-  };
-
   const addSlot = () => {
     setFormData(prev => ({
       ...prev,
@@ -94,10 +76,42 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
     });
   };
 
+  const formatDateLabel = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title || !formData.price || !formData.description || !formData.image || !formData.dates?.length || !formData.slots?.length) {
-      alert("Please complete all sections to finalize the broadcast.");
+    
+    let finalDates: string[] = [];
+    if (occurrenceType === 'single') {
+      if (!singleDate) {
+        alert("Please select a date for the event.");
+        return;
+      }
+      finalDates = [formatDateLabel(singleDate)];
+    } else {
+      if (!startDate || !endDate) {
+        alert("Please select a start and end date for the range.");
+        return;
+      }
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (end < start) {
+        alert("End date must be after start date.");
+        return;
+      }
+      // Generate all dates in range
+      let curr = new Date(start);
+      while (curr <= end) {
+        finalDates.push(formatDateLabel(curr.toISOString()));
+        curr.setDate(curr.getDate() + 1);
+      }
+    }
+
+    if (!formData.title || !formData.price || !formData.description || !formData.image || !finalDates.length || !formData.slots?.length) {
+      alert("Please complete all sections to finalize the event.");
       return;
     }
     
@@ -110,9 +124,9 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
       price: Number(formData.price),
       description: formData.description || '',
       image: formData.image || '',
-      dates: formData.dates || [],
+      dates: finalDates,
       hostPhone: user.phone,
-      slots: formData.slots || []
+      slots: occurrenceType === 'single' ? [formData.slots[0]] : formData.slots
     };
 
     await api.saveEvent(newEvent);
@@ -125,12 +139,12 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
     <div className="fixed inset-0 z-[500] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-xl" onClick={onClose}></div>
       <div className="relative w-full max-w-2xl bg-white rounded-[3.5rem] shadow-3xl overflow-hidden animate-in zoom-in-95 duration-300">
-        <div className="bg-slate-900 p-10 text-white flex justify-between items-center relative overflow-hidden">
+        <div className="bg-slate-900 p-10 text-slate-200 flex justify-between items-center relative overflow-hidden">
           <div className="relative z-10">
             <span className="text-brand-red text-[8px] font-black uppercase tracking-[0.4em] mb-2 block">Provider Portal</span>
-            <h2 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter">Broadcast Experience</h2>
+            <h2 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter">Event Experience</h2>
           </div>
-          <button onClick={onClose} className="relative z-10 text-slate-400 hover:text-white transition-all transform hover:rotate-90">
+          <button onClick={onClose} className="relative z-10 text-slate-400 hover:text-slate-200 transition-all transform hover:rotate-90">
             <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
         </div>
@@ -157,7 +171,7 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
               >
                 <option value="Shows">Shows</option>
                 <option value="Activity">Activity</option>
-                <option value="Therapy">Therapy</option>
+                <option value="MMD Originals">MMD Originals</option>
                 <option value="Mindfulness">Mindfulness</option>
                 <option value="Workshop">Workshop</option>
               </select>
@@ -165,52 +179,83 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
           </div>
 
           <div className="space-y-4">
-            <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1">Temporal Anchors (Select Dates)</label>
-            <div className="flex flex-wrap gap-2 mb-3">
-              {formData.dates?.map(date => (
-                <div key={date} className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase italic animate-in zoom-in duration-300">
-                  {date}
-                  <button type="button" onClick={() => removeDate(date)} className="text-white/40 hover:text-brand-red transition-colors">
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12"/></svg>
-                  </button>
+            <div className="flex items-center justify-between px-1">
+              <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Temporal Cadence</label>
+              <div className="flex bg-slate-100 p-1 rounded-xl">
+                 <button 
+                  type="button" 
+                  onClick={() => setOccurrenceType('single')}
+                  className={`px-4 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${occurrenceType === 'single' ? 'bg-slate-900 text-slate-200 shadow-lg' : 'text-slate-400'}`}
+                 >
+                   Single Day
+                 </button>
+                 <button 
+                  type="button" 
+                  onClick={() => setOccurrenceType('range')}
+                  className={`px-4 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${occurrenceType === 'range' ? 'bg-slate-900 text-slate-200 shadow-lg' : 'text-slate-400'}`}
+                 >
+                   Date Range
+                 </button>
+               </div>
+            </div>
+
+            {occurrenceType === 'single' ? (
+              <div className="animate-in slide-in-from-left duration-500">
+                <label className="text-[9px] font-black uppercase tracking-widest text-slate-300 block mb-2 px-1">Select Event Date</label>
+                <input 
+                  type="date" 
+                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-sm font-bold outline-none focus:border-brand-red transition-all"
+                  value={singleDate}
+                  onChange={(e) => setSingleDate(e.target.value)}
+                />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-4 animate-in slide-in-from-right duration-500">
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-300 px-1">Start Date</label>
+                  <input 
+                    type="date" 
+                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-sm font-bold outline-none focus:border-brand-red transition-all"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                  />
                 </div>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <input 
-                type="date" 
-                className="flex-1 bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-3 text-sm font-bold outline-none focus:border-brand-red transition-all"
-                value={newDateInput}
-                onChange={(e) => setNewDateInput(e.target.value)}
-              />
-              <button 
-                type="button" 
-                onClick={addDate}
-                className="px-6 bg-slate-100 hover:bg-slate-200 text-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
-              >
-                Add Link
-              </button>
-            </div>
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-300 px-1">End Date</label>
+                  <input 
+                    type="date" 
+                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-sm font-bold outline-none focus:border-brand-red transition-all"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="space-y-4">
             <div className="flex items-center justify-between px-1">
-              <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Time Sequence Grid</label>
-              <button 
-                type="button" 
-                onClick={addSlot}
-                className="text-[9px] font-black uppercase tracking-widest text-brand-red hover:underline"
-              >
-                + Add Sequence
-              </button>
+              <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                {occurrenceType === 'single' ? 'Session Time' : 'Time Sequence Grid'}
+              </label>
+              {occurrenceType === 'range' && (
+                <button 
+                  type="button" 
+                  onClick={addSlot}
+                  className="text-[9px] font-black uppercase tracking-widest text-brand-red hover:underline"
+                >
+                  + Add Sequence
+                </button>
+              )}
             </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {formData.slots?.map((slot, index) => (
-                <div key={index} className="flex items-center gap-3 animate-in slide-in-from-right-4 duration-500">
+              {(occurrenceType === 'single' ? [formData.slots![0]] : formData.slots!).map((slot, index) => (
+                <div key={index} className="flex items-center gap-3 animate-in slide-in-from-bottom duration-500">
                   <div className="flex-1 bg-white border-2 border-slate-100 rounded-2xl px-4 py-3 flex items-center justify-between">
                     <input 
                       type="time" 
-                      className="bg-transparent text-sm font-bold outline-none text-slate-900"
+                      className="bg-transparent text-sm font-bold outline-none text-slate-800"
                       value={slot.time}
                       onChange={(e) => updateSlot(index, 'time', e.target.value)}
                     />
@@ -224,7 +269,7 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
                        />
                     </div>
                   </div>
-                  {formData.slots && formData.slots.length > 1 && (
+                  {occurrenceType === 'range' && formData.slots!.length > 1 && (
                     <button type="button" onClick={() => removeSlot(index)} className="p-3 text-slate-300 hover:text-brand-red transition-colors">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                     </button>
@@ -252,14 +297,14 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
                  <button 
                   type="button" 
                   onClick={() => setImageInputMode('url')}
-                  className={`px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${imageInputMode === 'url' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-400'}`}
+                  className={`px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${imageInputMode === 'url' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400'}`}
                  >
                    URL
                  </button>
                  <button 
                   type="button" 
                   onClick={() => setImageInputMode('file')}
-                  className={`px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${imageInputMode === 'file' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-400'}`}
+                  className={`px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${imageInputMode === 'file' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400'}`}
                  >
                    Upload
                  </button>
@@ -282,7 +327,7 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
                      <div className="w-full h-full">
                        <img src={imagePreview} className="w-full h-full object-cover transition-transform group-hover:scale-105" alt="Preview" />
                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <span className="text-white text-[8px] font-black uppercase tracking-widest bg-slate-900/50 px-3 py-1.5 rounded-full">Change Identity</span>
+                          <span className="text-slate-200 text-[8px] font-black uppercase tracking-widest bg-slate-900/50 px-3 py-1.5 rounded-full">Change Identity</span>
                        </div>
                      </div>
                    ) : (
@@ -290,12 +335,6 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
                    )}
                 </div>
               </>
-            )}
-
-            {imageInputMode === 'url' && imagePreview && (
-              <div className="w-full h-32 rounded-2xl overflow-hidden border border-slate-100 animate-in fade-in duration-500">
-                <img src={imagePreview} className="w-full h-full object-cover" alt="URL Preview" onError={() => setImagePreview(null)} />
-              </div>
             )}
           </div>
 
@@ -313,9 +352,9 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
           <button 
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-6 bg-slate-900 text-white rounded-[2rem] font-black uppercase text-[12px] tracking-[0.2em] shadow-2xl hover:bg-brand-red transition-all active:scale-[0.98] disabled:opacity-50"
+            className="w-full py-6 bg-slate-900 text-slate-200 rounded-[2rem] font-black uppercase text-[12px] tracking-[0.2em] shadow-2xl hover:bg-brand-red transition-all active:scale-[0.98] disabled:opacity-50"
           >
-            {isSubmitting ? 'Establishing Connection...' : 'Initiate Broadcast'}
+            {isSubmitting ? 'Establishing Connection...' : 'Create Event'}
           </button>
         </form>
       </div>
@@ -332,23 +371,20 @@ const Dashboard: React.FC<DashboardProps> = ({ user, events, bookings, onLogout,
   const userEvents = useMemo(() => events.filter(e => e.hostPhone === user.phone), [events, user.phone]);
   const userBookings = useMemo(() => bookings.filter(b => b.userPhone === user.phone), [bookings, user.phone]);
 
-  // Automated Reminder Simulation Logic
   useEffect(() => {
     if (!localPreferences.emailReminders && !localPreferences.smsReminders) return;
 
     const checkUpcoming = () => {
       const now = new Date();
       userBookings.forEach(booking => {
-        // Simple mock check: if bookedAt is within the last 30 seconds, simulate an immediate confirmation reminder
         const bookedTime = new Date(booking.bookedAt).getTime();
         if (now.getTime() - bookedTime < 30000 && !booking.reminderSent) {
           const type = localPreferences.smsReminders ? 'SMS' : 'Email';
           const msg = `[MOCK ${type}]: Namaste ${user.name}! Your session "${booking.eventTitle}" is anchored for ${booking.eventDate}. See you there.`;
           
           setNotifications(prev => [...prev, msg]);
-          booking.reminderSent = true; // Mutate locally for mock purposes
+          booking.reminderSent = true; 
           
-          // Clear notification after 5 seconds
           setTimeout(() => {
             setNotifications(prev => prev.filter(n => n !== msg));
           }, 6000);
@@ -367,17 +403,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, events, bookings, onLogout,
     };
     setLocalPreferences(nextPrefs);
     
-    // In a real app, this would persist to the backend
     const updatedUser = { ...user, preferences: nextPrefs };
     localStorage.setItem('makemydays_user_v1', JSON.stringify(updatedUser));
   };
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-6 duration-700 relative">
-      {/* Automated Reminder Toasts */}
       <div className="fixed top-24 right-6 z-[600] space-y-3 pointer-events-none">
         {notifications.map((note, i) => (
-          <div key={i} className="bg-slate-900 text-white p-4 rounded-2xl shadow-2xl border border-brand-red/30 animate-in slide-in-from-right duration-500 pointer-events-auto max-w-xs">
+          <div key={i} className="bg-slate-900 text-slate-200 p-4 rounded-2xl shadow-2xl border border-brand-red/30 animate-in slide-in-from-right duration-500 pointer-events-auto max-w-xs">
             <div className="flex items-center gap-3 mb-1">
               <div className="w-2 h-2 rounded-full bg-brand-red animate-ping"></div>
               <span className="text-[8px] font-black uppercase tracking-widest text-brand-red">Automated Alert</span>
@@ -388,7 +422,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, events, bookings, onLogout,
       </div>
 
       <div className="glass-card rounded-[3.5rem] overflow-hidden shadow-2xl border border-white/40">
-        <div className="bg-slate-900 p-10 md:p-14 text-white relative">
+        <div className="bg-slate-900 p-10 md:p-14 text-slate-200 relative">
           <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
             <div>
               <span className="text-brand-red text-[11px] font-black uppercase tracking-[0.4em] mb-3 block">Private Sanctuary</span>
@@ -400,7 +434,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, events, bookings, onLogout,
             <div className="flex gap-4">
               <button 
                 onClick={onLogout}
-                className="px-8 py-4 bg-brand-red hover:bg-white hover:text-brand-red text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-xl active:scale-95"
+                className="px-8 py-4 bg-brand-red hover:bg-slate-200 hover:text-brand-red text-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-xl active:scale-95"
               >
                 Disconnect
               </button>
@@ -409,24 +443,24 @@ const Dashboard: React.FC<DashboardProps> = ({ user, events, bookings, onLogout,
         </div>
 
         <div className="p-10 md:p-14">
-          <div className="flex gap-8 mb-12 border-b border-slate-100 pb-1 overflow-x-auto scrollbar-hide">
+          <div className="flex gap-8 mb-12 border-b border-white/10 pb-1 overflow-x-auto scrollbar-hide">
             <button 
               onClick={() => setActiveTab('bookings')}
-              className={`pb-5 text-[12px] font-black uppercase tracking-[0.2em] transition-all relative whitespace-nowrap ${activeTab === 'bookings' ? 'text-slate-900' : 'text-slate-300 hover:text-slate-500'}`}
+              className={`pb-5 text-[12px] font-black uppercase tracking-[0.2em] transition-all relative whitespace-nowrap ${activeTab === 'bookings' ? 'text-slate-100' : 'text-slate-400 hover:text-slate-200'}`}
             >
               Recent Bookings
               {activeTab === 'bookings' && <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-brand-red rounded-full"></div>}
             </button>
             <button 
               onClick={() => setActiveTab('hosting')}
-              className={`pb-5 text-[12px] font-black uppercase tracking-[0.2em] transition-all relative whitespace-nowrap ${activeTab === 'hosting' ? 'text-slate-900' : 'text-slate-300 hover:text-slate-500'}`}
+              className={`pb-5 text-[12px] font-black uppercase tracking-[0.2em] transition-all relative whitespace-nowrap ${activeTab === 'hosting' ? 'text-slate-100' : 'text-slate-400 hover:text-slate-200'}`}
             >
-              My Broadcasts
+              My Events
               {activeTab === 'hosting' && <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-brand-red rounded-full"></div>}
             </button>
             <button 
               onClick={() => setActiveTab('settings')}
-              className={`pb-5 text-[12px] font-black uppercase tracking-[0.2em] transition-all relative whitespace-nowrap ${activeTab === 'settings' ? 'text-slate-900' : 'text-slate-300 hover:text-slate-500'}`}
+              className={`pb-5 text-[12px] font-black uppercase tracking-[0.2em] transition-all relative whitespace-nowrap ${activeTab === 'settings' ? 'text-slate-100' : 'text-slate-400 hover:text-slate-200'}`}
             >
               Governance
               {activeTab === 'settings' && <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-brand-red rounded-full"></div>}
@@ -436,8 +470,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, events, bookings, onLogout,
           {activeTab === 'bookings' && (
             <div className="space-y-6">
               {userBookings.length === 0 ? (
-                <div className="text-center py-20 bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200">
-                  <p className="text-slate-300 text-[11px] font-black uppercase tracking-widest italic">No bookings found.</p>
+                <div className="text-center py-20 bg-slate-900/30 rounded-[3rem] border-2 border-dashed border-white/5">
+                  <p className="text-slate-500 text-[11px] font-black uppercase tracking-widest italic">No bookings found.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -453,8 +487,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, events, bookings, onLogout,
                              </div>
                            ) : null}
                         </div>
-                        <h4 className="text-slate-900 font-black italic uppercase tracking-tight text-xl mb-3">{booking.eventTitle}</h4>
-                        <div className="flex items-center gap-5 text-slate-400 text-[11px] font-bold">
+                        <h4 className="text-slate-800 font-black italic uppercase tracking-tight text-xl mb-3">{booking.eventTitle}</h4>
+                        <div className="flex items-center gap-5 text-slate-500 text-[11px] font-bold">
                           <span>{booking.eventDate}</span>
                           <span>{booking.time}</span>
                         </div>
@@ -472,22 +506,22 @@ const Dashboard: React.FC<DashboardProps> = ({ user, events, bookings, onLogout,
 
           {activeTab === 'hosting' && (
             <div className="space-y-10">
-              <div className="flex flex-col md:flex-row justify-between items-center gap-6 bg-slate-50/50 p-8 rounded-[2.5rem] border border-slate-100">
+              <div className="flex flex-col md:flex-row justify-between items-center gap-6 bg-slate-900/40 p-8 rounded-[2.5rem] border border-white/5">
                 <div className="max-w-md">
-                   <h3 className="text-xl font-black italic uppercase tracking-tight text-slate-900 mb-2">Host New Experience</h3>
-                   <p className="text-slate-400 text-xs font-bold uppercase tracking-widest leading-relaxed">Broadcast your unique frequency to the community.</p>
+                   <h3 className="text-xl font-black italic uppercase tracking-tight text-slate-100 mb-2">Host New Experience</h3>
+                   <p className="text-slate-400 text-xs font-bold uppercase tracking-widest leading-relaxed">Host your unique event frequency to the community.</p>
                 </div>
                 <button 
                   onClick={() => setShowCreateModal(true)}
-                  className="bg-slate-900 text-white px-10 py-5 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl hover:bg-brand-red transition-all"
+                  className="bg-slate-100 text-slate-800 px-10 py-5 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl hover:bg-brand-red hover:text-slate-200 transition-all"
                 >
-                  Create Broadcast
+                  Create Event
                 </button>
               </div>
 
               {userEvents.length === 0 ? (
-                <div className="text-center py-20 bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200">
-                  <p className="text-slate-300 text-[11px] font-black uppercase tracking-widest italic">No active broadcasts found.</p>
+                <div className="text-center py-20 bg-slate-900/30 rounded-[3rem] border-2 border-dashed border-white/5">
+                  <p className="text-slate-500 text-[11px] font-black uppercase tracking-widest italic">No active events found.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -497,19 +531,19 @@ const Dashboard: React.FC<DashboardProps> = ({ user, events, bookings, onLogout,
                         <img src={event.image} alt={event.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
                         <div className="absolute bottom-6 left-8">
-                          <span className="bg-brand-red text-white text-[8px] font-black uppercase px-3 py-1.5 rounded-full mb-2 block w-fit shadow-lg">{event.category}</span>
-                          <h4 className="text-white font-black italic uppercase tracking-tight text-xl">{event.title}</h4>
+                          <span className="bg-brand-red text-slate-200 text-[8px] font-black uppercase px-3 py-1.5 rounded-full mb-2 block w-fit shadow-lg">{event.category}</span>
+                          <h4 className="text-slate-200 font-black italic uppercase tracking-tight text-xl">{event.title}</h4>
                         </div>
                       </div>
                       <div className="p-8">
                          <div className="flex justify-between items-center mb-6">
-                            <span className="text-2xl font-black italic text-slate-900">₹{event.price}</span>
+                            <span className="text-2xl font-black italic text-slate-800">₹{event.price}</span>
                             <span className="text-[10px] font-bold text-slate-400 uppercase">{event.dates.length} Dates Live</span>
                          </div>
                          <button 
-                            className="w-full py-4 bg-slate-900 hover:bg-brand-red text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg"
+                            className="w-full py-4 bg-slate-900 hover:bg-brand-red text-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg"
                             onClick={async () => {
-                              if (confirm("Terminate this broadcast?")) {
+                              if (confirm("Terminate this event?")) {
                                 await api.deleteEvent(event.id);
                                 onRefreshEvents?.();
                               }
@@ -528,33 +562,33 @@ const Dashboard: React.FC<DashboardProps> = ({ user, events, bookings, onLogout,
           {activeTab === 'settings' && (
             <div className="space-y-12 animate-in fade-in duration-500">
               <section className="space-y-8">
-                 <div className="border-b border-slate-100 pb-4">
-                   <h3 className="text-xl font-black italic uppercase tracking-tight text-slate-900">Resonance Settings</h3>
+                 <div className="border-b border-white/10 pb-4">
+                   <h3 className="text-xl font-black italic uppercase tracking-tight text-slate-100">Resonance Settings</h3>
                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">How we communicate with your profile</p>
                  </div>
 
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100 flex items-center justify-between">
+                    <div className="bg-slate-900/40 p-8 rounded-[2.5rem] border border-white/5 flex items-center justify-between">
                        <div className="space-y-1">
-                          <h4 className="text-sm font-black italic text-slate-900 uppercase">SMS Notifications</h4>
+                          <h4 className="text-sm font-black italic text-slate-100 uppercase">SMS Notifications</h4>
                           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Urgent temporal updates via +91 {user.phone}</p>
                        </div>
                        <button 
                          onClick={() => updatePreferences('sms')}
-                         className={`w-14 h-8 rounded-full transition-all relative ${localPreferences.smsReminders ? 'bg-brand-red' : 'bg-slate-200'}`}
+                         className={`w-14 h-8 rounded-full transition-all relative ${localPreferences.smsReminders ? 'bg-brand-red' : 'bg-white/10'}`}
                        >
                           <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all shadow-md ${localPreferences.smsReminders ? 'left-7' : 'left-1'}`}></div>
                        </button>
                     </div>
 
-                    <div className="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100 flex items-center justify-between">
+                    <div className="bg-slate-900/40 p-8 rounded-[2.5rem] border border-white/5 flex items-center justify-between">
                        <div className="space-y-1">
-                          <h4 className="text-sm font-black italic text-slate-900 uppercase">Email Sync</h4>
+                          <h4 className="text-sm font-black italic text-slate-100 uppercase">Email Sync</h4>
                           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Detailed resonance reports and receipts</p>
                        </div>
                        <button 
                          onClick={() => updatePreferences('email')}
-                         className={`w-14 h-8 rounded-full transition-all relative ${localPreferences.emailReminders ? 'bg-brand-red' : 'bg-slate-200'}`}
+                         className={`w-14 h-8 rounded-full transition-all relative ${localPreferences.emailReminders ? 'bg-brand-red' : 'bg-white/10'}`}
                        >
                           <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all shadow-md ${localPreferences.emailReminders ? 'left-7' : 'left-1'}`}></div>
                        </button>
@@ -563,15 +597,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, events, bookings, onLogout,
               </section>
 
               <section className="space-y-6">
-                 <div className="border-b border-slate-100 pb-4">
-                   <h3 className="text-xl font-black italic uppercase tracking-tight text-slate-900">Governance Protocol</h3>
+                 <div className="border-b border-white/10 pb-4">
+                   <h3 className="text-xl font-black italic uppercase tracking-tight text-slate-100">Governance Protocol</h3>
                  </div>
                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {['terms', 'privacy', 'refund', 'shipping'].map(policy => (
                       <button 
                         key={policy}
                         onClick={() => onOpenPolicy?.(policy as PolicyType)}
-                        className="bg-white border-2 border-slate-100 p-4 rounded-2xl text-[9px] font-black uppercase tracking-widest text-slate-400 hover:border-brand-red hover:text-brand-red transition-all text-center"
+                        className="bg-slate-900/40 border-2 border-white/5 p-4 rounded-2xl text-[9px] font-black uppercase tracking-widest text-slate-400 hover:border-brand-red hover:text-brand-red transition-all text-center"
                       >
                         {policy}
                       </button>
@@ -582,7 +616,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, events, bookings, onLogout,
               {user.role === 'admin' && (
                 <button 
                   onClick={onOpenAdmin}
-                  className="w-full py-6 bg-slate-100 hover:bg-slate-900 hover:text-white text-slate-900 rounded-[2rem] font-black uppercase text-[11px] tracking-[0.3em] transition-all"
+                  className="w-full py-6 bg-slate-900/60 hover:bg-slate-100 hover:text-slate-800 text-slate-300 rounded-[2rem] font-black uppercase text-[11px] tracking-[0.3em] border border-white/5 transition-all"
                 >
                   Access Superuser Hub
                 </button>
