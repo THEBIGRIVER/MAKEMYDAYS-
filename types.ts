@@ -17,6 +17,7 @@ export interface Event {
   slots: Slot[];
   dates: string[]; 
   hostPhone: string;
+  createdAt?: string; // ISO string for sorting and badge logic
 }
 
 export interface Booking {

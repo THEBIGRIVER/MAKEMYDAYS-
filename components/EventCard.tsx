@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Event } from '../types.ts';
 
 interface EventCardProps {
@@ -21,6 +21,14 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick, id }) => {
 
   const isCommunityHost = event.hostPhone !== DEFAULT_HOST_PHONE;
 
+  // Logic for "NEW" badge
+  const isRecentlyAdded = useMemo(() => {
+    if (!event.createdAt) return event.id.startsWith('user-event-'); // Fallback if no timestamp
+    const createdTime = new Date(event.createdAt).getTime();
+    const now = new Date().getTime();
+    return (now - createdTime) < (24 * 60 * 60 * 1000); // Within 24 hours
+  }, [event.createdAt, event.id]);
+
   return (
     <div 
       id={id}
@@ -38,8 +46,13 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick, id }) => {
            <span className="bg-black/80 backdrop-blur-md text-slate-200 text-[8px] font-black uppercase tracking-wider px-3 py-1.5 rounded-full border border-white/10 shadow-lg w-fit">
             {event.category}
            </span>
-           {isCommunityHost && (
-             <span className="bg-brand-red text-white text-[7px] font-black uppercase tracking-widest px-2 py-1 rounded-full shadow-lg w-fit animate-pulse">
+           {isRecentlyAdded && (
+             <span className="bg-emerald-500 text-white text-[7px] font-black uppercase tracking-widest px-2 py-1 rounded-full shadow-lg w-fit animate-pulse border border-emerald-400/50">
+               Recently Calibrated
+             </span>
+           )}
+           {isCommunityHost && !isRecentlyAdded && (
+             <span className="bg-brand-red text-white text-[7px] font-black uppercase tracking-widest px-2 py-1 rounded-full shadow-lg w-fit">
                Community Choice
              </span>
            )}

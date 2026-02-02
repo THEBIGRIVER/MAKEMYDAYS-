@@ -159,15 +159,16 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
         image: formData.image || '',
         dates: finalDates,
         hostPhone: user.phone,
-        slots: occurrenceType === 'single' ? [formData.slots[0]] : formData.slots
+        slots: occurrenceType === 'single' ? [formData.slots[0]] : formData.slots,
+        createdAt: new Date().toISOString()
       };
 
       await api.saveEvent(newEvent);
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       onSuccess();
       onClose();
     } catch (err) {
-      alert("Transmission failed. The visual aura may be too complex. Try a different image.");
+      alert("Transmission failed. Frequency interference detected.");
     } finally {
       setIsSubmitting(false);
     }
@@ -181,7 +182,10 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
           <div className="relative z-10">
             <span className="text-brand-red text-[8px] font-black uppercase tracking-[0.4em] mb-2 block">Provider Portal</span>
             <h2 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter">Event Experience</h2>
-            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-1">This experience will be live globally upon submission.</p>
+            <p className="text-[8px] font-black text-emerald-500 uppercase tracking-widest mt-1 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></span>
+              Synchronizing with Global Feed
+            </p>
           </div>
           <button onClick={onClose} className="relative z-10 text-slate-400 hover:text-slate-200 transition-all transform hover:rotate-90">
             <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -308,9 +312,9 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
             {isSubmitting ? (
               <>
                 <div className="w-5 h-5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin"></div>
-                Calibrating Global Stream...
+                Calibrating Global Feed...
               </>
-            ) : 'Create & Sync Global Event'}
+            ) : 'Launch Experience'}
           </button>
         </form>
       </div>
@@ -410,7 +414,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, events, bookings, onLogout,
               <div className="flex flex-col md:flex-row justify-between items-center gap-6 glass-card p-8 rounded-[2.5rem] border border-white/10">
                 <div className="max-w-md">
                   <h3 className="text-xl font-black italic uppercase tracking-tight text-slate-100 mb-2">Host New Experience</h3>
-                  <p className="text-slate-400 text-xs font-bold uppercase tracking-widest leading-relaxed">Your events will be immediately live on the home page for all users to see and book.</p>
+                  <p className="text-slate-400 text-xs font-bold uppercase tracking-widest leading-relaxed">Added experiences will immediately occupy the Prime Resonance slots on the global home page.</p>
                 </div>
                 <button onClick={() => setShowCreateModal(true)} className="bg-slate-200 text-slate-900 px-10 py-5 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl hover:bg-brand-red hover:text-slate-200 transition-all">Create Event</button>
               </div>
