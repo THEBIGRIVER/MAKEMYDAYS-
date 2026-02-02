@@ -69,7 +69,7 @@ const App: React.FC = () => {
       const [evs, bks] = await Promise.all([api.getEvents(), api.getBookings()]);
       setEvents(evs || []);
       setGlobalBookings(bks || []);
-      // Keep feed open, just clear the specific mood recommendations to show everything
+      // Reset recommendations on full refresh to show the unfiltered community feed
       setAiRec(null);
     } catch (e) { console.error(e); }
   }, []);
@@ -99,22 +99,55 @@ const App: React.FC = () => {
   }, [isMusicPlaying]);
 
   const handleMoodSearch = async (mood: string) => {
-    if (!mood.trim()) return;
+    if (!mood.trim()) {
+      setAiRec(null);
+      return;
+    }
     setIsAiLoading(true);
-    setAiRec(null);
+    // Do not clear aiRec immediately to avoid jarring layout shifts
     try {
       const rec = await api.getRecommendations(mood, events);
       setAiRec(rec);
-    } catch (err) { console.error(err); } 
-    finally { setIsAiLoading(false); }
+    } catch (err) { 
+      console.error(err); 
+      setAiRec(null);
+    } finally { 
+      setIsAiLoading(false); 
+    }
+  };
+
+  const handleSearchInputChange = (val: string) => {
+    setUserMood(val);
+    setSearchQuery(val);
+    // If the user clears the input manually, remove any AI-driven filters
+    if (!val.trim()) {
+      setAiRec(null);
+    }
   };
 
   const filteredEvents = useMemo(() => {
     return events.filter(e => {
+      // 1. Category Filter
       const matchCat = selectedCategory === 'All' || e.category === selectedCategory;
-      const matchSearch = e.title.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      // 2. Text Search Filter (Title/Description)
+      const query = searchQuery.toLowerCase();
+      const matchText = e.title.toLowerCase().includes(query) || 
+                        e.category.toLowerCase().includes(query) ||
+                        e.description.toLowerCase().includes(query);
+
+      // 3. AI Recommendation Filter (Semantic)
+      // If AI has provided specific recommendations, we check those IDs.
       const matchAi = aiRec ? aiRec.suggestedEventIds.includes(e.id) : true;
-      return matchCat && matchSearch && matchAi;
+      
+      /**
+       * CRITICAL FIX: The Logic
+       * If aiRec is active, we prioritize matchAi. 
+       * If no aiRec is active, we rely on matchText (live search).
+       */
+      const finalSearchMatch = aiRec ? matchAi : matchText;
+      
+      return matchCat && finalSearchMatch;
     });
   }, [events, selectedCategory, searchQuery, aiRec]);
 
@@ -122,7 +155,15 @@ const App: React.FC = () => {
     <div className={`flex flex-col min-h-screen bg-black mesh-bg vibe-sunny selection:bg-brand-red selection:text-slate-200`}>
       <nav className="fixed top-0 left-0 right-0 z-[100] h-16 glass-card border-b border-white/10">
         <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
-          <div className="flex items-center gap-3 cursor-pointer group" onClick={() => { setShowDashboard(false); setShowAdmin(false); setAiRec(null); setSelectedCategory('All'); fetchData(); }}>
+          <div className="flex items-center gap-3 cursor-pointer group" onClick={() => { 
+            setShowDashboard(false); 
+            setShowAdmin(false); 
+            setAiRec(null); 
+            setSelectedCategory('All'); 
+            setUserMood('');
+            setSearchQuery('');
+            fetchData(); 
+          }}>
             <ConnectionLogo />
             <span className="text-xl font-black italic tracking-tighter text-slate-200 group-hover:text-brand-red transition-all">MakeMyDays</span>
           </div>
@@ -172,24 +213,39 @@ const App: React.FC = () => {
                  <div className="relative dark-glass-card rounded-[2.5rem] p-4 flex flex-col md:flex-row items-center gap-3 ai-glow overflow-hidden group">
                     <div className="flex-1 w-full px-5 py-3 flex items-center gap-4 z-10">
                        <input 
-                         type="text" placeholder="How is your energy today?..."
+                         type="text" 
+                         placeholder="How is your energy? Or search by name..."
                          className="w-full bg-transparent border-none text-slate-200 text-lg font-medium placeholder:text-slate-600 focus:outline-none"
-                         value={userMood} onChange={(e) => setUserMood(e.target.value)}
+                         value={userMood} 
+                         onChange={(e) => handleSearchInputChange(e.target.value)}
                          onKeyDown={(e) => e.key === 'Enter' && handleMoodSearch(userMood)}
                        />
                     </div>
-                    <button onClick={() => handleMoodSearch(userMood)} className="w-full md:w-auto px-10 py-4 bg-blue-600 text-slate-200 rounded-[1.5rem] font-black uppercase text-[11px] tracking-[0.2em] transition-all hover:bg-blue-500 hover:text-slate-200 shadow-2xl shadow-blue-600/40">
-                      {isAiLoading ? 'Calibrating...' : 'SEARCH 🔍'}
+                    <button 
+                      onClick={() => handleMoodSearch(userMood)} 
+                      disabled={isAiLoading || !userMood.trim()}
+                      className={`w-full md:w-auto px-10 py-4 rounded-[1.5rem] font-black uppercase text-[11px] tracking-[0.2em] transition-all shadow-2xl flex items-center justify-center gap-2 ${
+                        isAiLoading || !userMood.trim() 
+                        ? 'bg-slate-800 text-slate-500 cursor-not-allowed' 
+                        : 'bg-brand-red text-slate-200 hover:bg-slate-100 hover:text-brand-red shadow-brand-red/40'
+                      }`}
+                    >
+                      {isAiLoading ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                          Calibrating...
+                        </>
+                      ) : 'SEARCH 🔍'}
                     </button>
                  </div>
 
                  <div className="flex flex-wrap justify-center gap-3">
                     {MOODS.map(mood => {
-                      const isActive = userMood === mood.label;
+                      const isActive = userMood.toLowerCase() === mood.label.toLowerCase();
                       return (
                         <button 
                           key={mood.label} 
-                          onClick={() => { setUserMood(mood.label); handleMoodSearch(mood.label); }} 
+                          onClick={() => { handleSearchInputChange(mood.label); handleMoodSearch(mood.label); }} 
                           className={`group relative flex flex-col items-center justify-center p-0.5 rounded-[1.5rem] transition-all duration-500 hover:-translate-y-1 ${isActive ? 'scale-105' : ''}`} 
                           style={{ minWidth: '80px' }}
                         >
@@ -208,7 +264,7 @@ const App: React.FC = () => {
                      <div className="relative glass-card rounded-[3rem] p-8 border border-white/10 shadow-3xl flex flex-col md:flex-row items-center gap-8">
                         <div className="w-16 h-16 rounded-full bg-brand-red flex items-center justify-center shrink-0 shadow-2xl relative"><span className="text-2xl animate-pulse">✨</span></div>
                         <div className="flex-1 text-center md:text-left"><p className="text-[11px] font-black uppercase tracking-[0.3em] text-brand-red mb-2 italic">Frequency Harmonization</p><p className="text-lg font-bold italic text-slate-100 leading-tight">"{aiRec.reasoning}"</p></div>
-                        <button onClick={() => setAiRec(null)} className="p-3 text-slate-400 hover:text-brand-red transition-all transform hover:rotate-90"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12"/></svg></button>
+                        <button onClick={() => { setAiRec(null); setUserMood(''); setSearchQuery(''); }} className="p-3 text-slate-400 hover:text-brand-red transition-all transform hover:rotate-90"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12"/></svg></button>
                      </div>
                    </div>
                  )}
@@ -237,6 +293,7 @@ const App: React.FC = () => {
               {filteredEvents.length === 0 ? (
                 <div className="text-center py-20 bg-slate-900/30 rounded-[3rem] border-2 border-dashed border-white/5">
                   <p className="text-slate-500 text-[11px] font-black uppercase tracking-widest italic">No experiences matched this frequency.</p>
+                  <button onClick={() => { setAiRec(null); setUserMood(''); setSearchQuery(''); setSelectedCategory('All'); }} className="mt-6 text-[9px] font-black text-brand-red uppercase tracking-widest hover:underline">Clear Search Filter</button>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -272,8 +329,6 @@ const App: React.FC = () => {
       {activePolicy && <LegalModal type={activePolicy} onClose={() => setActivePolicy(null)} />}
       {selectedEvent && <BookingModal event={selectedEvent} onClose={() => setSelectedEvent(null)} onConfirm={async (slot, date) => {
           if (!selectedEvent) return;
-          
-          // Allow guest bookings if not logged in
           const booking: Booking = { 
             id: Math.random().toString(36).substr(2, 9), 
             eventId: selectedEvent.id, 
@@ -286,15 +341,12 @@ const App: React.FC = () => {
             userName: currentUser?.name || 'Anonymous Guest', 
             userPhone: currentUser?.phone || 'Guest Line' 
           };
-          
           await api.saveBooking(booking);
-          
           if (currentUser) {
             const updatedUser = { ...currentUser, bookings: [booking, ...currentUser.bookings] };
             setCurrentUser(updatedUser);
             localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updatedUser));
           }
-          
           setGlobalBookings(prev => [booking, ...prev]);
           setSelectedEvent(null);
       }} />}
