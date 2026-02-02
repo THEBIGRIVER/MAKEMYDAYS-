@@ -69,6 +69,8 @@ const App: React.FC = () => {
       const [evs, bks] = await Promise.all([api.getEvents(), api.getBookings()]);
       setEvents(evs || []);
       setGlobalBookings(bks || []);
+      // Auto-clear AI filters on refresh to show new community launches
+      setAiRec(null);
     } catch (e) { console.error(e); }
   }, []);
 
@@ -120,7 +122,7 @@ const App: React.FC = () => {
     <div className={`flex flex-col min-h-screen bg-black mesh-bg vibe-sunny selection:bg-brand-red selection:text-slate-200`}>
       <nav className="fixed top-0 left-0 right-0 z-[100] h-16 glass-card border-b border-white/10">
         <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
-          <div className="flex items-center gap-3 cursor-pointer group" onClick={() => { setShowDashboard(false); setShowAdmin(false); setAiRec(null); setSelectedCategory('All'); }}>
+          <div className="flex items-center gap-3 cursor-pointer group" onClick={() => { setShowDashboard(false); setShowAdmin(false); setAiRec(null); setSelectedCategory('All'); fetchData(); }}>
             <ConnectionLogo />
             <span className="text-xl font-black italic tracking-tighter text-slate-200 group-hover:text-brand-red transition-all">MakeMyDays</span>
           </div>
@@ -217,7 +219,7 @@ const App: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide py-2">
                   {CATEGORIES.map(cat => (
-                    <button key={cat} onClick={() => setSelectedCategory(cat)} className={`whitespace-nowrap px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border-2 ${selectedCategory === cat ? 'bg-slate-100 border-slate-100 text-slate-800 shadow-xl translate-y-[-2px]' : 'bg-slate-900/50 border-white/10 text-slate-400 hover:border-white/30 hover:text-slate-200'}`}>
+                    <button key={cat} onClick={() => { setSelectedCategory(cat); setAiRec(null); }} className={`whitespace-nowrap px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border-2 ${selectedCategory === cat ? 'bg-slate-100 border-slate-100 text-slate-800 shadow-xl translate-y-[-2px]' : 'bg-slate-900/50 border-white/10 text-slate-400 hover:border-white/30 hover:text-slate-200'}`}>
                       {cat}
                     </button>
                   ))}

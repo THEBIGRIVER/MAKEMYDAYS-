@@ -10,8 +10,12 @@ const USERS_DB_KEY = 'makemydays_users_db_v1';
 export const api = {
   // User Management
   async getAllUsers(): Promise<any[]> {
-    const stored = localStorage.getItem(USERS_DB_KEY);
-    return stored ? JSON.parse(stored) : [];
+    try {
+      const stored = localStorage.getItem(USERS_DB_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch (e) {
+      return [];
+    }
   },
 
   async saveUser(user: User, pin: string): Promise<void> {
@@ -39,12 +43,17 @@ export const api = {
 
   // Event Management
   async getEvents(): Promise<Event[]> {
-    const stored = localStorage.getItem(EVENTS_KEY);
-    if (!stored) {
-      localStorage.setItem(EVENTS_KEY, JSON.stringify(INITIAL_EVENTS));
+    try {
+      const stored = localStorage.getItem(EVENTS_KEY);
+      if (!stored) {
+        localStorage.setItem(EVENTS_KEY, JSON.stringify(INITIAL_EVENTS));
+        return INITIAL_EVENTS;
+      }
+      return JSON.parse(stored);
+    } catch (e) {
+      console.error("Critical: Failed to parse events from storage.");
       return INITIAL_EVENTS;
     }
-    return JSON.parse(stored);
   },
 
   async saveEvent(event: Event): Promise<void> {
@@ -53,9 +62,15 @@ export const api = {
     if (index > -1) {
       events[index] = event;
     } else {
-      events.unshift(event); // New events at the top
+      events.unshift(event); // New events always appear at the top globally
     }
-    localStorage.setItem(EVENTS_KEY, JSON.stringify(events));
+    
+    try {
+      localStorage.setItem(EVENTS_KEY, JSON.stringify(events));
+    } catch (e) {
+      console.error("Storage full: Data loss prevented.");
+      throw new Error("Sanctuary memory full. Try a smaller image or removing older events.");
+    }
   },
 
   async deleteEvent(eventId: string): Promise<void> {

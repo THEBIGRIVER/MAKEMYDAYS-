@@ -16,9 +16,17 @@ interface DashboardProps {
 
 const compressImage = (base64Str: string): Promise<string> => {
   return new Promise((resolve) => {
+    // Timeout for compression to prevent infinite loading
+    const timeout = setTimeout(() => resolve(base64Str), 5000);
+    
     const img = new Image();
     img.src = base64Str;
+    img.onerror = () => {
+      clearTimeout(timeout);
+      resolve(base64Str);
+    };
     img.onload = () => {
+      clearTimeout(timeout);
       const MAX_WIDTH = 1200;
       const MAX_HEIGHT = 1200;
       const canvas = document.createElement('canvas');
@@ -48,6 +56,7 @@ const compressImage = (base64Str: string): Promise<string> => {
 
 const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: () => void }> = ({ user, onClose, onSuccess }) => {
   const [occurrenceType, setOccurrenceType] = useState<'single' | 'range'>('single');
+  const [isSuccessfullyLaunched, setIsSuccessfullyLaunched] = useState(false);
   const [formData, setFormData] = useState<Partial<Event>>({
     title: '',
     category: 'Activity',
@@ -119,22 +128,13 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
     
     let finalDates: string[] = [];
     if (occurrenceType === 'single') {
-      if (!singleDate) {
-        alert("Please select a date for the event.");
-        return;
-      }
+      if (!singleDate) return alert("Please select an event date.");
       finalDates = [formatDateLabel(singleDate)];
     } else {
-      if (!startDate || !endDate) {
-        alert("Please select a start and end date for the range.");
-        return;
-      }
+      if (!startDate || !endDate) return alert("Please select a date range.");
       const start = new Date(startDate);
       const end = new Date(endDate);
-      if (end < start) {
-        alert("End date must be after start date.");
-        return;
-      }
+      if (end < start) return alert("End date must be after start date.");
       let curr = new Date(start);
       while (curr <= end) {
         finalDates.push(formatDateLabel(curr.toISOString()));
@@ -143,7 +143,7 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
     }
 
     if (!formData.title || !formData.price || !formData.description || !formData.image || !finalDates.length || !formData.slots?.length) {
-      alert("Please complete all sections to finalize the event.");
+      alert("Please complete all sections to finalize the launch.");
       return;
     }
     
@@ -164,15 +164,35 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
       };
 
       await api.saveEvent(newEvent);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      onSuccess();
-      onClose();
-    } catch (err) {
-      alert("Transmission failed. Frequency interference detected.");
+      setIsSuccessfullyLaunched(true);
+      
+      setTimeout(() => {
+        onSuccess();
+        onClose();
+      }, 2000);
+    } catch (err: any) {
+      alert(err.message || "Launch disrupted. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (isSuccessfullyLaunched) {
+    return (
+      <div className="fixed inset-0 z-[600] flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-slate-950/98 backdrop-blur-3xl"></div>
+        <div className="relative text-center space-y-6 animate-in zoom-in-95 duration-700">
+           <div className="w-24 h-24 bg-brand-red rounded-full flex items-center justify-center mx-auto shadow-[0_0_50px_rgba(248,68,100,0.4)] animate-music-pulse">
+              <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7"/></svg>
+           </div>
+           <div>
+             <h2 className="text-3xl font-black italic uppercase tracking-tighter text-slate-100 mb-2">Global Launch Complete</h2>
+             <p className="text-[10px] font-black uppercase tracking-[0.4em] text-emerald-500 animate-pulse">Now broadcasting to Home Feed</p>
+           </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-[500] flex items-center justify-center p-4">
