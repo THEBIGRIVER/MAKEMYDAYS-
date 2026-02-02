@@ -12,7 +12,7 @@ import AuthModal from './components/AuthModal.tsx';
 import { api } from './services/api.ts';
 
 const MOOD_MUSIC_URL = "https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3";
-const USER_STORAGE_KEY = 'makemydays_user_v1';
+const USER_STORAGE_KEY = 'makemydays_user_session_v1';
 
 const MOODS = [
   { label: "Joyful", emoji: "🌈", glow: "rgba(248,68,100,0.5)", bg: "bg-brand-red" },
@@ -64,13 +64,26 @@ const App: React.FC = () => {
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  const fetchData = useCallback(async () => {
+    try {
+      const [evs, bks] = await Promise.all([api.getEvents(), api.getBookings()]);
+      setEvents(evs || []);
+      setGlobalBookings(bks || []);
+    } catch (e) { console.error(e); }
+  }, []);
+
   useEffect(() => {
     audioRef.current = new Audio(MOOD_MUSIC_URL);
     audioRef.current.loop = true;
     audioRef.current.volume = 0.25;
     const interval = setInterval(() => setAuraIndex(p => (p + 1) % AURA_STATES.length), 4500);
+    fetchData();
+    
+    const stored = localStorage.getItem(USER_STORAGE_KEY);
+    if (stored) setCurrentUser(JSON.parse(stored));
+
     return () => { audioRef.current?.pause(); clearInterval(interval); };
-  }, []);
+  }, [fetchData]);
 
   const toggleMusic = useCallback(() => {
     if (!audioRef.current) return;
@@ -82,20 +95,6 @@ const App: React.FC = () => {
       setIsMusicPlaying(true);
     }
   }, [isMusicPlaying]);
-
-  const fetchData = useCallback(async () => {
-    try {
-      const [evs, bks] = await Promise.all([api.getEvents(), api.getBookings()]);
-      setEvents(evs || []);
-      setGlobalBookings(bks || []);
-    } catch (e) { console.error(e); }
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-    const stored = localStorage.getItem(USER_STORAGE_KEY);
-    if (stored) setCurrentUser(JSON.parse(stored));
-  }, [fetchData]);
 
   const handleMoodSearch = async (mood: string) => {
     if (!mood.trim()) return;
@@ -151,7 +150,7 @@ const App: React.FC = () => {
         ) : showDashboard && currentUser ? (
           <Dashboard 
             user={currentUser} events={events} bookings={globalBookings}
-            onLogout={() => { setCurrentUser(null); localStorage.removeItem(USER_STORAGE_KEY); }} 
+            onLogout={() => { setCurrentUser(null); localStorage.removeItem(USER_STORAGE_KEY); setShowDashboard(false); }} 
             onOpenAdmin={() => setShowAdmin(true)} onOpenPolicy={setActivePolicy} onRefreshEvents={fetchData}
           />
         ) : (
@@ -215,16 +214,29 @@ const App: React.FC = () => {
             </section>
 
             <section id="event-grid-container" className="space-y-10">
-              <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide py-2">
-                {CATEGORIES.map(cat => (
-                  <button key={cat} onClick={() => setSelectedCategory(cat)} className={`whitespace-nowrap px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border-2 ${selectedCategory === cat ? 'bg-slate-100 border-slate-100 text-slate-800 shadow-xl translate-y-[-2px]' : 'bg-slate-900/50 border-white/10 text-slate-400 hover:border-white/30 hover:text-slate-200'}`}>
-                    {cat}
-                  </button>
-                ))}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide py-2">
+                  {CATEGORIES.map(cat => (
+                    <button key={cat} onClick={() => setSelectedCategory(cat)} className={`whitespace-nowrap px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border-2 ${selectedCategory === cat ? 'bg-slate-100 border-slate-100 text-slate-800 shadow-xl translate-y-[-2px]' : 'bg-slate-900/50 border-white/10 text-slate-400 hover:border-white/30 hover:text-slate-200'}`}>
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+                <div className="hidden md:flex items-center gap-2">
+                   <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                   <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{events.length} Live Frequencies</span>
+                </div>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {filteredEvents.map(event => (<EventCard key={event.id} event={event} onClick={setSelectedEvent} />))}
-              </div>
+              
+              {filteredEvents.length === 0 ? (
+                <div className="text-center py-20 bg-slate-900/30 rounded-[3rem] border-2 border-dashed border-white/5">
+                  <p className="text-slate-500 text-[11px] font-black uppercase tracking-widest italic">No experiences matched this frequency.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {filteredEvents.map(event => (<EventCard key={event.id} event={event} onClick={setSelectedEvent} />))}
+                </div>
+              )}
             </section>
           </div>
         )}

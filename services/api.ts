@@ -1,12 +1,43 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { Event, Booking, AIRecommendation } from '../types.ts';
+import { Event, Booking, AIRecommendation, User } from '../types.ts';
 import { INITIAL_EVENTS } from '../constants.ts';
 
 const BOOKINGS_KEY = 'makemydays_bookings_v1';
 const EVENTS_KEY = 'makemydays_events_v1';
+const USERS_DB_KEY = 'makemydays_users_db_v1';
 
 export const api = {
+  // User Management
+  async getAllUsers(): Promise<any[]> {
+    const stored = localStorage.getItem(USERS_DB_KEY);
+    return stored ? JSON.parse(stored) : [];
+  },
+
+  async saveUser(user: User, pin: string): Promise<void> {
+    const users = await this.getAllUsers();
+    const existingIndex = users.findIndex(u => u.phone === user.phone);
+    const userWithPin = { ...user, pin };
+    
+    if (existingIndex > -1) {
+      users[existingIndex] = userWithPin;
+    } else {
+      users.push(userWithPin);
+    }
+    localStorage.setItem(USERS_DB_KEY, JSON.stringify(users));
+  },
+
+  async authenticate(phone: string, pin: string): Promise<User | null> {
+    const users = await this.getAllUsers();
+    const user = users.find(u => u.phone === phone && u.pin === pin);
+    if (user) {
+      const { pin: _, ...userWithoutPin } = user;
+      return userWithoutPin as User;
+    }
+    return null;
+  },
+
+  // Event Management
   async getEvents(): Promise<Event[]> {
     const stored = localStorage.getItem(EVENTS_KEY);
     if (!stored) {
@@ -22,7 +53,7 @@ export const api = {
     if (index > -1) {
       events[index] = event;
     } else {
-      events.push(event);
+      events.unshift(event); // New events at the top
     }
     localStorage.setItem(EVENTS_KEY, JSON.stringify(events));
   },
@@ -33,6 +64,7 @@ export const api = {
     localStorage.setItem(EVENTS_KEY, JSON.stringify(filtered));
   },
 
+  // AI & Bookings
   async getRecommendations(mood: string, events: Event[]): Promise<AIRecommendation> {
     const apiKey = process.env.API_KEY || "";
     if (!apiKey) {
@@ -63,7 +95,8 @@ export const api = {
           }
         }
       });
-      return JSON.parse(response.text?.trim() || "{}");
+      const text = response.text || "{}";
+      return JSON.parse(text.trim());
     } catch (error) {
       console.error("AI Recommendation disrupted:", error);
       return { reasoning: "✨ Frequency synced. We suggest exploring these sessions.", suggestedEventIds: events.slice(0, 3).map(e => e.id) };

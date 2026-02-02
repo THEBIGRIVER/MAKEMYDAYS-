@@ -138,8 +138,8 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
   return (
     <div className="fixed inset-0 z-[500] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-xl" onClick={onClose}></div>
-      <div className="relative w-full max-w-2xl bg-white rounded-[3.5rem] shadow-3xl overflow-hidden animate-in zoom-in-95 duration-300">
-        <div className="bg-slate-900 p-10 text-slate-200 flex justify-between items-center relative overflow-hidden">
+      <div className="relative w-full max-w-2xl dark-glass-card rounded-[3.5rem] shadow-3xl overflow-hidden animate-in zoom-in-95 duration-300">
+        <div className="p-10 text-slate-200 flex justify-between items-center relative overflow-hidden">
           <div className="relative z-10">
             <span className="text-brand-red text-[8px] font-black uppercase tracking-[0.4em] mb-2 block">Provider Portal</span>
             <h2 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter">Event Experience</h2>
@@ -157,7 +157,7 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
                 required
                 type="text" 
                 placeholder="e.g. Midnight Forest Bathing"
-                className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-sm font-bold outline-none focus:border-brand-red transition-all shadow-sm"
+                className="w-full bg-slate-800/50 border-2 border-white/5 rounded-2xl px-6 py-4 text-sm font-bold text-slate-200 outline-none focus:border-brand-red transition-all shadow-sm"
                 value={formData.title}
                 onChange={(e) => setFormData({...formData, title: e.target.value})}
               />
@@ -165,7 +165,7 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
             <div className="space-y-2">
               <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-1">Category</label>
               <select 
-                className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-sm font-bold outline-none focus:border-brand-red transition-all"
+                className="w-full bg-slate-800/50 border-2 border-white/5 rounded-2xl px-6 py-4 text-sm font-bold text-slate-200 outline-none focus:border-brand-red transition-all"
                 value={formData.category}
                 onChange={(e) => setFormData({...formData, category: e.target.value as Category})}
               >
@@ -181,18 +181,18 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
           <div className="space-y-4">
             <div className="flex items-center justify-between px-1">
               <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Temporal Cadence</label>
-              <div className="flex bg-slate-100 p-1 rounded-xl">
+              <div className="flex bg-white/5 p-1 rounded-xl">
                  <button 
                   type="button" 
                   onClick={() => setOccurrenceType('single')}
-                  className={`px-4 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${occurrenceType === 'single' ? 'bg-slate-900 text-slate-200 shadow-lg' : 'text-slate-400'}`}
+                  className={`px-4 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${occurrenceType === 'single' ? 'bg-slate-200 text-slate-900 shadow-lg' : 'text-slate-400'}`}
                  >
                    Single Day
                  </button>
                  <button 
                   type="button" 
                   onClick={() => setOccurrenceType('range')}
-                  className={`px-4 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${occurrenceType === 'range' ? 'bg-slate-900 text-slate-200 shadow-lg' : 'text-slate-400'}`}
+                  className={`px-4 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${occurrenceType === 'range' ? 'bg-slate-200 text-slate-900 shadow-lg' : 'text-slate-400'}`}
                  >
                    Date Range
                  </button>
@@ -204,7 +204,7 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
                 <label className="text-[9px] font-black uppercase tracking-widest text-slate-300 block mb-2 px-1">Select Event Date</label>
                 <input 
                   type="date" 
-                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-sm font-bold outline-none focus:border-brand-red transition-all"
+                  className="w-full bg-slate-800/50 border-2 border-white/5 rounded-2xl px-6 py-4 text-sm font-bold text-slate-200 outline-none focus:border-brand-red transition-all"
                   value={singleDate}
                   onChange={(e) => setSingleDate(e.target.value)}
                 />
@@ -215,7 +215,7 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
                   <label className="text-[9px] font-black uppercase tracking-widest text-slate-300 px-1">Start Date</label>
                   <input 
                     type="date" 
-                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-sm font-bold outline-none focus:border-brand-red transition-all"
+                    className="w-full bg-slate-800/50 border-2 border-white/5 rounded-2xl px-6 py-4 text-sm font-bold text-slate-200 outline-none focus:border-brand-red transition-all"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                   />
@@ -224,7 +224,7 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
                   <label className="text-[9px] font-black uppercase tracking-widest text-slate-300 px-1">End Date</label>
                   <input 
                     type="date" 
-                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-sm font-bold outline-none focus:border-brand-red transition-all"
+                    className="w-full bg-slate-800/50 border-2 border-white/5 rounded-2xl px-6 py-4 text-sm font-bold text-slate-200 outline-none focus:border-brand-red transition-all"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
                   />
@@ -252,25 +252,25 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {(occurrenceType === 'single' ? [formData.slots![0]] : formData.slots!).map((slot, index) => (
                 <div key={index} className="flex items-center gap-3 animate-in slide-in-from-bottom duration-500">
-                  <div className="flex-1 bg-white border-2 border-slate-100 rounded-2xl px-4 py-3 flex items-center justify-between">
+                  <div className="flex-1 bg-slate-800/50 border-2 border-white/5 rounded-2xl px-4 py-3 flex items-center justify-between">
                     <input 
                       type="time" 
-                      className="bg-transparent text-sm font-bold outline-none text-slate-800"
+                      className="bg-transparent text-sm font-bold outline-none text-slate-200"
                       value={slot.time}
                       onChange={(e) => updateSlot(index, 'time', e.target.value)}
                     />
                     <div className="flex items-center gap-2">
-                       <span className="text-[8px] font-black text-slate-300 uppercase">Cap</span>
+                       <span className="text-[8px] font-black text-slate-400 uppercase">Cap</span>
                        <input 
                          type="number" 
-                         className="bg-slate-50 rounded-lg text-sm font-bold outline-none w-12 text-center py-1"
+                         className="bg-slate-900 rounded-lg text-sm font-bold outline-none w-12 text-center py-1 text-slate-200"
                          value={slot.availableSeats}
                          onChange={(e) => updateSlot(index, 'availableSeats', Number(e.target.value))}
                        />
                     </div>
                   </div>
                   {occurrenceType === 'range' && formData.slots!.length > 1 && (
-                    <button type="button" onClick={() => removeSlot(index)} className="p-3 text-slate-300 hover:text-brand-red transition-colors">
+                    <button type="button" onClick={() => removeSlot(index)} className="p-3 text-slate-500 hover:text-brand-red transition-colors">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                     </button>
                   )}
@@ -284,7 +284,7 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
             <input 
               required
               type="number" 
-              className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-sm font-bold outline-none focus:border-brand-red transition-all"
+              className="w-full bg-slate-800/50 border-2 border-white/5 rounded-2xl px-6 py-4 text-sm font-bold text-slate-200 outline-none focus:border-brand-red transition-all"
               value={formData.price}
               onChange={(e) => setFormData({...formData, price: Number(e.target.value)})}
             />
@@ -293,18 +293,18 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
           <div className="space-y-4">
             <div className="flex items-center justify-between px-1">
                <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Visual Aura</label>
-               <div className="flex bg-slate-100 p-1 rounded-xl">
+               <div className="flex bg-white/5 p-1 rounded-xl">
                  <button 
                   type="button" 
                   onClick={() => setImageInputMode('url')}
-                  className={`px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${imageInputMode === 'url' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400'}`}
+                  className={`px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${imageInputMode === 'url' ? 'bg-slate-200 text-slate-900 shadow-sm' : 'text-slate-400'}`}
                  >
                    URL
                  </button>
                  <button 
                   type="button" 
                   onClick={() => setImageInputMode('file')}
-                  className={`px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${imageInputMode === 'file' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400'}`}
+                  className={`px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${imageInputMode === 'file' ? 'bg-slate-200 text-slate-900 shadow-sm' : 'text-slate-400'}`}
                  >
                    Upload
                  </button>
@@ -315,14 +315,14 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
               <input 
                 type="text" 
                 placeholder="https://images.unsplash.com/..."
-                className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-sm font-bold outline-none focus:border-brand-red transition-all shadow-sm"
+                className="w-full bg-slate-800/50 border-2 border-white/5 rounded-2xl px-6 py-4 text-sm font-bold text-slate-200 outline-none focus:border-brand-red transition-all shadow-sm"
                 value={formData.image}
                 onChange={handleUrlChange}
               />
             ) : (
               <>
                 <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
-                <div onClick={() => fileInputRef.current?.click()} className="w-full h-32 bg-slate-50 border-2 border-dashed border-slate-100 rounded-2xl flex items-center justify-center cursor-pointer hover:border-brand-red/50 transition-all overflow-hidden relative group">
+                <div onClick={() => fileInputRef.current?.click()} className="w-full h-32 bg-slate-800/50 border-2 border-dashed border-white/10 rounded-2xl flex items-center justify-center cursor-pointer hover:border-brand-red/50 transition-all overflow-hidden relative group">
                    {imagePreview ? (
                      <div className="w-full h-full">
                        <img src={imagePreview} className="w-full h-full object-cover transition-transform group-hover:scale-105" alt="Preview" />
@@ -331,7 +331,7 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
                        </div>
                      </div>
                    ) : (
-                     <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Select Visual Identity</span>
+                     <span className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Select Visual Identity</span>
                    )}
                 </div>
               </>
@@ -343,7 +343,7 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
             <textarea 
               required
               rows={3}
-              className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-sm font-bold outline-none focus:border-brand-red resize-none"
+              className="w-full bg-slate-800/50 border-2 border-white/5 rounded-2xl px-6 py-4 text-sm font-bold text-slate-200 outline-none focus:border-brand-red resize-none"
               value={formData.description}
               onChange={(e) => setFormData({...formData, description: e.target.value})}
             />
@@ -352,7 +352,7 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
           <button 
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-6 bg-slate-900 text-slate-200 rounded-[2rem] font-black uppercase text-[12px] tracking-[0.2em] shadow-2xl hover:bg-brand-red transition-all active:scale-[0.98] disabled:opacity-50"
+            className="w-full py-6 bg-slate-200 text-slate-900 rounded-[2rem] font-black uppercase text-[12px] tracking-[0.2em] shadow-2xl hover:bg-brand-red hover:text-white transition-all active:scale-[0.98] disabled:opacity-50"
           >
             {isSubmitting ? 'Establishing Connection...' : 'Create Event'}
           </button>
@@ -404,7 +404,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, events, bookings, onLogout,
     setLocalPreferences(nextPrefs);
     
     const updatedUser = { ...user, preferences: nextPrefs };
-    localStorage.setItem('makemydays_user_v1', JSON.stringify(updatedUser));
+    localStorage.setItem('makemydays_user_session_v1', JSON.stringify(updatedUser));
   };
 
   return (
@@ -421,14 +421,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, events, bookings, onLogout,
         ))}
       </div>
 
-      <div className="glass-card rounded-[3.5rem] overflow-hidden shadow-2xl border border-white/40">
-        <div className="bg-slate-900 p-10 md:p-14 text-slate-200 relative">
+      <div className="glass-card rounded-[3.5rem] overflow-hidden shadow-2xl border border-white/10">
+        <div className="bg-slate-900/50 p-10 md:p-14 text-slate-200 relative border-b border-white/10 backdrop-blur-3xl">
           <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
             <div>
               <span className="text-brand-red text-[11px] font-black uppercase tracking-[0.4em] mb-3 block">Private Sanctuary</span>
-              <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter leading-none mb-3">Namaste, {user.name}</h2>
+              <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter leading-none mb-3 text-slate-200">Namaste, {user.name}</h2>
               <div className="flex items-center gap-4 text-slate-400">
-                 <span className="text-[10px] font-bold uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full border border-white/10">+91 {user.phone}</span>
+                 <span className="text-[10px] font-bold uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full border border-white/10 text-slate-400">+91 {user.phone}</span>
               </div>
             </div>
             <div className="flex gap-4">
@@ -470,13 +470,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, events, bookings, onLogout,
           {activeTab === 'bookings' && (
             <div className="space-y-6">
               {userBookings.length === 0 ? (
-                <div className="text-center py-20 bg-slate-900/30 rounded-[3rem] border-2 border-dashed border-white/5">
+                <div className="text-center py-20 glass-card rounded-[3rem] border-2 border-dashed border-white/5">
                   <p className="text-slate-500 text-[11px] font-black uppercase tracking-widest italic">No bookings found.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {userBookings.map((booking) => (
-                    <div key={booking.id} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm relative overflow-hidden group">
+                    <div key={booking.id} className="glass-card p-8 rounded-[2.5rem] border border-white/10 shadow-sm relative overflow-hidden group hover:border-white/20 transition-all hover:-translate-y-1">
                       <div className="relative z-10">
                         <div className="flex justify-between items-start mb-2">
                            <span className="text-brand-red text-[9px] font-black uppercase tracking-widest block">{booking.category}</span>
@@ -487,13 +487,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, events, bookings, onLogout,
                              </div>
                            ) : null}
                         </div>
-                        <h4 className="text-slate-800 font-black italic uppercase tracking-tight text-xl mb-3">{booking.eventTitle}</h4>
-                        <div className="flex items-center gap-5 text-slate-500 text-[11px] font-bold">
+                        <h4 className="text-slate-200 font-black italic uppercase tracking-tight text-xl mb-3">{booking.eventTitle}</h4>
+                        <div className="flex items-center gap-5 text-slate-400 text-[11px] font-bold">
                           <span>{booking.eventDate}</span>
                           <span>{booking.time}</span>
                         </div>
                       </div>
-                      <div className="mt-6 pt-6 border-t border-slate-50 text-[9px] font-black text-slate-400 uppercase italic flex justify-between">
+                      <div className="mt-6 pt-6 border-t border-white/10 text-[9px] font-black text-slate-500 uppercase italic flex justify-between">
                         <span>Ref: #{booking.id.split('-').pop()}</span>
                         {booking.reminderSent && <span className="text-emerald-500">Alert Dispatched</span>}
                       </div>
@@ -506,27 +506,27 @@ const Dashboard: React.FC<DashboardProps> = ({ user, events, bookings, onLogout,
 
           {activeTab === 'hosting' && (
             <div className="space-y-10">
-              <div className="flex flex-col md:flex-row justify-between items-center gap-6 bg-slate-900/40 p-8 rounded-[2.5rem] border border-white/5">
+              <div className="flex flex-col md:flex-row justify-between items-center gap-6 glass-card p-8 rounded-[2.5rem] border border-white/10">
                 <div className="max-w-md">
                    <h3 className="text-xl font-black italic uppercase tracking-tight text-slate-100 mb-2">Host New Experience</h3>
                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest leading-relaxed">Host your unique event frequency to the community.</p>
                 </div>
                 <button 
                   onClick={() => setShowCreateModal(true)}
-                  className="bg-slate-100 text-slate-800 px-10 py-5 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl hover:bg-brand-red hover:text-slate-200 transition-all"
+                  className="bg-slate-200 text-slate-900 px-10 py-5 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl hover:bg-brand-red hover:text-slate-200 transition-all"
                 >
                   Create Event
                 </button>
               </div>
 
               {userEvents.length === 0 ? (
-                <div className="text-center py-20 bg-slate-900/30 rounded-[3rem] border-2 border-dashed border-white/5">
+                <div className="text-center py-20 glass-card rounded-[3rem] border-2 border-dashed border-white/5">
                   <p className="text-slate-500 text-[11px] font-black uppercase tracking-widest italic">No active events found.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {userEvents.map(event => (
-                    <div key={event.id} className="bg-white rounded-[2.5rem] border border-slate-100 overflow-hidden shadow-sm group">
+                    <div key={event.id} className="glass-card rounded-[2.5rem] border border-white/10 overflow-hidden shadow-sm group hover:border-white/20 transition-all hover:-translate-y-1">
                       <div className="relative h-48 overflow-hidden">
                         <img src={event.image} alt={event.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
@@ -537,11 +537,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, events, bookings, onLogout,
                       </div>
                       <div className="p-8">
                          <div className="flex justify-between items-center mb-6">
-                            <span className="text-2xl font-black italic text-slate-800">₹{event.price}</span>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase">{event.dates.length} Dates Live</span>
+                            <span className="text-2xl font-black italic text-slate-200">₹{event.price}</span>
+                            <span className="text-[10px] font-bold text-slate-500 uppercase">{event.dates.length} Dates Live</span>
                          </div>
                          <button 
-                            className="w-full py-4 bg-slate-900 hover:bg-brand-red text-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg"
+                            className="w-full py-4 bg-slate-800 hover:bg-brand-red text-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg"
                             onClick={async () => {
                               if (confirm("Terminate this event?")) {
                                 await api.deleteEvent(event.id);
@@ -568,7 +568,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, events, bookings, onLogout,
                  </div>
 
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-slate-900/40 p-8 rounded-[2.5rem] border border-white/5 flex items-center justify-between">
+                    <div className="glass-card p-8 rounded-[2.5rem] border border-white/10 flex items-center justify-between">
                        <div className="space-y-1">
                           <h4 className="text-sm font-black italic text-slate-100 uppercase">SMS Notifications</h4>
                           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Urgent temporal updates via +91 {user.phone}</p>
@@ -581,7 +581,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, events, bookings, onLogout,
                        </button>
                     </div>
 
-                    <div className="bg-slate-900/40 p-8 rounded-[2.5rem] border border-white/5 flex items-center justify-between">
+                    <div className="glass-card p-8 rounded-[2.5rem] border border-white/10 flex items-center justify-between">
                        <div className="space-y-1">
                           <h4 className="text-sm font-black italic text-slate-100 uppercase">Email Sync</h4>
                           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Detailed resonance reports and receipts</p>
@@ -604,37 +604,4 @@ const Dashboard: React.FC<DashboardProps> = ({ user, events, bookings, onLogout,
                     {['terms', 'privacy', 'refund', 'shipping'].map(policy => (
                       <button 
                         key={policy}
-                        onClick={() => onOpenPolicy?.(policy as PolicyType)}
-                        className="bg-slate-900/40 border-2 border-white/5 p-4 rounded-2xl text-[9px] font-black uppercase tracking-widest text-slate-400 hover:border-brand-red hover:text-brand-red transition-all text-center"
-                      >
-                        {policy}
-                      </button>
-                    ))}
-                 </div>
-              </section>
-
-              {user.role === 'admin' && (
-                <button 
-                  onClick={onOpenAdmin}
-                  className="w-full py-6 bg-slate-900/60 hover:bg-slate-100 hover:text-slate-800 text-slate-300 rounded-[2rem] font-black uppercase text-[11px] tracking-[0.3em] border border-white/5 transition-all"
-                >
-                  Access Superuser Hub
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {showCreateModal && (
-        <CreateEventModal 
-          user={user} 
-          onClose={() => setShowCreateModal(false)} 
-          onSuccess={() => { onRefreshEvents?.(); }} 
-        />
-      )}
-    </div>
-  );
-};
-
-export default Dashboard;
+                        onClick={() => onOpenPolicy?.(policy as Policy
