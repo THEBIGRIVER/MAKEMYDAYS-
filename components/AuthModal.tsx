@@ -15,14 +15,41 @@ const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, onClose }) => {
   const [pin, setPin] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
+  const [recoveredPin, setRecoveredPin] = useState<string | null>(null);
 
   useEffect(() => {
     setError('');
+    setRecoveredPin(null);
   }, [mode]);
+
+  const handleForgotPin = async () => {
+    if (phone.length !== 10) {
+      setError("Please provide your 10-digit number first.");
+      return;
+    }
+    
+    setIsProcessing(true);
+    try {
+      const allUsers = await api.getAllUsers();
+      const user = allUsers.find(u => u.phone === phone);
+      
+      if (user) {
+        setRecoveredPin(user.pin);
+        setError('');
+      } else {
+        setError("This frequency is not registered in our sanctuary.");
+      }
+    } catch (err) {
+      setError("Recall protocol failed. Try again.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setRecoveredPin(null);
     
     if (phone.length !== 10) {
       setError("Please provide a valid 10-digit number.");
@@ -149,7 +176,18 @@ const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, onClose }) => {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-slate-400 text-[9px] font-black uppercase tracking-widest">Resonance PIN (4 Digits)</label>
+            <div className="flex justify-between items-center px-1">
+              <label className="text-slate-400 text-[9px] font-black uppercase tracking-widest">Resonance PIN (4 Digits)</label>
+              {mode === 'login' && (
+                <button 
+                  type="button" 
+                  onClick={handleForgotPin}
+                  className="text-brand-red text-[8px] font-black uppercase tracking-widest hover:underline"
+                >
+                  Forgot PIN?
+                </button>
+              )}
+            </div>
             <input 
               required
               type="password" 
@@ -162,9 +200,28 @@ const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, onClose }) => {
             />
           </div>
 
+          {recoveredPin && (
+            <div className="p-4 bg-brand-lime/10 border border-brand-lime/30 rounded-2xl animate-in zoom-in-95">
+              <p className="text-slate-600 text-[8px] font-black uppercase tracking-widest text-center mb-1">Recovered Signal</p>
+              <div className="text-center text-2xl font-black text-slate-900 tracking-[0.5em]">
+                {recoveredPin}
+              </div>
+              <p className="text-slate-400 text-[7px] font-bold uppercase tracking-wider text-center mt-2 italic">Please keep your coordinates secure.</p>
+            </div>
+          )}
+
           {error && (
             <div className="p-3 bg-brand-red/10 border border-brand-red/20 rounded-xl">
               <p className="text-brand-red text-[9px] font-black uppercase text-center tracking-wider">{error}</p>
+              {error.includes("mismatch") && !recoveredPin && (
+                <button 
+                  type="button" 
+                  onClick={handleForgotPin}
+                  className="w-full mt-2 text-[8px] font-black uppercase text-brand-red hover:underline"
+                >
+                  Recall my PIN
+                </button>
+              )}
             </div>
           )}
 
