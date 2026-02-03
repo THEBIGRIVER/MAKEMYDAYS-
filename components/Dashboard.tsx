@@ -169,7 +169,7 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
       setTimeout(() => {
         onSuccess();
         onClose();
-      }, 2000);
+      }, 2500);
     } catch (err: any) {
       alert(err.message || "Launch disrupted. Please try again.");
     } finally {
@@ -186,8 +186,8 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
               <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7"/></svg>
            </div>
            <div>
-             <h2 className="text-3xl font-black italic uppercase tracking-tighter text-slate-100 mb-2">Global Launch Complete</h2>
-             <p className="text-[10px] font-black uppercase tracking-[0.4em] text-emerald-500 animate-pulse">Now broadcasting to Home Feed</p>
+             <h2 className="text-3xl font-black italic uppercase tracking-tighter text-slate-100 mb-2">Broadcasting to Global Feed</h2>
+             <p className="text-[10px] font-black uppercase tracking-[0.4em] text-emerald-500 animate-pulse">Your session is now visible to the entire community</p>
            </div>
         </div>
       </div>
@@ -332,7 +332,7 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
             {isSubmitting ? (
               <>
                 <div className="w-5 h-5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin"></div>
-                Calibrating Global Feed...
+                Broadcasting to Sanctuary...
               </>
             ) : 'Launch Experience'}
           </button>
@@ -434,7 +434,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, events, bookings, onLogout,
               <div className="flex flex-col md:flex-row justify-between items-center gap-6 glass-card p-8 rounded-[2.5rem] border border-white/10">
                 <div className="max-w-md">
                   <h3 className="text-xl font-black italic uppercase tracking-tight text-slate-100 mb-2">Host New Experience</h3>
-                  <p className="text-slate-400 text-xs font-bold uppercase tracking-widest leading-relaxed">Added experiences will immediately occupy the Prime Resonance slots on the global home page.</p>
+                  <p className="text-slate-400 text-xs font-bold uppercase tracking-widest leading-relaxed">Launched experiences appear immediately at the top of the Global Discovery Feed.</p>
                 </div>
                 <button onClick={() => setShowCreateModal(true)} className="bg-slate-200 text-slate-900 px-10 py-5 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl hover:bg-brand-red hover:text-slate-200 transition-all">Create Event</button>
               </div>

@@ -29,6 +29,27 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick, id }) => {
     return (now - createdTime) < (24 * 60 * 60 * 1000); // Within 24 hours
   }, [event.createdAt, event.id]);
 
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent opening the booking modal
+    const shareData = {
+      title: event.title,
+      text: `Check out this experience: ${event.title} - ${event.description}`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        // Fallback: Copy to clipboard
+        await navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`);
+        alert('Resonance link copied to clipboard!');
+      }
+    } catch (err) {
+      console.debug('Sharing disrupted:', err);
+    }
+  };
+
   return (
     <div 
       id={id}
@@ -42,20 +63,34 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick, id }) => {
           onError={() => setImgSrc(FALLBACK_IMAGE)}
           className="w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-110 opacity-100" 
         />
-        <div className="absolute top-4 left-4 flex flex-col gap-2">
-           <span className="bg-black/80 backdrop-blur-md text-slate-200 text-[8px] font-black uppercase tracking-wider px-3 py-1.5 rounded-full border border-white/10 shadow-lg w-fit">
-            {event.category}
-           </span>
-           {isRecentlyAdded && (
-             <span className="bg-emerald-500 text-white text-[7px] font-black uppercase tracking-widest px-2 py-1 rounded-full shadow-lg w-fit animate-pulse border border-emerald-400/50">
-               Recently Calibrated
-             </span>
-           )}
-           {isCommunityHost && !isRecentlyAdded && (
-             <span className="bg-brand-red text-white text-[7px] font-black uppercase tracking-widest px-2 py-1 rounded-full shadow-lg w-fit">
-               Community Choice
-             </span>
-           )}
+        
+        {/* Top Controls Overlay */}
+        <div className="absolute top-4 left-4 right-4 flex items-start justify-between">
+           <div className="flex flex-col gap-2">
+              <span className="bg-black/80 backdrop-blur-md text-slate-200 text-[8px] font-black uppercase tracking-wider px-3 py-1.5 rounded-full border border-white/10 shadow-lg w-fit">
+               {event.category}
+              </span>
+              {isRecentlyAdded && (
+                <span className="bg-brand-red text-white text-[7px] font-black uppercase tracking-widest px-2 py-1 rounded-full shadow-lg w-fit animate-pulse border border-brand-red/50">
+                  Live Stream
+                </span>
+              )}
+              {isCommunityHost && (
+                <span className="bg-brand-accent text-slate-900 text-[7px] font-black uppercase tracking-widest px-2 py-1 rounded-full shadow-lg w-fit border border-white/10">
+                  Explorer Stream
+                </span>
+              )}
+           </div>
+
+           <button 
+             onClick={handleShare}
+             className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-slate-300 hover:text-brand-red hover:bg-black/60 transition-all group/share"
+             title="Share Frequency"
+           >
+             <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current" strokeWidth="2.5">
+               <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" strokeLinecap="round" strokeLinejoin="round" />
+             </svg>
+           </button>
         </div>
       </div>
 

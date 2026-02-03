@@ -2,8 +2,10 @@
 import { Event } from './types.ts';
 
 const DEFAULT_HOST = '917686924919';
-const MOCK_COMMUNITY_HOST_1 = '9820012345';
-const MOCK_COMMUNITY_HOST_2 = '9930054321';
+const EXPLORER_1 = '9820012345';
+const EXPLORER_2 = '9930054321';
+const EXPLORER_3 = '9120098765';
+const EXPLORER_4 = '9870011223';
 
 export const INITIAL_EVENTS: Event[] = [
   {
@@ -25,9 +27,21 @@ export const INITIAL_EVENTS: Event[] = [
     description: 'An acoustic session on a private rooftop in Bandra. Bring your own instrument or just your energy.',
     price: 150,
     dates: ['26 Dec 2024'],
-    hostPhone: MOCK_COMMUNITY_HOST_1,
+    hostPhone: EXPLORER_1,
     slots: [{ time: '06:30 PM', availableSeats: 15 }],
-    createdAt: new Date().toISOString()
+    createdAt: new Date(Date.now() - 3600000).toISOString()
+  },
+  {
+    id: 'user-sample-3',
+    title: 'Urban Foraging & Tea Ceremony',
+    category: 'Workshop',
+    image: 'https://images.unsplash.com/photo-1545231027-63b3f162ad00?auto=format&fit=crop&q=80&w=1200',
+    description: 'Discover the edible wild side of the city followed by a traditional matcha ceremony in a hidden garden.',
+    price: 750,
+    dates: ['27 Dec 2024'],
+    hostPhone: EXPLORER_3,
+    slots: [{ time: '04:00 PM', availableSeats: 8 }],
+    createdAt: new Date(Date.now() - 7200000).toISOString()
   },
   {
     id: 'w1',
@@ -51,9 +65,21 @@ export const INITIAL_EVENTS: Event[] = [
     description: 'A high-cadence group ride through the national park trails under moonlight. Safety gear mandatory.',
     price: 0,
     dates: ['27 Dec 2024'],
-    hostPhone: MOCK_COMMUNITY_HOST_2,
+    hostPhone: EXPLORER_2,
     slots: [{ time: '11:45 PM', availableSeats: 25 }],
-    createdAt: new Date().toISOString()
+    createdAt: new Date(Date.now() - 10800000).toISOString()
+  },
+  {
+    id: 'user-sample-4',
+    title: 'Street Photography Flash Mob',
+    category: 'Activity',
+    image: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&q=80&w=1200',
+    description: 'A fast-paced shooting session in the old market districts. Capture the raw energy of the city.',
+    price: 200,
+    dates: ['29 Dec 2024'],
+    hostPhone: EXPLORER_4,
+    slots: [{ time: '10:00 AM', availableSeats: 12 }],
+    createdAt: new Date(Date.now() - 86400000).toISOString()
   },
   {
     id: 't1',
@@ -93,16 +119,5 @@ export const INITIAL_EVENTS: Event[] = [
       { time: '06:00 AM', availableSeats: 25 },
       { time: '05:00 PM', availableSeats: 25 }
     ]
-  },
-  {
-    id: 'ws2',
-    title: 'Electronic Sound Design',
-    category: 'Workshop',
-    image: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=1200',
-    description: 'Learn the frequencies of modern audio production. Practical workshop on synthesizers and spatial audio.',
-    price: 1800,
-    dates: ['27 Dec 2024', '29 Dec 2024'],
-    hostPhone: DEFAULT_HOST,
-    slots: [{ time: '04:00 PM', availableSeats: 12 }]
   }
 ];

@@ -46,6 +46,36 @@ const Visualizer = ({ isPlaying }: { isPlaying: boolean }) => (
   </div>
 );
 
+const CommunityPulseTicker = ({ eventsCount }: { eventsCount: number }) => {
+  const [pulseIdx, setPulseIdx] = useState(0);
+  const pulses = [
+    `NEW RESONANCE: Explorer +91 98*** just launched a new Workshop`,
+    `BOOKING CONFIRMED: Someone anchored for Midnight Forest Bathing`,
+    `LIVE PULSE: ${eventsCount} active streams currently broadcasting globally`,
+    `COMMUNITY CHOICE: Secret Rooftop Sunset Jam trending in high-energy`
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => setPulseIdx(p => (p + 1) % pulses.length), 5000);
+    return () => clearInterval(interval);
+  }, [pulses.length]);
+
+  return (
+    <div className="w-full bg-brand-lime/10 border-y border-brand-lime/5 py-2 overflow-hidden flex whitespace-nowrap">
+      <div className="animate-marquee flex items-center gap-12">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="flex items-center gap-4">
+            <span className="text-[9px] font-black uppercase tracking-[0.3em] text-brand-lime">
+               ● {pulses[pulseIdx]}
+            </span>
+            <div className="w-1.5 h-1.5 bg-brand-lime rounded-full animate-ping" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const App: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [globalBookings, setGlobalBookings] = useState<Booking[]>([]);
@@ -67,9 +97,14 @@ const App: React.FC = () => {
   const fetchData = useCallback(async () => {
     try {
       const [evs, bks] = await Promise.all([api.getEvents(), api.getBookings()]);
-      setEvents(evs || []);
+      // Explicit sort to ensure newest (user-created) events are always first in the feed
+      const sortedEvents = (evs || []).sort((a, b) => {
+        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return timeB - timeA;
+      });
+      setEvents(sortedEvents);
       setGlobalBookings(bks || []);
-      // Reset recommendations on full refresh to show the unfiltered community feed
       setAiRec(null);
     } catch (e) { console.error(e); }
   }, []);
@@ -104,7 +139,6 @@ const App: React.FC = () => {
       return;
     }
     setIsAiLoading(true);
-    // Do not clear aiRec immediately to avoid jarring layout shifts
     try {
       const rec = await api.getRecommendations(mood, events);
       setAiRec(rec);
@@ -119,7 +153,6 @@ const App: React.FC = () => {
   const handleSearchInputChange = (val: string) => {
     setUserMood(val);
     setSearchQuery(val);
-    // If the user clears the input manually, remove any AI-driven filters
     if (!val.trim()) {
       setAiRec(null);
     }
@@ -127,29 +160,21 @@ const App: React.FC = () => {
 
   const filteredEvents = useMemo(() => {
     return events.filter(e => {
-      // 1. Category Filter
       const matchCat = selectedCategory === 'All' || e.category === selectedCategory;
-      
-      // 2. Text Search Filter (Title/Description)
       const query = searchQuery.toLowerCase();
       const matchText = e.title.toLowerCase().includes(query) || 
                         e.category.toLowerCase().includes(query) ||
                         e.description.toLowerCase().includes(query);
-
-      // 3. AI Recommendation Filter (Semantic)
-      // If AI has provided specific recommendations, we check those IDs.
       const matchAi = aiRec ? aiRec.suggestedEventIds.includes(e.id) : true;
-      
-      /**
-       * CRITICAL FIX: The Logic
-       * If aiRec is active, we prioritize matchAi. 
-       * If no aiRec is active, we rely on matchText (live search).
-       */
       const finalSearchMatch = aiRec ? matchAi : matchText;
-      
       return matchCat && finalSearchMatch;
     });
   }, [events, selectedCategory, searchQuery, aiRec]);
+
+  const featuredEvents = useMemo(() => {
+    // Recently calibrated section always shows the newest 4 experiences
+    return [...events].slice(0, 4);
+  }, [events]);
 
   return (
     <div className={`flex flex-col min-h-screen bg-black mesh-bg vibe-sunny selection:bg-brand-red selection:text-slate-200`}>
@@ -169,12 +194,10 @@ const App: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-6">
-            <div className="flex items-center gap-3">
-               <button onClick={toggleMusic} aria-label="Toggle Atmosphere" className={`relative group w-11 h-11 flex items-center justify-center rounded-full transition-all duration-500 border-2 ${isMusicPlaying ? 'bg-slate-900 border-brand-red shadow-lg' : 'bg-slate-800 border-white/10 hover:border-white/30'}`}>
-                {isMusicPlaying && <div className="absolute inset-0 rounded-full border border-brand-red/40 animate-music-pulse" />}
-                <div className="relative z-10 transition-transform group-hover:scale-110"><Visualizer isPlaying={isMusicPlaying} /></div>
-               </button>
-            </div>
+            <button onClick={toggleMusic} aria-label="Toggle Atmosphere" className={`relative group w-11 h-11 flex items-center justify-center rounded-full transition-all duration-500 border-2 ${isMusicPlaying ? 'bg-slate-900 border-brand-red shadow-lg' : 'bg-slate-800 border-white/10 hover:border-white/30'}`}>
+              {isMusicPlaying && <div className="absolute inset-0 rounded-full border border-brand-red/40 animate-music-pulse" />}
+              <div className="relative z-10 transition-transform group-hover:scale-110"><Visualizer isPlaying={isMusicPlaying} /></div>
+            </button>
 
             {currentUser ? (
               <button id="user-sanctuary-trigger" onClick={() => setShowDashboard(!showDashboard)} className="w-10 h-10 rounded-xl bg-slate-100 text-slate-800 flex items-center justify-center font-black italic text-lg shadow-lg hover:bg-slate-200 transition-colors">
@@ -197,7 +220,8 @@ const App: React.FC = () => {
             onOpenAdmin={() => setShowAdmin(true)} onOpenPolicy={setActivePolicy} onRefreshEvents={fetchData}
           />
         ) : (
-          <div className="space-y-12 pb-20">
+          <div className="space-y-16 pb-20">
+            {/* Hero Section */}
             <section className="text-center space-y-10">
               <div className="inline-block relative">
                 <div className="absolute inset-0 bg-brand-lime/10 blur-xl"></div>
@@ -263,49 +287,104 @@ const App: React.FC = () => {
                    <div className="animate-in slide-in-from-top-6 duration-700 pt-4">
                      <div className="relative glass-card rounded-[3rem] p-8 border border-white/10 shadow-3xl flex flex-col md:flex-row items-center gap-8">
                         <div className="w-16 h-16 rounded-full bg-brand-red flex items-center justify-center shrink-0 shadow-2xl relative"><span className="text-2xl animate-pulse">✨</span></div>
-                        <div className="flex-1 text-center md:text-left"><p className="text-[11px] font-black uppercase tracking-[0.3em] text-brand-red mb-2 italic">Frequency Harmonization</p><p className="text-lg font-bold italic text-slate-100 leading-tight">"{aiRec.reasoning}"</p></div>
-                        <button onClick={() => { setAiRec(null); setUserMood(''); setSearchQuery(''); }} className="p-3 text-slate-400 hover:text-brand-red transition-all transform hover:rotate-90"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12"/></svg></button>
+                        <div className="flex-1 text-center md:text-left">
+                          <p className="text-[11px] font-black uppercase tracking-[0.3em] text-brand-red mb-2 italic">Frequency Harmonization</p>
+                          <p className="text-lg font-bold italic text-slate-100 leading-tight">"{aiRec.reasoning}"</p>
+                        </div>
+                        <button onClick={() => { setAiRec(null); setUserMood(''); setSearchQuery(''); }} className="p-3 text-slate-400 hover:text-brand-red transition-all transform hover:rotate-90">
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
                      </div>
                    </div>
                  )}
               </div>
             </section>
 
+            {/* Community Pulse Ticker */}
+            <div className="relative z-10 -mx-6">
+               <CommunityPulseTicker eventsCount={events.length} />
+            </div>
+
+            {/* Prime Resonance - Featured Scroller */}
+            {!searchQuery && !aiRec && (
+              <section className="space-y-6">
+                <div className="flex items-end justify-between px-2">
+                  <div className="space-y-1">
+                    <span className="text-brand-red text-[10px] font-black uppercase tracking-[0.4em]">Prime Resonance</span>
+                    <h2 className="text-3xl font-black italic uppercase tracking-tighter text-slate-200">Recently Calibrated</h2>
+                  </div>
+                </div>
+                <div className="flex gap-6 overflow-x-auto pb-8 scrollbar-hide snap-x px-2">
+                  {featuredEvents.map(event => (
+                    <div key={event.id} className="min-w-[280px] md:min-w-[320px] snap-center">
+                      <EventCard event={event} onClick={setSelectedEvent} />
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Discovery Feed Section */}
             <section id="event-grid-container" className="space-y-10">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/5 pb-8">
+              <div className="flex flex-col space-y-8 border-b border-white/5 pb-10">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                  <div className="space-y-2">
+                    <span className="text-brand-accent text-[10px] font-black uppercase tracking-[0.4em]">Global Streams Converging</span>
+                    <h2 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter text-slate-200">
+                      Discovery Feed
+                    </h2>
+                  </div>
+                  <div className="flex items-center gap-4 bg-white/5 px-5 py-2.5 rounded-full border border-white/10">
+                     <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                        <span className="text-[9px] font-black text-emerald-500 uppercase tracking-[0.3em]">Network Active</span>
+                     </div>
+                     <div className="h-4 w-[1px] bg-white/10"></div>
+                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">{events.length} Total Frequencies</span>
+                  </div>
+                </div>
+
                 <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide py-2">
                   {CATEGORIES.map(cat => (
-                    <button key={cat} onClick={() => { setSelectedCategory(cat); setAiRec(null); }} className={`whitespace-nowrap px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border-2 ${selectedCategory === cat ? 'bg-slate-100 border-slate-100 text-slate-800 shadow-xl translate-y-[-2px]' : 'bg-slate-900/50 border-white/10 text-slate-400 hover:border-white/30 hover:text-slate-200'}`}>
+                    <button 
+                      key={cat} 
+                      onClick={() => { setSelectedCategory(cat); setAiRec(null); }} 
+                      className={`whitespace-nowrap px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border-2 ${
+                        selectedCategory === cat 
+                        ? 'bg-slate-100 border-slate-100 text-slate-800 shadow-[0_10px_30px_rgba(255,255,255,0.1)] translate-y-[-2px]' 
+                        : 'bg-slate-900/50 border-white/10 text-slate-400 hover:border-white/30 hover:text-slate-200'
+                      }`}
+                    >
                       {cat}
                     </button>
                   ))}
                 </div>
-                <div className="flex items-center gap-4 bg-white/5 px-4 py-2 rounded-full border border-white/10">
-                   <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                      <span className="text-[8px] font-black text-emerald-500 uppercase tracking-[0.3em]">Live Pulse</span>
-                   </div>
-                   <div className="h-3 w-[1px] bg-white/10"></div>
-                   <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]">{events.length} Community Streams</span>
-                </div>
               </div>
               
               {filteredEvents.length === 0 ? (
-                <div className="text-center py-20 bg-slate-900/30 rounded-[3rem] border-2 border-dashed border-white/5">
-                  <p className="text-slate-500 text-[11px] font-black uppercase tracking-widest italic">No experiences matched this frequency.</p>
-                  <button onClick={() => { setAiRec(null); setUserMood(''); setSearchQuery(''); setSelectedCategory('All'); }} className="mt-6 text-[9px] font-black text-brand-red uppercase tracking-widest hover:underline">Clear Search Filter</button>
+                <div className="text-center py-24 bg-slate-900/30 rounded-[4rem] border-2 border-dashed border-white/5">
+                  <p className="text-slate-500 text-sm font-black uppercase tracking-widest italic">No experiences matched this frequency.</p>
+                  <button onClick={() => { setAiRec(null); setUserMood(''); setSearchQuery(''); setSelectedCategory('All'); }} className="mt-8 text-[11px] font-black text-brand-red uppercase tracking-widest hover:underline hover:scale-105 transition-transform inline-block">Reset Global Stream</button>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                  {filteredEvents.map(event => (<EventCard key={event.id} event={event} onClick={setSelectedEvent} />))}
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+                  {filteredEvents.map(event => (
+                    <div key={event.id} className="animate-slide-up">
+                      <EventCard event={event} onClick={setSelectedEvent} />
+                    </div>
+                  ))}
                 </div>
               )}
               
-              <div className="pt-10 text-center">
-                 <p className="text-[8px] font-black uppercase tracking-[0.5em] text-slate-600 mb-6">Open Sanctuary Protocols Enabled</p>
-                 <div className="flex justify-center gap-2">
+              <div className="pt-20 text-center space-y-8">
+                 <div className="flex justify-center items-center gap-4">
+                    <div className="h-[1px] w-12 bg-white/5"></div>
+                    <p className="text-[9px] font-black uppercase tracking-[0.5em] text-slate-600 italic">End of Current Stream</p>
+                    <div className="h-[1px] w-12 bg-white/5"></div>
+                 </div>
+                 <div className="flex justify-center gap-3">
                     {[...Array(5)].map((_, i) => (
-                      <div key={i} className="w-1 h-1 bg-slate-800 rounded-full"></div>
+                      <div key={i} className="w-1.5 h-1.5 bg-slate-800 rounded-full animate-pulse" style={{ animationDelay: `${i * 0.2}s` }}></div>
                     ))}
                  </div>
               </div>
@@ -314,14 +393,20 @@ const App: React.FC = () => {
         )}
       </main>
 
-      <footer className="py-12 px-6 border-t border-white/5 bg-black/50 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] font-black tracking-[0.3em] text-slate-400 uppercase italic">
-          <div className="flex flex-col md:flex-row items-center gap-4">
-            <span className="text-slate-300">MAKEMYDAYS © 2024</span>
+      <footer className="py-16 px-6 border-t border-white/5 bg-black/50 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-10 text-[10px] font-black tracking-[0.3em] text-slate-400 uppercase italic">
+          <div className="flex flex-col md:flex-row items-center gap-6">
+            <div className="flex items-center gap-3">
+              <ConnectionLogo className="w-6 h-6 opacity-50" />
+              <span className="text-slate-300">MAKEMYDAYS © 2024</span>
+            </div>
+            <span className="text-slate-600 hidden md:block">|</span>
             <span className="text-slate-500">PEER-TO-PEER SANCTUARY NETWORK</span>
           </div>
-          <div className="flex gap-8">
-            {['Terms', 'Privacy'].map(l => (<button key={l} className="hover:text-brand-red transition-colors">{l}</button>))}
+          <div className="flex gap-10">
+            {['Terms', 'Privacy', 'Refund'].map(l => (
+              <button key={l} className="hover:text-brand-red transition-colors">{l}</button>
+            ))}
           </div>
         </div>
       </footer>
