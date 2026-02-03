@@ -87,6 +87,7 @@ const App: React.FC = () => {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [userMood, setUserMood] = useState('');
   const [showDashboard, setShowDashboard] = useState(false);
+  const [dashboardTab, setDashboardTab] = useState<'bookings' | 'hosting' | 'settings'>('bookings');
   const [showAdmin, setShowAdmin] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [auraIndex, setAuraIndex] = useState(0);
@@ -97,7 +98,6 @@ const App: React.FC = () => {
   const fetchData = useCallback(async () => {
     try {
       const [evs, bks] = await Promise.all([api.getEvents(), api.getBookings()]);
-      // Explicit sort to ensure newest (user-created) events are always first in the feed
       const sortedEvents = (evs || []).sort((a, b) => {
         const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
         const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
@@ -132,6 +132,15 @@ const App: React.FC = () => {
       setIsMusicPlaying(true);
     }
   }, [isMusicPlaying]);
+
+  const handleLaunchClick = () => {
+    if (!currentUser) {
+      setShowAuthModal(true);
+    } else {
+      setDashboardTab('hosting');
+      setShowDashboard(true);
+    }
+  };
 
   const handleMoodSearch = async (mood: string) => {
     if (!mood.trim()) {
@@ -172,7 +181,6 @@ const App: React.FC = () => {
   }, [events, selectedCategory, searchQuery, aiRec]);
 
   const featuredEvents = useMemo(() => {
-    // Recently calibrated section always shows the newest 4 experiences
     return [...events].slice(0, 4);
   }, [events]);
 
@@ -193,14 +201,21 @@ const App: React.FC = () => {
             <span className="text-xl font-black italic tracking-tighter text-slate-200 group-hover:text-brand-red transition-all">MakeMyDays</span>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={handleLaunchClick}
+              className="hidden md:flex items-center gap-2 px-5 py-2 bg-brand-red text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-white hover:text-brand-red transition-all shadow-lg active:scale-95"
+            >
+              Launch Wave
+            </button>
+
             <button onClick={toggleMusic} aria-label="Toggle Atmosphere" className={`relative group w-11 h-11 flex items-center justify-center rounded-full transition-all duration-500 border-2 ${isMusicPlaying ? 'bg-slate-900 border-brand-red shadow-lg' : 'bg-slate-800 border-white/10 hover:border-white/30'}`}>
               {isMusicPlaying && <div className="absolute inset-0 rounded-full border border-brand-red/40 animate-music-pulse" />}
               <div className="relative z-10 transition-transform group-hover:scale-110"><Visualizer isPlaying={isMusicPlaying} /></div>
             </button>
 
             {currentUser ? (
-              <button id="user-sanctuary-trigger" onClick={() => setShowDashboard(!showDashboard)} className="w-10 h-10 rounded-xl bg-slate-100 text-slate-800 flex items-center justify-center font-black italic text-lg shadow-lg hover:bg-slate-200 transition-colors">
+              <button id="user-sanctuary-trigger" onClick={() => { setDashboardTab('bookings'); setShowDashboard(!showDashboard); }} className="w-10 h-10 rounded-xl bg-slate-100 text-slate-800 flex items-center justify-center font-black italic text-lg shadow-lg hover:bg-slate-200 transition-colors">
                 {currentUser.name[0]}
               </button>
             ) : (
@@ -216,6 +231,7 @@ const App: React.FC = () => {
         ) : showDashboard && currentUser ? (
           <Dashboard 
             user={currentUser} events={events} bookings={globalBookings}
+            initialTab={dashboardTab}
             onLogout={() => { setCurrentUser(null); localStorage.removeItem(USER_STORAGE_KEY); setShowDashboard(false); }} 
             onOpenAdmin={() => setShowAdmin(true)} onOpenPolicy={setActivePolicy} onRefreshEvents={fetchData}
           />
@@ -361,18 +377,37 @@ const App: React.FC = () => {
                 </div>
               </div>
               
-              {filteredEvents.length === 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+                {/* Community Host CTA Card */}
+                {!searchQuery && selectedCategory === 'All' && (
+                  <div 
+                    onClick={handleLaunchClick}
+                    className="group cursor-pointer animate-slide-up flex flex-col items-center justify-center gap-6 glass-card p-8 rounded-[2.5rem] border-2 border-dashed border-white/10 hover:border-brand-red transition-all shadow-xl bg-slate-900/40"
+                  >
+                    <div className="w-20 h-20 rounded-full bg-slate-800 flex items-center justify-center border border-white/5 group-hover:bg-brand-red transition-all">
+                       <svg className="w-8 h-8 text-brand-red group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
+                       </svg>
+                    </div>
+                    <div className="text-center space-y-2">
+                       <h4 className="text-sm font-black italic uppercase tracking-tighter text-slate-100">Broadcast Your Wave</h4>
+                       <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed">Join the network and host your own experience.</p>
+                    </div>
+                    <span className="text-[10px] font-black text-brand-red uppercase tracking-widest animate-pulse">Launch Now</span>
+                  </div>
+                )}
+
+                {filteredEvents.map(event => (
+                  <div key={event.id} className="animate-slide-up">
+                    <EventCard event={event} onClick={setSelectedEvent} />
+                  </div>
+                ))}
+              </div>
+              
+              {filteredEvents.length === 0 && (
                 <div className="text-center py-24 bg-slate-900/30 rounded-[4rem] border-2 border-dashed border-white/5">
                   <p className="text-slate-500 text-sm font-black uppercase tracking-widest italic">No experiences matched this frequency.</p>
                   <button onClick={() => { setAiRec(null); setUserMood(''); setSearchQuery(''); setSelectedCategory('All'); }} className="mt-8 text-[11px] font-black text-brand-red uppercase tracking-widest hover:underline hover:scale-105 transition-transform inline-block">Reset Global Stream</button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-                  {filteredEvents.map(event => (
-                    <div key={event.id} className="animate-slide-up">
-                      <EventCard event={event} onClick={setSelectedEvent} />
-                    </div>
-                  ))}
                 </div>
               )}
               

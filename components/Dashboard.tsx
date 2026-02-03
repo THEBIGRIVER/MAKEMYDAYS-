@@ -8,6 +8,7 @@ interface DashboardProps {
   user: User;
   events: Event[];
   bookings: Booking[];
+  initialTab?: 'bookings' | 'hosting' | 'settings';
   onLogout: () => void;
   onOpenAdmin?: () => void;
   onOpenPolicy?: (type: PolicyType) => void;
@@ -342,11 +343,16 @@ const CreateEventModal: React.FC<{ user: User, onClose: () => void, onSuccess: (
   );
 };
 
-const Dashboard: React.FC<DashboardProps> = ({ user, events, bookings, onLogout, onOpenAdmin, onOpenPolicy, onRefreshEvents }) => {
-  const [activeTab, setActiveTab] = useState<'bookings' | 'hosting' | 'settings'>('bookings');
+const Dashboard: React.FC<DashboardProps> = ({ user, events, bookings, initialTab, onLogout, onOpenAdmin, onOpenPolicy, onRefreshEvents }) => {
+  const [activeTab, setActiveTab] = useState<'bookings' | 'hosting' | 'settings'>(initialTab || 'bookings');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [localPreferences, setLocalPreferences] = useState(user.preferences || { emailReminders: true, smsReminders: true });
   const [notifications, setNotifications] = useState<string[]>([]);
+
+  // Sync tab if initialTab changes (e.g. user clicks Launch Wave from outside)
+  useEffect(() => {
+    if (initialTab) setActiveTab(initialTab);
+  }, [initialTab]);
 
   const userEvents = useMemo(() => events.filter(e => e.hostPhone === user.phone), [events, user.phone]);
   const userBookings = useMemo(() => bookings.filter(b => b.userPhone === user.phone), [bookings, user.phone]);
