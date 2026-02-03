@@ -317,7 +317,7 @@ const App: React.FC = () => {
                           <p className="text-lg font-bold italic text-slate-100 leading-tight">"{aiRec.reasoning}"</p>
                         </div>
                         <button onClick={() => { setAiRec(null); setUserMood(''); setSearchQuery(''); }} className="p-3 text-slate-400 hover:text-brand-red transition-all transform hover:rotate-90">
-                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12"/></svg>
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
                      </div>
                    </div>
@@ -349,23 +349,35 @@ const App: React.FC = () => {
               </section>
             )}
 
-            {/* Discovery Feed Section */}
-            <section id="event-grid-container" className="space-y-10">
-              <div className="flex flex-col space-y-8 border-b border-white/5 pb-10">
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                  <div className="space-y-2">
-                    <span className="text-brand-accent text-[10px] font-black uppercase tracking-[0.4em]">Global Streams Converging</span>
-                    <h2 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter text-slate-200">
-                      Discovery Feed
+            {/* Global Discovery Feed Section */}
+            <section id="event-grid-container" className="space-y-12 relative">
+              {/* Subtle grid decoration */}
+              <div className="absolute inset-0 -z-10 opacity-10" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
+              
+              <div className="flex flex-col space-y-10 border-b border-white/5 pb-12">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <span className="text-brand-accent text-[11px] font-black uppercase tracking-[0.5em] drop-shadow-[0_0_8px_rgba(0,245,255,0.4)]">Peer-to-Peer Network</span>
+                      <div className="h-0.5 w-12 bg-brand-accent/30 rounded-full"></div>
+                    </div>
+                    <h2 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter text-slate-100 leading-[0.9]">
+                      Global Discovery <br /> <span className="text-brand-accent">Feed</span>
                     </h2>
                   </div>
-                  <div className="flex items-center gap-4 bg-white/5 px-5 py-2.5 rounded-full border border-white/10">
-                     <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                        <span className="text-[9px] font-black text-emerald-500 uppercase tracking-[0.3em]">Network Active</span>
-                     </div>
-                     <div className="h-4 w-[1px] bg-white/10"></div>
-                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">{events.length} Total Frequencies</span>
+                  <div className="flex flex-col items-end gap-3">
+                    <div className="flex items-center gap-4 bg-slate-900/80 backdrop-blur-xl px-6 py-3.5 rounded-2xl border border-white/10 shadow-2xl">
+                       <div className="flex items-center gap-3">
+                          <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_#10b981]"></div>
+                          <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em]">Sanctuary Active</span>
+                       </div>
+                       <div className="h-5 w-[1px] bg-white/10"></div>
+                       <div className="flex items-center gap-2">
+                         <span className="text-[10px] font-black text-slate-200 uppercase tracking-[0.2em]">{events.length}</span>
+                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Frequencies</span>
+                       </div>
+                    </div>
+                    <p className="text-[8px] font-black text-slate-500 uppercase tracking-[0.4em] px-2 italic">Synchronized across 12 region nodes</p>
                   </div>
                 </div>
 
@@ -374,10 +386,10 @@ const App: React.FC = () => {
                     <button 
                       key={cat} 
                       onClick={() => { setSelectedCategory(cat); setAiRec(null); }} 
-                      className={`whitespace-nowrap px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border-2 ${
+                      className={`whitespace-nowrap px-8 py-4 rounded-[1.75rem] text-[11px] font-black uppercase tracking-[0.2em] transition-all border-2 ${
                         selectedCategory === cat 
-                        ? 'bg-slate-100 border-slate-100 text-slate-800 shadow-[0_10px_30px_rgba(255,255,255,0.1)] translate-y-[-2px]' 
-                        : 'bg-slate-900/50 border-white/10 text-slate-400 hover:border-white/30 hover:text-slate-200'
+                        ? 'bg-slate-100 border-slate-100 text-slate-900 shadow-[0_15px_40px_rgba(255,255,255,0.15)] translate-y-[-4px]' 
+                        : 'bg-slate-900/40 border-white/5 text-slate-500 hover:border-white/20 hover:text-slate-200 hover:bg-slate-800/60'
                       }`}
                     >
                       {cat}
@@ -386,23 +398,26 @@ const App: React.FC = () => {
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-10">
                 {/* Community Host CTA Card */}
                 {!searchQuery && (selectedCategory === 'All' || selectedCategory === 'Community') && (
                   <div 
                     onClick={handleLaunchClick}
-                    className="group cursor-pointer animate-slide-up flex flex-col items-center justify-center gap-6 glass-card p-8 rounded-[2.5rem] border-2 border-dashed border-white/10 hover:border-brand-red transition-all shadow-xl bg-slate-900/40"
+                    className="group cursor-pointer animate-slide-up flex flex-col items-center justify-center gap-8 glass-card p-10 rounded-[3rem] border-2 border-dashed border-white/10 hover:border-brand-accent hover:bg-slate-900/60 transition-all shadow-xl bg-slate-900/30 min-h-[400px]"
                   >
-                    <div className="w-20 h-20 rounded-full bg-slate-800 flex items-center justify-center border border-white/5 group-hover:bg-brand-red transition-all">
-                       <svg className="w-8 h-8 text-brand-red group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
+                    <div className="w-24 h-24 rounded-full bg-slate-900 flex items-center justify-center border border-white/5 group-hover:border-brand-accent/50 group-hover:scale-110 transition-all shadow-inner">
+                       <svg className="w-10 h-10 text-brand-accent group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
                        </svg>
                     </div>
-                    <div className="text-center space-y-2">
-                       <h4 className="text-sm font-black italic uppercase tracking-tighter text-slate-100">Broadcast Your Wave</h4>
-                       <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed">Join the network and host your own experience.</p>
+                    <div className="text-center space-y-3">
+                       <h4 className="text-lg font-black italic uppercase tracking-tighter text-slate-100 group-hover:text-brand-accent transition-colors">Broadcast Your Wave</h4>
+                       <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed px-4">Anyone can host a sanctuary. Join the global peer-to-peer network today.</p>
                     </div>
-                    <span className="text-[10px] font-black text-brand-red uppercase tracking-widest animate-pulse">Launch Now</span>
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="text-[11px] font-black text-brand-accent uppercase tracking-[0.3em] group-hover:animate-pulse">Initialize Node</span>
+                      <div className="w-8 h-1 bg-brand-accent/20 rounded-full transition-all group-hover:w-16 group-hover:bg-brand-accent"></div>
+                    </div>
                   </div>
                 )}
 
@@ -414,21 +429,24 @@ const App: React.FC = () => {
               </div>
               
               {filteredEvents.length === 0 && (
-                <div className="text-center py-24 bg-slate-900/30 rounded-[4rem] border-2 border-dashed border-white/5">
-                  <p className="text-slate-500 text-sm font-black uppercase tracking-widest italic">No experiences matched this frequency.</p>
-                  <button onClick={() => { setAiRec(null); setUserMood(''); setSearchQuery(''); setSelectedCategory('All'); }} className="mt-8 text-[11px] font-black text-brand-red uppercase tracking-widest hover:underline hover:scale-105 transition-transform inline-block">Reset Global Stream</button>
+                <div className="text-center py-32 bg-slate-950/40 rounded-[5rem] border-2 border-dashed border-white/5 backdrop-blur-sm">
+                  <div className="w-20 h-20 bg-slate-900/50 rounded-full flex items-center justify-center mx-auto mb-8">
+                     <svg className="w-10 h-10 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                  </div>
+                  <p className="text-slate-500 text-base font-black uppercase tracking-[0.2em] italic">No active frequencies detected in this stream.</p>
+                  <button onClick={() => { setAiRec(null); setUserMood(''); setSearchQuery(''); setSelectedCategory('All'); }} className="mt-10 px-10 py-5 bg-slate-100 text-slate-900 rounded-2xl text-[11px] font-black uppercase tracking-[0.3em] hover:bg-brand-red hover:text-white transition-all transform active:scale-95 shadow-2xl">Reset Satellite Link</button>
                 </div>
               )}
               
-              <div className="pt-20 text-center space-y-8">
-                 <div className="flex justify-center items-center gap-4">
-                    <div className="h-[1px] w-12 bg-white/5"></div>
-                    <p className="text-[9px] font-black uppercase tracking-[0.5em] text-slate-600 italic">End of Current Stream</p>
-                    <div className="h-[1px] w-12 bg-white/5"></div>
+              <div className="pt-24 text-center space-y-10">
+                 <div className="flex justify-center items-center gap-6">
+                    <div className="h-[1px] w-20 bg-gradient-to-r from-transparent to-white/10"></div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.6em] text-slate-700 italic">Ethereal End of Stream</p>
+                    <div className="h-[1px] w-20 bg-gradient-to-l from-transparent to-white/10"></div>
                  </div>
-                 <div className="flex justify-center gap-3">
+                 <div className="flex justify-center gap-4">
                     {[...Array(5)].map((_, i) => (
-                      <div key={i} className="w-1.5 h-1.5 bg-slate-800 rounded-full animate-pulse" style={{ animationDelay: `${i * 0.2}s` }}></div>
+                      <div key={i} className="w-2 h-2 bg-slate-800 rounded-full animate-pulse" style={{ animationDelay: `${i * 0.3}s` }}></div>
                     ))}
                  </div>
               </div>
@@ -437,19 +455,22 @@ const App: React.FC = () => {
         )}
       </main>
 
-      <footer className="py-16 px-6 border-t border-white/5 bg-black/50 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-10 text-[10px] font-black tracking-[0.3em] text-slate-400 uppercase italic">
-          <div className="flex flex-col md:flex-row items-center gap-6">
-            <div className="flex items-center gap-3">
-              <ConnectionLogo className="w-6 h-6 opacity-50" />
-              <span className="text-slate-300">MAKEMYDAYS © 2024</span>
+      <footer className="py-20 px-6 border-t border-white/5 bg-black/80 backdrop-blur-xl">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-12 text-[11px] font-black tracking-[0.4em] text-slate-500 uppercase italic">
+          <div className="flex flex-col md:flex-row items-center gap-8">
+            <div className="flex items-center gap-4">
+              <ConnectionLogo className="w-8 h-8 opacity-60" />
+              <span className="text-slate-300 tracking-[0.2em]">MAKEMYDAYS — SANCTUARY NETWORK © 2024</span>
             </div>
-            <span className="text-slate-600 hidden md:block">|</span>
-            <span className="text-slate-500">PEER-TO-PEER SANCTUARY NETWORK</span>
+            <span className="text-slate-800 hidden md:block text-2xl">|</span>
+            <div className="flex flex-col md:flex-row items-center gap-3">
+               <span className="text-slate-600">INFRASTRUCTURE:</span>
+               <span className="text-brand-accent drop-shadow-[0_0_5px_rgba(0,245,255,0.3)]">BENEME PROTOCOL 2.5</span>
+            </div>
           </div>
-          <div className="flex gap-10">
+          <div className="flex gap-12">
             {['Terms', 'Privacy', 'Refund'].map(l => (
-              <button key={l} className="hover:text-brand-red transition-colors">{l}</button>
+              <button key={l} className="hover:text-brand-red transition-all hover:tracking-[0.6em] duration-500">{l}</button>
             ))}
           </div>
         </div>
