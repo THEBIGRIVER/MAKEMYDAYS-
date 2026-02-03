@@ -46,12 +46,19 @@ export const api = {
     try {
       const stored = localStorage.getItem(EVENTS_KEY);
       if (!stored) {
+        // If nothing is stored, initialize with initial events
         localStorage.setItem(EVENTS_KEY, JSON.stringify(INITIAL_EVENTS));
         return INITIAL_EVENTS;
       }
-      return JSON.parse(stored);
+      const parsed = JSON.parse(stored) as Event[];
+      // If the stored array is empty, re-initialize with INITIAL_EVENTS to ensure feed is never empty
+      if (parsed.length === 0) {
+        localStorage.setItem(EVENTS_KEY, JSON.stringify(INITIAL_EVENTS));
+        return INITIAL_EVENTS;
+      }
+      return parsed;
     } catch (e) {
-      console.error("Critical: Failed to parse events from storage.");
+      console.error("Critical: Failed to parse events from storage. Reverting to initial state.");
       return INITIAL_EVENTS;
     }
   },
@@ -76,6 +83,7 @@ export const api = {
   async deleteEvent(eventId: string): Promise<void> {
     const events = await this.getEvents();
     const filtered = events.filter(e => e.id !== eventId);
+    // If we delete everything, let's keep INITIAL_EVENTS as a fallback in memory
     localStorage.setItem(EVENTS_KEY, JSON.stringify(filtered));
   },
 
