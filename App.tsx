@@ -10,6 +10,7 @@ import LegalModal, { PolicyType } from './components/LegalModal.tsx';
 import OnboardingTour from './components/OnboardingTour.tsx';
 import AuthModal from './components/AuthModal.tsx'; 
 import { api } from './services/api.ts';
+import { DEFAULT_HOST } from './constants.ts';
 
 const MOOD_MUSIC_URL = "https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3";
 const USER_STORAGE_KEY = 'makemydays_user_session_v1';
@@ -22,7 +23,7 @@ const MOODS = [
   { label: "Peaceful", emoji: "🍃", glow: "rgba(16,185,129,0.5)", bg: "bg-emerald-500" }
 ];
 
-const CATEGORIES: (Category | 'All')[] = ['All', 'Shows', 'Activity', 'MMD Originals', 'Mindfulness', 'Workshop'];
+const CATEGORIES: (Category | 'All' | 'Community')[] = ['All', 'Community', 'Shows', 'Activity', 'MMD Originals', 'Mindfulness', 'Workshop'];
 const AURA_STATES = ["TRUE", "SYNCED", "OPTIMAL", "PURE", "RESONATING", "FLUID", "DEEP"];
 
 const ConnectionLogo = ({ className = "w-8 h-8" }: { className?: string }) => (
@@ -80,7 +81,7 @@ const App: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [globalBookings, setGlobalBookings] = useState<Booking[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<Category | 'All'>('All');
+  const [selectedCategory, setSelectedCategory] = useState<Category | 'All' | 'Community'>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiRec, setAiRec] = useState<AIRecommendation | null>(null);
@@ -169,7 +170,15 @@ const App: React.FC = () => {
 
   const filteredEvents = useMemo(() => {
     return events.filter(e => {
-      const matchCat = selectedCategory === 'All' || e.category === selectedCategory;
+      let matchCat = false;
+      if (selectedCategory === 'All') {
+        matchCat = true;
+      } else if (selectedCategory === 'Community') {
+        matchCat = e.hostPhone !== DEFAULT_HOST;
+      } else {
+        matchCat = e.category === selectedCategory;
+      }
+
       const query = searchQuery.toLowerCase();
       const matchText = e.title.toLowerCase().includes(query) || 
                         e.category.toLowerCase().includes(query) ||
@@ -379,7 +388,7 @@ const App: React.FC = () => {
               
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
                 {/* Community Host CTA Card */}
-                {!searchQuery && selectedCategory === 'All' && (
+                {!searchQuery && (selectedCategory === 'All' || selectedCategory === 'Community') && (
                   <div 
                     onClick={handleLaunchClick}
                     className="group cursor-pointer animate-slide-up flex flex-col items-center justify-center gap-6 glass-card p-8 rounded-[2.5rem] border-2 border-dashed border-white/10 hover:border-brand-red transition-all shadow-xl bg-slate-900/40"
@@ -453,7 +462,7 @@ const App: React.FC = () => {
             id: Math.random().toString(36).substr(2, 9), 
             eventId: selectedEvent.id, 
             eventTitle: selectedEvent.title, 
-            category: selectedEvent.category, 
+            category: selectedCategory === 'Community' ? selectedEvent.category : selectedEvent.category, 
             time: slot.time, 
             eventDate: date, 
             price: selectedEvent.price, 

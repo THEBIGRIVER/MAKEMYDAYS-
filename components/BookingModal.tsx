@@ -26,7 +26,6 @@ const BookingModal: React.FC<BookingModalProps> = ({ event, onClose, onConfirm }
         const parts = dateStr.split(' ');
         const dayNum = parseInt(parts[0]);
         
-        // Handle "Every Monday" or "25 Dec"
         return {
           full: dateStr,
           day: (parts[1] || 'DATE').toUpperCase(),
@@ -35,7 +34,6 @@ const BookingModal: React.FC<BookingModalProps> = ({ event, onClose, onConfirm }
       });
     }
 
-    // Fallback if no dates set
     const dates = [];
     for (let i = 0; i < 7; i++) {
       const d = new Date();
@@ -114,33 +112,58 @@ Ref ID: ${bookingId}`;
   }, [event, selectedSlot, selectedDate, onConfirm]);
 
   if (modalState === 'success') {
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(generatedBookingId)}&color=0f172a&bgcolor=ffffff`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(generatedBookingId)}&color=0f172a&bgcolor=ffffff`;
 
     return (
       <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
+        <style>{`
+          @keyframes scan {
+            0%, 100% { top: 0%; opacity: 0; }
+            5% { opacity: 1; }
+            95% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+          }
+          .scan-line {
+            height: 2px;
+            width: 100%;
+            background: #10b981;
+            position: absolute;
+            z-index: 20;
+            box-shadow: 0 0 10px #10b981;
+            animation: scan 3s linear infinite;
+          }
+          .ticket-edge {
+            background-image: radial-gradient(circle at 10px 10px, transparent 10px, white 10px);
+            background-size: 20px 20px;
+            background-position: -10px -10px;
+            height: 10px;
+            width: 100%;
+          }
+        `}</style>
         <div className="absolute inset-0 bg-slate-950/98 backdrop-blur-3xl animate-in fade-in duration-700"></div>
-        <div className="relative bg-white w-full max-w-sm rounded-[3rem] shadow-3xl overflow-hidden animate-in zoom-in-95 duration-500 transform-gpu flex flex-col">
-          <div className="bg-emerald-500 p-8 text-center relative overflow-hidden">
-             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+        <div className="relative bg-white w-full max-w-sm rounded-t-[3rem] shadow-[0_50px_100px_rgba(0,0,0,0.5)] overflow-hidden animate-in zoom-in-95 duration-500 transform-gpu flex flex-col">
+          <div className="bg-slate-950 p-8 text-center relative overflow-hidden">
+             <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
              <div className="relative z-10">
-               <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 animate-music-pulse">
-                  <svg className="w-8 h-8 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4 animate-music-pulse">
+                  <svg className="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" />
                   </svg>
                </div>
-               <h2 className="text-2xl font-black italic tracking-tighter uppercase text-slate-200 leading-none">Confirmed.</h2>
-               <p className="text-slate-200/80 text-[8px] font-black uppercase tracking-[0.3em] mt-2">Access Granted to Sanctuary</p>
+               <h2 className="text-2xl font-black italic tracking-tighter uppercase text-slate-100 leading-none">Frequency Locked</h2>
+               <p className="text-slate-400 text-[8px] font-black uppercase tracking-[0.3em] mt-2">Digital Access Key Generated</p>
              </div>
           </div>
 
-          <div className="flex-1 p-8 text-center flex flex-col gap-6">
-            <div className="mx-auto p-4 bg-white border-4 border-slate-50 rounded-[2.5rem] shadow-sm animate-in fade-in zoom-in duration-700 delay-300">
-              <img src={qrUrl} alt="Booking QR Code" className="w-32 h-32 opacity-90" />
+          <div className="flex-1 p-8 text-center flex flex-col gap-6 bg-white">
+            <div className="relative mx-auto p-4 bg-white border-4 border-slate-50 rounded-[2rem] shadow-xl animate-in fade-in zoom-in duration-700 delay-300 group overflow-hidden">
+              <div className="scan-line"></div>
+              <img src={qrUrl} alt="Booking QR Code" className="w-40 h-40 opacity-100 block" />
             </div>
 
             <div className="space-y-1">
-              <span className="text-[8px] font-black uppercase tracking-[0.4em] text-slate-300">Identity Reference</span>
-              <div className="text-xl font-mono font-black text-slate-900 tracking-tighter select-all border-y border-dashed border-slate-100 py-3">
+              <span className="text-[8px] font-black uppercase tracking-[0.4em] text-slate-400">Identity Reference</span>
+              <div className="text-xl font-mono font-black text-slate-900 tracking-tighter select-all border-y border-dashed border-slate-200 py-3">
                 {generatedBookingId}
               </div>
             </div>
@@ -153,7 +176,7 @@ Ref ID: ${bookingId}`;
                       <span className="text-[10px] font-black italic text-slate-900 uppercase line-clamp-1">{event.title}</span>
                     </div>
                     <div className="text-right flex flex-col">
-                      <span className="text-[7px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Frequency Date</span>
+                      <span className="text-[7px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Date Anchor</span>
                       <span className="text-[10px] font-black text-slate-900">{selectedDate}</span>
                     </div>
                   </div>
@@ -163,7 +186,7 @@ Ref ID: ${bookingId}`;
                       <span className="text-[10px] font-black text-slate-900">{selectedSlot?.time}</span>
                     </div>
                     <div className="text-right">
-                       <span className="text-[11px] font-black text-brand-red">₹{event.price}</span>
+                       <span className="text-[12px] font-black text-slate-900">₹{event.price}</span>
                     </div>
                   </div>
                </div>
@@ -171,14 +194,15 @@ Ref ID: ${bookingId}`;
 
             <button 
               onClick={onClose}
-              className="w-full py-5 bg-slate-900 text-slate-200 rounded-[1.5rem] font-black uppercase text-[10px] tracking-[0.2em] transition-all active:scale-95 shadow-2xl hover:bg-brand-red"
+              className="w-full py-5 bg-slate-950 text-slate-100 rounded-[1.5rem] font-black uppercase text-[10px] tracking-[0.2em] transition-all active:scale-95 shadow-2xl hover:bg-brand-red"
             >
               Enter Sanctuary
             </button>
           </div>
-          <div className="bg-slate-50 py-4 border-t border-dashed border-slate-200 flex justify-center gap-1">
-            {[...Array(20)].map((_, i) => (
-              <div key={i} className="w-1 h-1 rounded-full bg-slate-200" />
+          <div className="ticket-edge"></div>
+          <div className="bg-black py-4 flex justify-center gap-1.5 px-8">
+            {[...Array(15)].map((_, i) => (
+              <div key={i} className="w-1.5 h-1.5 rounded-full bg-white/10" />
             ))}
           </div>
         </div>

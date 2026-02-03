@@ -1,11 +1,12 @@
 
 import { Event } from './types.ts';
 
-const DEFAULT_HOST = '917686924919';
+export const DEFAULT_HOST = '917686924919';
 const EXPLORER_1 = '9820012345';
 const EXPLORER_2 = '9930054321';
 const EXPLORER_3 = '9120098765';
 const EXPLORER_4 = '9870011223';
+const EXPLORER_5 = '9111122233';
 
 export const INITIAL_EVENTS: Event[] = [
   {
@@ -30,6 +31,18 @@ export const INITIAL_EVENTS: Event[] = [
     hostPhone: EXPLORER_1,
     slots: [{ time: '06:30 PM', availableSeats: 15 }],
     createdAt: new Date(Date.now() - 3600000).toISOString()
+  },
+  {
+    id: 'user-sample-5',
+    title: 'Glow-in-the-Dark Yoga Flow',
+    category: 'Mindfulness',
+    image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&q=80&w=1200',
+    description: 'A vinyasa flow session illuminated by neon body paint and UV lights. Feel the energy in every move.',
+    price: 300,
+    dates: ['28 Dec 2024'],
+    hostPhone: EXPLORER_5,
+    slots: [{ time: '07:30 PM', availableSeats: 20 }],
+    createdAt: new Date(Date.now() - 5400000).toISOString()
   },
   {
     id: 'user-sample-3',
@@ -104,20 +117,6 @@ export const INITIAL_EVENTS: Event[] = [
     slots: [
       { time: '07:00 PM', availableSeats: 20 },
       { time: '09:00 PM', availableSeats: 20 }
-    ]
-  },
-  {
-    id: 'mn1',
-    title: 'Vipassana Silent Meditation',
-    category: 'Mindfulness',
-    image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&q=80&w=1200',
-    description: 'A guided immersion into profound silence. Recalibrate your inner focus with ancient techniques.',
-    price: 800,
-    dates: ['26 Dec 2024', '28 Dec 2024'],
-    hostPhone: DEFAULT_HOST,
-    slots: [
-      { time: '06:00 AM', availableSeats: 25 },
-      { time: '05:00 PM', availableSeats: 25 }
     ]
   }
 ];
