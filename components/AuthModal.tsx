@@ -1,7 +1,14 @@
 
-import React, { useState, useEffect } from 'react';
-import { User } from '../types';
-import { api } from '../services/api.ts';
+import React, { useState } from 'react';
+import { User } from '../types.ts';
+import { auth } from '../services/firebase.ts';
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword,
+  updateProfile,
+  sendEmailVerification,
+  signOut
+} from 'firebase/auth';
 
 interface AuthModalProps {
   onSuccess: (user: User) => void;
@@ -10,94 +17,109 @@ interface AuthModalProps {
 
 const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, onClose }) => {
   const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [showVerificationScreen, setShowVerificationScreen] = useState(false);
   const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [pin, setPin] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
-  const [recoveredPin, setRecoveredPin] = useState<string | null>(null);
-
-  useEffect(() => {
-    setError('');
-    setRecoveredPin(null);
-  }, [mode]);
-
-  const handleForgotPin = async () => {
-    if (phone.length !== 10) {
-      setError("Please provide your 10-digit number first.");
-      return;
-    }
-    
-    setIsProcessing(true);
-    try {
-      const allUsers = await api.getAllUsers();
-      const user = allUsers.find(u => u.phone === phone);
-      
-      if (user) {
-        setRecoveredPin(user.pin);
-        setError('');
-      } else {
-        setError("This frequency is not registered in our sanctuary.");
-      }
-    } catch (err) {
-      setError("Recall protocol failed. Try again.");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setRecoveredPin(null);
-    
-    if (phone.length !== 10) {
-      setError("Please provide a valid 10-digit number.");
-      return;
-    }
-    if (pin.length !== 4) {
-      setError("Resonance PIN must be 4 digits.");
-      return;
-    }
-
     setIsProcessing(true);
 
     try {
       if (mode === 'register') {
-        if (name.trim().length < 2) {
-          setError("Please enter a valid name.");
+        if (!name.trim()) {
+          setError("Please enter your name.");
           setIsProcessing(false);
           return;
         }
         
-        const allUsers = await api.getAllUsers();
-        if (allUsers.find(u => u.phone === phone)) {
-          setError("This frequency is already registered. Please login.");
-          setMode('login');
-        } else {
-          const newUser: User = {
-            name: name.trim(),
-            phone: phone,
-            bookings: [],
-            role: phone.endsWith('2576') ? 'admin' : 'user'
-          };
-          await api.saveUser(newUser, pin);
-          onSuccess(newUser);
+        try {
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          await updateProfile(userCredential.user, { displayName: name });
+          
+          // Send verification email
+          await sendEmailVerification(userCredential.user);
+          
+          // Sign out immediately so they aren't logged in unverified
+          await signOut(auth);
+          
+          setShowVerificationScreen(true);
+        } catch (err: any) {
+          if (err.code === 'auth/email-already-in-use') {
+            setError("User already exists. Please sign in.");
+          } else {
+            setError(err.message || "Manifestation failed. Try again.");
+          }
         }
       } else {
-        const user = await api.authenticate(phone, pin);
-        if (user) {
-          onSuccess(user);
-        } else {
-          setError("Invalid coordinates or PIN mismatch.");
+        try {
+          const userCredential = await signInWithEmailAndPassword(auth, email, password);
+          
+          // Check if email is verified
+          if (!userCredential.user.emailVerified) {
+            await signOut(auth);
+            setError("Please verify your email before logging in. Check your inbox.");
+            setIsProcessing(false);
+            return;
+          }
+
+          const loggedUser: User = {
+            uid: userCredential.user.uid,
+            name: userCredential.user.displayName || 'Explorer',
+            email: email,
+            bookings: [], 
+            role: email === 'admin@makemydays.com' ? 'admin' : 'user'
+          };
+          onSuccess(loggedUser);
+        } catch (err: any) {
+          setError("Email or password is incorrect.");
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       setError("Frequency transmission error. Try again.");
     } finally {
       setIsProcessing(false);
     }
   };
+
+  if (showVerificationScreen) {
+    return (
+      <div className="fixed inset-0 z-[600] flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-xl animate-in fade-in duration-500" onClick={onClose}></div>
+        <div className="relative w-full max-w-md bg-white rounded-[3rem] shadow-3xl overflow-hidden animate-in zoom-in-95 duration-300">
+          <div className="bg-slate-900 p-10 text-slate-200 text-center relative overflow-hidden">
+            <div className="w-20 h-20 bg-brand-red/20 rounded-full flex items-center justify-center mx-auto mb-6 animate-music-pulse">
+              <svg className="w-10 h-10 text-brand-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-black italic uppercase tracking-tighter text-slate-200 mb-2">Check Your Inbox</h2>
+            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest leading-relaxed">
+              We have sent you a verification email to <span className="text-brand-red">{email}</span>. Please verify it and log in.
+            </p>
+          </div>
+          <div className="p-10">
+            <button 
+              onClick={() => {
+                setShowVerificationScreen(false);
+                setMode('login');
+              }}
+              className="w-full py-5 bg-slate-900 text-slate-200 rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] shadow-xl hover:bg-brand-red transition-all flex items-center justify-center gap-3"
+            >
+              Back to Login
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-[600] flex items-center justify-center p-4">
@@ -134,17 +156,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, onClose }) => {
                 </button>
               </div>
             </div>
-            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-3">
-              {mode === 'login' ? 'Synchronize your existing profile' : 'Create your unique aura signature'}
-            </p>
           </div>
-
           <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-brand-red/10 rounded-full blur-3xl animate-pulse"></div>
         </div>
 
         <form onSubmit={handleSubmit} className="p-10 space-y-5">
           {mode === 'register' && (
-            <div className="space-y-1.5 animate-in slide-in-from-top-2">
+            <div className="space-y-1.5">
               <label className="text-slate-400 text-[9px] font-black uppercase tracking-widest">Full Name</label>
               <input 
                 required
@@ -159,69 +177,34 @@ const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, onClose }) => {
           )}
           
           <div className="space-y-1.5">
-            <label className="text-slate-400 text-[9px] font-black uppercase tracking-widest">WhatsApp Number</label>
-            <div className="relative">
-              <span className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">+91</span>
-              <input 
-                required
-                type="tel" 
-                placeholder="10-digit phone"
-                maxLength={10}
-                className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl pl-16 pr-6 py-4 text-base font-bold text-slate-900 outline-none focus:border-brand-red transition-all"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                disabled={isProcessing}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <div className="flex justify-between items-center px-1">
-              <label className="text-slate-400 text-[9px] font-black uppercase tracking-widest">Resonance PIN (4 Digits)</label>
-              {mode === 'login' && (
-                <button 
-                  type="button" 
-                  onClick={handleForgotPin}
-                  className="text-brand-red text-[8px] font-black uppercase tracking-widest hover:underline"
-                >
-                  Forgot PIN?
-                </button>
-              )}
-            </div>
+            <label className="text-slate-400 text-[9px] font-black uppercase tracking-widest">Email Address</label>
             <input 
               required
-              type="password" 
-              maxLength={4}
-              placeholder="••••"
-              className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-center text-xl font-black tracking-[1em] text-slate-900 outline-none focus:border-brand-red transition-all"
-              value={pin}
-              onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+              type="email" 
+              placeholder="explorer@sanctuary.com"
+              className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-base font-bold text-slate-900 outline-none focus:border-brand-red transition-all"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               disabled={isProcessing}
             />
           </div>
 
-          {recoveredPin && (
-            <div className="p-4 bg-brand-lime/10 border border-brand-lime/30 rounded-2xl animate-in zoom-in-95">
-              <p className="text-slate-600 text-[8px] font-black uppercase tracking-widest text-center mb-1">Recovered Signal</p>
-              <div className="text-center text-2xl font-black text-slate-900 tracking-[0.5em]">
-                {recoveredPin}
-              </div>
-              <p className="text-slate-400 text-[7px] font-bold uppercase tracking-wider text-center mt-2 italic">Please keep your coordinates secure.</p>
-            </div>
-          )}
+          <div className="space-y-1.5">
+            <label className="text-slate-400 text-[9px] font-black uppercase tracking-widest">Security Password</label>
+            <input 
+              required
+              type="password" 
+              placeholder="••••••••"
+              className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-base font-bold text-slate-900 outline-none focus:border-brand-red transition-all"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={isProcessing}
+            />
+          </div>
 
           {error && (
             <div className="p-3 bg-brand-red/10 border border-brand-red/20 rounded-xl">
               <p className="text-brand-red text-[9px] font-black uppercase text-center tracking-wider">{error}</p>
-              {error.includes("mismatch") && !recoveredPin && (
-                <button 
-                  type="button" 
-                  onClick={handleForgotPin}
-                  className="w-full mt-2 text-[8px] font-black uppercase text-brand-red hover:underline"
-                >
-                  Recall my PIN
-                </button>
-              )}
             </div>
           )}
 
@@ -242,12 +225,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, onClose }) => {
             )}
           </button>
         </form>
-
-        <div className="p-8 bg-slate-50 border-t border-slate-100 text-center">
-          <p className="text-slate-300 text-[8px] font-black uppercase tracking-[0.2em]">
-            MAKEMYDAYS SECURE ACCESS NODE
-          </p>
-        </div>
       </div>
     </div>
   );

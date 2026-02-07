@@ -8,6 +8,7 @@ export interface Slot {
 
 export interface Event {
   id: string;
+  ownerUid?: string; // UID of the host who created the event
   title: string;
   category: Category;
   image: string;
@@ -17,11 +18,12 @@ export interface Event {
   slots: Slot[];
   dates: string[]; 
   hostPhone: string;
-  createdAt?: string; // ISO string for sorting and badge logic
+  createdAt?: string; 
 }
 
 export interface Booking {
   id: string;
+  userUid?: string; // UID of the explorer who booked the event
   eventId: string;
   eventTitle: string;
   category: Category;
@@ -36,8 +38,10 @@ export interface Booking {
 }
 
 export interface User {
+  uid: string;
   name: string;
-  phone: string;
+  email: string;
+  phone?: string;
   bookings: Booking[];
   role?: 'user' | 'admin';
   preferences?: {

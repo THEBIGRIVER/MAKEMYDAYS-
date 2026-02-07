@@ -8,9 +8,11 @@ interface AdminPanelProps {
   bookings: Booking[];
   onClose: () => void;
   onRefresh: () => void;
+  // Add userUid to the props to identify the host
+  userUid?: string;
 }
 
-const AdminPanel: React.FC<AdminPanelProps> = ({ events, bookings, onClose, onRefresh }) => {
+const AdminPanel: React.FC<AdminPanelProps> = ({ events, bookings, onClose, onRefresh, userUid }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'events' | 'bookings'>('overview');
   const [editingEvent, setEditingEvent] = useState<Partial<Event> | null>(null);
   const [adminPasskey, setAdminPasskey] = useState('');
@@ -25,6 +27,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, bookings, onClose, onRe
       return;
     }
     if (editingEvent?.title && editingEvent?.category) {
+      // Fix: api.saveEvent expects 2 arguments: the event object and the user UID for ownership.
       await api.saveEvent({
         ...editingEvent,
         id: editingEvent.id || Math.random().toString(36).substr(2, 9),
@@ -33,7 +36,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, bookings, onClose, onRe
         image: editingEvent.image || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=60&w=800',
         description: editingEvent.description || '',
         hostPhone: editingEvent.hostPhone || '917686924919'
-      } as Event);
+      } as Event, userUid || 'admin');
       setEditingEvent(null);
       setError('');
       setAdminPasskey('');

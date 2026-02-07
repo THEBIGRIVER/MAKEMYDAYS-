@@ -7,13 +7,12 @@ import Dashboard from './components/Dashboard.tsx';
 import AdminPanel from './components/AdminPanel.tsx';
 import ChatBot from './components/ChatBot.tsx';
 import LegalModal, { PolicyType } from './components/LegalModal.tsx';
-import OnboardingTour from './components/OnboardingTour.tsx';
-import AuthModal from './components/AuthModal.tsx'; 
+import AuthModal from './components/AuthModal.tsx';
 import { api } from './services/api.ts';
-import { DEFAULT_HOST } from './constants.ts';
+import { auth } from './services/firebase.ts';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const MOOD_MUSIC_URL = "https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3";
-const USER_STORAGE_KEY = 'makemydays_user_session_v1';
 
 const MOODS = [
   { label: "Joyful", emoji: "🌈", glow: "rgba(248,68,100,0.5)", bg: "bg-brand-red" },
@@ -50,7 +49,7 @@ const Visualizer = ({ isPlaying }: { isPlaying: boolean }) => (
 const CommunityPulseTicker = ({ eventsCount }: { eventsCount: number }) => {
   const [pulseIdx, setPulseIdx] = useState(0);
   const pulses = [
-    `NEW RESONANCE: Explorer +91 98*** just launched a new Workshop`,
+    `NEW RESONANCE: Explorer just launched a new Workshop`,
     `BOOKING CONFIRMED: Someone anchored for Midnight Forest Bathing`,
     `LIVE PULSE: ${eventsCount} active streams currently broadcasting globally`,
     `COMMUNITY CHOICE: Secret Rooftop Sunset Jam trending in high-energy`
@@ -80,7 +79,6 @@ const CommunityPulseTicker = ({ eventsCount }: { eventsCount: number }) => {
 const App: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [globalBookings, setGlobalBookings] = useState<Booking[]>([]);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<Category | 'All' | 'Community'>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
@@ -90,38 +88,62 @@ const App: React.FC = () => {
   const [showDashboard, setShowDashboard] = useState(false);
   const [dashboardTab, setDashboardTab] = useState<'bookings' | 'hosting' | 'settings'>('bookings');
   const [showAdmin, setShowAdmin] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
   const [auraIndex, setAuraIndex] = useState(0);
   const [activePolicy, setActivePolicy] = useState<PolicyType | null>(null);
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (userUid?: string) => {
     try {
-      const [evs, bks] = await Promise.all([api.getEvents(), api.getBookings()]);
+      const evs = await api.getEvents();
       const sortedEvents = (evs || []).sort((a, b) => {
         const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
         const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
         return timeB - timeA;
       });
       setEvents(sortedEvents);
-      setGlobalBookings(bks || []);
+
+      if (userUid) {
+        const bks = await api.getBookings(userUid);
+        setGlobalBookings(bks || []);
+      } else {
+        setGlobalBookings([]);
+      }
+      
       setAiRec(null);
     } catch (e) { console.error(e); }
   }, []);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        const user: User = {
+          uid: firebaseUser.uid,
+          name: firebaseUser.displayName || 'Explorer',
+          email: firebaseUser.email || '',
+          bookings: [], 
+          role: firebaseUser.email === 'admin@makemydays.com' ? 'admin' : 'user'
+        };
+        setCurrentUser(user);
+        await api.syncUserProfile(user);
+        fetchData(firebaseUser.uid);
+      } else {
+        setCurrentUser(null);
+        fetchData();
+      }
+    });
+    return () => unsubscribe();
+  }, [fetchData]);
 
   useEffect(() => {
     audioRef.current = new Audio(MOOD_MUSIC_URL);
     audioRef.current.loop = true;
     audioRef.current.volume = 0.25;
     const interval = setInterval(() => setAuraIndex(p => (p + 1) % AURA_STATES.length), 4500);
-    fetchData();
-    
-    const stored = localStorage.getItem(USER_STORAGE_KEY);
-    if (stored) setCurrentUser(JSON.parse(stored));
-
     return () => { audioRef.current?.pause(); clearInterval(interval); };
-  }, [fetchData]);
+  }, []);
 
   const toggleMusic = useCallback(() => {
     if (!audioRef.current) return;
@@ -137,10 +159,10 @@ const App: React.FC = () => {
   const handleLaunchClick = () => {
     if (!currentUser) {
       setShowAuthModal(true);
-    } else {
-      setDashboardTab('hosting');
-      setShowDashboard(true);
+      return;
     }
+    setDashboardTab('hosting');
+    setShowDashboard(true);
   };
 
   const handleMoodSearch = async (mood: string) => {
@@ -174,7 +196,7 @@ const App: React.FC = () => {
       if (selectedCategory === 'All') {
         matchCat = true;
       } else if (selectedCategory === 'Community') {
-        matchCat = e.hostPhone !== DEFAULT_HOST;
+        matchCat = e.hostPhone !== '917686924919';
       } else {
         matchCat = e.category === selectedCategory;
       }
@@ -189,10 +211,6 @@ const App: React.FC = () => {
     });
   }, [events, selectedCategory, searchQuery, aiRec]);
 
-  const featuredEvents = useMemo(() => {
-    return [...events].slice(0, 4);
-  }, [events]);
-
   return (
     <div className={`flex flex-col min-h-screen bg-black mesh-bg vibe-sunny selection:bg-brand-red selection:text-slate-200`}>
       <nav className="fixed top-0 left-0 right-0 z-[100] h-16 glass-card border-b border-white/10">
@@ -204,7 +222,6 @@ const App: React.FC = () => {
             setSelectedCategory('All'); 
             setUserMood('');
             setSearchQuery('');
-            fetchData(); 
           }}>
             <ConnectionLogo />
             <span className="text-xl font-black italic tracking-tighter text-slate-200 group-hover:text-brand-red transition-all">MakeMyDays</span>
@@ -224,25 +241,40 @@ const App: React.FC = () => {
             </button>
 
             {currentUser ? (
-              <button id="user-sanctuary-trigger" onClick={() => { setDashboardTab('bookings'); setShowDashboard(!showDashboard); }} className="w-10 h-10 rounded-xl bg-slate-100 text-slate-800 flex items-center justify-center font-black italic text-lg shadow-lg hover:bg-slate-200 transition-colors">
-                {currentUser.name[0]}
+              <button 
+                onClick={() => { setDashboardTab('bookings'); setShowDashboard(!showDashboard); }} 
+                className="px-6 py-2 bg-slate-100 text-slate-800 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg hover:bg-brand-red hover:text-slate-200 transition-all flex items-center gap-2"
+              >
+                <span className="w-1.5 h-1.5 bg-brand-red rounded-full animate-pulse"></span>
+                Sanctuary
               </button>
             ) : (
-              <button onClick={() => setShowAuthModal(true)} className="px-6 py-2 bg-slate-100 text-slate-800 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg hover:bg-brand-red hover:text-slate-200 transition-all">Join</button>
+              <button 
+                onClick={() => setShowAuthModal(true)} 
+                className="px-6 py-2 bg-brand-red text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg hover:bg-white hover:text-brand-red transition-all"
+              >
+                Enter Sanctuary
+              </button>
             )}
           </div>
         </div>
       </nav>
 
       <main className="flex-1 pt-24 px-6 max-w-7xl mx-auto w-full">
-        {showAdmin && currentUser?.role === 'admin' ? (
-          <AdminPanel events={events} bookings={globalBookings} onClose={() => setShowAdmin(false)} onRefresh={fetchData} />
-        ) : showDashboard && currentUser ? (
+        {showAdmin ? (
+          <AdminPanel 
+            events={events} 
+            bookings={globalBookings} 
+            userUid={currentUser?.uid}
+            onClose={() => setShowAdmin(false)} 
+            onRefresh={() => fetchData(currentUser?.uid)} 
+          />
+        ) : showDashboard ? (
           <Dashboard 
-            user={currentUser} events={events} bookings={globalBookings}
+            events={events} bookings={globalBookings}
             initialTab={dashboardTab}
-            onLogout={() => { setCurrentUser(null); localStorage.removeItem(USER_STORAGE_KEY); setShowDashboard(false); }} 
-            onOpenAdmin={() => setShowAdmin(true)} onOpenPolicy={setActivePolicy} onRefreshEvents={fetchData}
+            currentUser={currentUser}
+            onOpenAdmin={() => setShowAdmin(true)} onOpenPolicy={setActivePolicy} onRefreshEvents={() => fetchData(currentUser?.uid)}
           />
         ) : (
           <div className="space-y-16 pb-20">
@@ -330,28 +362,8 @@ const App: React.FC = () => {
                <CommunityPulseTicker eventsCount={events.length} />
             </div>
 
-            {/* Prime Resonance - Featured Scroller */}
-            {!searchQuery && !aiRec && (
-              <section className="space-y-6">
-                <div className="flex items-end justify-between px-2">
-                  <div className="space-y-1">
-                    <span className="text-brand-red text-[10px] font-black uppercase tracking-[0.4em]">Prime Resonance</span>
-                    <h2 className="text-3xl font-black italic uppercase tracking-tighter text-slate-200">Recently Calibrated</h2>
-                  </div>
-                </div>
-                <div className="flex gap-6 overflow-x-auto pb-8 scrollbar-hide snap-x px-2">
-                  {featuredEvents.map(event => (
-                    <div key={event.id} className="min-w-[280px] md:min-w-[320px] snap-center">
-                      <EventCard event={event} onClick={setSelectedEvent} />
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
-
             {/* Global Discovery Feed Section */}
             <section id="event-grid-container" className="space-y-12 relative">
-              {/* Subtle grid decoration */}
               <div className="absolute inset-0 -z-10 opacity-10" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
               
               <div className="flex flex-col space-y-10 border-b border-white/5 pb-12">
@@ -377,7 +389,6 @@ const App: React.FC = () => {
                          <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Frequencies</span>
                        </div>
                     </div>
-                    <p className="text-[8px] font-black text-slate-500 uppercase tracking-[0.4em] px-2 italic">Synchronized across 12 region nodes</p>
                   </div>
                 </div>
 
@@ -399,56 +410,11 @@ const App: React.FC = () => {
               </div>
               
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-10">
-                {/* Community Host CTA Card */}
-                {!searchQuery && (selectedCategory === 'All' || selectedCategory === 'Community') && (
-                  <div 
-                    onClick={handleLaunchClick}
-                    className="group cursor-pointer animate-slide-up flex flex-col items-center justify-center gap-8 glass-card p-10 rounded-[3rem] border-2 border-dashed border-white/10 hover:border-brand-accent hover:bg-slate-900/60 transition-all shadow-xl bg-slate-900/30 min-h-[400px]"
-                  >
-                    <div className="w-24 h-24 rounded-full bg-slate-900 flex items-center justify-center border border-white/5 group-hover:border-brand-accent/50 group-hover:scale-110 transition-all shadow-inner">
-                       <svg className="w-10 h-10 text-brand-accent group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-                       </svg>
-                    </div>
-                    <div className="text-center space-y-3">
-                       <h4 className="text-lg font-black italic uppercase tracking-tighter text-slate-100 group-hover:text-brand-accent transition-colors">Broadcast Your Wave</h4>
-                       <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed px-4">Anyone can host a sanctuary. Join the global peer-to-peer network today.</p>
-                    </div>
-                    <div className="flex flex-col items-center gap-1">
-                      <span className="text-[11px] font-black text-brand-accent uppercase tracking-[0.3em] group-hover:animate-pulse">Initialize Node</span>
-                      <div className="w-8 h-1 bg-brand-accent/20 rounded-full transition-all group-hover:w-16 group-hover:bg-brand-accent"></div>
-                    </div>
-                  </div>
-                )}
-
                 {filteredEvents.map(event => (
                   <div key={event.id} className="animate-slide-up">
                     <EventCard event={event} onClick={setSelectedEvent} />
                   </div>
                 ))}
-              </div>
-              
-              {filteredEvents.length === 0 && (
-                <div className="text-center py-32 bg-slate-950/40 rounded-[5rem] border-2 border-dashed border-white/5 backdrop-blur-sm">
-                  <div className="w-20 h-20 bg-slate-900/50 rounded-full flex items-center justify-center mx-auto mb-8">
-                     <svg className="w-10 h-10 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                  </div>
-                  <p className="text-slate-500 text-base font-black uppercase tracking-[0.2em] italic">No active frequencies detected in this stream.</p>
-                  <button onClick={() => { setAiRec(null); setUserMood(''); setSearchQuery(''); setSelectedCategory('All'); }} className="mt-10 px-10 py-5 bg-slate-100 text-slate-900 rounded-2xl text-[11px] font-black uppercase tracking-[0.3em] hover:bg-brand-red hover:text-white transition-all transform active:scale-95 shadow-2xl">Reset Satellite Link</button>
-                </div>
-              )}
-              
-              <div className="pt-24 text-center space-y-10">
-                 <div className="flex justify-center items-center gap-6">
-                    <div className="h-[1px] w-20 bg-gradient-to-r from-transparent to-white/10"></div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.6em] text-slate-700 italic">Ethereal End of Stream</p>
-                    <div className="h-[1px] w-20 bg-gradient-to-l from-transparent to-white/10"></div>
-                 </div>
-                 <div className="flex justify-center gap-4">
-                    {[...Array(5)].map((_, i) => (
-                      <div key={i} className="w-2 h-2 bg-slate-800 rounded-full animate-pulse" style={{ animationDelay: `${i * 0.3}s` }}></div>
-                    ))}
-                 </div>
               </div>
             </section>
           </div>
@@ -462,45 +428,40 @@ const App: React.FC = () => {
               <ConnectionLogo className="w-8 h-8 opacity-60" />
               <span className="text-slate-300 tracking-[0.2em]">MAKEMYDAYS — SANCTUARY NETWORK © 2024</span>
             </div>
-            <span className="text-slate-800 hidden md:block text-2xl">|</span>
-            <div className="flex flex-col md:flex-row items-center gap-3">
-               <span className="text-slate-600">INFRASTRUCTURE:</span>
-               <span className="text-brand-accent drop-shadow-[0_0_5px_rgba(0,245,255,0.3)]">BENEME PROTOCOL 2.5</span>
-            </div>
           </div>
           <div className="flex gap-12">
             {['Terms', 'Privacy', 'Refund'].map(l => (
-              <button key={l} className="hover:text-brand-red transition-all hover:tracking-[0.6em] duration-500">{l}</button>
+              <button key={l} className="hover:text-brand-red transition-all hover:tracking-[0.6em] duration-500" onClick={() => setActivePolicy(l.toLowerCase() as any)}>{l}</button>
             ))}
           </div>
         </div>
       </footer>
 
       {activePolicy && <LegalModal type={activePolicy} onClose={() => setActivePolicy(null)} />}
-      {selectedEvent && <BookingModal event={selectedEvent} onClose={() => setSelectedEvent(null)} onConfirm={async (slot, date) => {
-          if (!selectedEvent) return;
+      {selectedEvent && <BookingModal event={selectedEvent} onClose={() => setSelectedEvent(null)} onConfirm={async (slot, date, guestName, guestPhone) => {
+          if (!selectedEvent || !currentUser) return;
           const booking: Booking = { 
             id: Math.random().toString(36).substr(2, 9), 
             eventId: selectedEvent.id, 
             eventTitle: selectedEvent.title, 
-            category: selectedCategory === 'Community' ? selectedEvent.category : selectedEvent.category, 
+            category: selectedEvent.category, 
             time: slot.time, 
             eventDate: date, 
             price: selectedEvent.price, 
             bookedAt: new Date().toISOString(), 
-            userName: currentUser?.name || 'Anonymous Guest', 
-            userPhone: currentUser?.phone || 'Guest Line' 
+            userName: guestName || currentUser.name, 
+            userPhone: guestPhone || currentUser.phone || ''
           };
-          await api.saveBooking(booking);
-          if (currentUser) {
-            const updatedUser = { ...currentUser, bookings: [booking, ...currentUser.bookings] };
-            setCurrentUser(updatedUser);
-            localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updatedUser));
-          }
-          setGlobalBookings(prev => [booking, ...prev]);
+          await api.saveBooking(booking, currentUser.uid);
+          fetchData(currentUser.uid);
           setSelectedEvent(null);
       }} />}
-      {showAuthModal && <AuthModal onSuccess={(u) => { setCurrentUser(u); localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(u)); setShowAuthModal(false); }} onClose={() => setShowAuthModal(false)} />}
+      {showAuthModal && (
+        <AuthModal 
+          onSuccess={() => setShowAuthModal(false)} 
+          onClose={() => setShowAuthModal(false)} 
+        />
+      )}
       <ChatBot />
     </div>
   );

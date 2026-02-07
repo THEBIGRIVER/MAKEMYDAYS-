@@ -3,19 +3,12 @@ import { GoogleGenAI, Chat } from "@google/genai";
 import { INITIAL_EVENTS } from "../constants.ts";
 
 export class ChatService {
-  private ai: GoogleGenAI | null = null;
   private chat: Chat | null = null;
-
-  private getClient() {
-    if (!this.ai) {
-      this.ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    }
-    return this.ai;
-  }
 
   private initChat() {
     const eventContext = INITIAL_EVENTS.map(e => `${e.title} (${e.category}): ${e.description}`).join('\n');
-    const ai = this.getClient();
+    // Guidelines specify using process.env.API_KEY directly when initializing.
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     
     this.chat = ai.chats.create({
       model: 'gemini-3-flash-preview',
@@ -43,6 +36,7 @@ export class ChatService {
     
     try {
       const result = await this.chat!.sendMessage({ message });
+      // The Gemini API result.text property directly returns the generated string.
       return result.text;
     } catch (error) {
       console.error("Chat error:", error);

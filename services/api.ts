@@ -2,110 +2,106 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Event, Booking, AIRecommendation, User } from '../types.ts';
 import { INITIAL_EVENTS } from '../constants.ts';
-
-const BOOKINGS_KEY = 'makemydays_bookings_v1';
-const EVENTS_KEY = 'makemydays_events_v1';
-const USERS_DB_KEY = 'makemydays_users_db_v1';
+import { db } from './firebase.ts';
+import { 
+  collection, 
+  getDocs, 
+  doc, 
+  setDoc, 
+  deleteDoc, 
+  query, 
+  where, 
+  addDoc, 
+  getDoc,
+  serverTimestamp,
+  orderBy
+} from 'firebase/firestore';
 
 export const api = {
-  // User Management
-  async getAllUsers(): Promise<any[]> {
+  // User Profile Sync
+  async syncUserProfile(user: User): Promise<void> {
     try {
-      const stored = localStorage.getItem(USERS_DB_KEY);
-      return stored ? JSON.parse(stored) : [];
+      const userRef = doc(db, 'users', user.uid);
+      const userSnap = await getDoc(userRef);
+      
+      if (!userSnap.exists()) {
+        await setDoc(userRef, {
+          uid: user.uid,
+          name: user.name,
+          email: user.email,
+          createdAt: serverTimestamp(),
+          role: user.role || 'user'
+        });
+      }
     } catch (e) {
-      return [];
+      console.error("Profile sync failed:", e);
     }
-  },
-
-  async saveUser(user: User, pin: string): Promise<void> {
-    const users = await this.getAllUsers();
-    const existingIndex = users.findIndex(u => u.phone === user.phone);
-    const userWithPin = { ...user, pin };
-    
-    if (existingIndex > -1) {
-      users[existingIndex] = userWithPin;
-    } else {
-      users.push(userWithPin);
-    }
-    localStorage.setItem(USERS_DB_KEY, JSON.stringify(users));
-  },
-
-  async authenticate(phone: string, pin: string): Promise<User | null> {
-    const users = await this.getAllUsers();
-    const user = users.find(u => u.phone === phone && u.pin === pin);
-    if (user) {
-      const { pin: _, ...userWithoutPin } = user;
-      return userWithoutPin as User;
-    }
-    return null;
   },
 
   // Event Management
   async getEvents(): Promise<Event[]> {
     try {
-      const stored = localStorage.getItem(EVENTS_KEY);
-      if (!stored) {
-        // If nothing is stored, initialize with initial events
-        localStorage.setItem(EVENTS_KEY, JSON.stringify(INITIAL_EVENTS));
+      const eventsCol = collection(db, 'events');
+      const q = query(eventsCol, orderBy('createdAt', 'desc'));
+      const snapshot = await getDocs(q);
+      
+      if (snapshot.empty) {
+        // Optional: Seed initial events if DB is empty (First time run)
+        // For production, this should be handled by a migration script
         return INITIAL_EVENTS;
       }
-      const parsed = JSON.parse(stored) as Event[];
-      // If the stored array is empty, re-initialize with INITIAL_EVENTS to ensure feed is never empty
-      if (parsed.length === 0) {
-        localStorage.setItem(EVENTS_KEY, JSON.stringify(INITIAL_EVENTS));
-        return INITIAL_EVENTS;
-      }
-      return parsed;
+      
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
     } catch (e) {
-      console.error("Critical: Failed to parse events from storage. Reverting to initial state.");
+      console.error("Error fetching events:", e);
       return INITIAL_EVENTS;
     }
   },
 
-  async saveEvent(event: Event): Promise<void> {
-    const events = await this.getEvents();
-    const index = events.findIndex(e => e.id === event.id);
-    if (index > -1) {
-      events[index] = event;
-    } else {
-      events.unshift(event); // New events always appear at the top globally
-    }
-    
+  async saveEvent(event: Event, userUid: string): Promise<void> {
     try {
-      localStorage.setItem(EVENTS_KEY, JSON.stringify(events));
+      const eventData = {
+        ...event,
+        ownerUid: userUid,
+        createdAt: event.createdAt || new Date().toISOString()
+      };
+      
+      // Remove ID if it's a new event being handled by addDoc
+      // or use setDoc if we want to preserve IDs
+      const eventRef = doc(db, 'events', event.id);
+      await setDoc(eventRef, eventData);
     } catch (e) {
-      console.error("Storage full: Data loss prevented.");
-      throw new Error("Sanctuary memory full. Try a smaller image or removing older events.");
+      console.error("Error saving event:", e);
+      throw e;
     }
   },
 
-  async deleteEvent(eventId: string): Promise<void> {
-    const events = await this.getEvents();
-    const filtered = events.filter(e => e.id !== eventId);
-    // If we delete everything, let's keep INITIAL_EVENTS as a fallback in memory
-    localStorage.setItem(EVENTS_KEY, JSON.stringify(filtered));
+  async deleteEvent(eventId: string, userUid: string): Promise<void> {
+    try {
+      const eventRef = doc(db, 'events', eventId);
+      const eventSnap = await getDoc(eventRef);
+      
+      if (eventSnap.exists() && eventSnap.data().ownerUid === userUid) {
+        await deleteDoc(eventRef);
+      } else {
+        throw new Error("Unauthorized or event not found");
+      }
+    } catch (e) {
+      console.error("Error deleting event:", e);
+      throw e;
+    }
   },
 
-  // AI & Bookings
+  // AI Recommendations
   async getRecommendations(mood: string, events: Event[]): Promise<AIRecommendation> {
-    const apiKey = process.env.API_KEY || "";
-    if (!apiKey) {
-      return { reasoning: "✨ Synchronizing your frequency with our experiences.", suggestedEventIds: events.slice(0, 3).map(e => e.id) };
-    }
-    const ai = new GoogleGenAI({ apiKey });
+    // Guidelines specify using process.env.API_KEY directly when initializing.
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const eventContext = events.map(e => ({ id: e.id, title: e.title, category: e.category, description: e.description }));
 
     try {
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
-        contents: `USER MOOD: "${mood}". 
-        VALID CATEGORIES: Shows, Activity, MMD Originals, Mindfulness, Workshop.
-        AVAILABLE EVENTS: ${JSON.stringify(eventContext)}
-        
-        INSTRUCTIONS:
-        1. Match 1-3 event IDs that best serve this mood.
-        2. Provide reasoning starting with a relevant emoji.`,
+        contents: `USER MOOD: "${mood}". MATCH 1-3 EVENTS. REASONING START WITH EMOJI. EVENTS: ${JSON.stringify(eventContext)}`,
         config: {
           responseMimeType: "application/json",
           responseSchema: {
@@ -118,21 +114,39 @@ export const api = {
           }
         }
       });
-      const text = response.text || "{}";
-      return JSON.parse(text.trim());
+      // The Gemini API response.text property directly returns the generated string.
+      return JSON.parse(response.text.trim());
     } catch (error) {
-      console.error("AI Recommendation disrupted:", error);
-      return { reasoning: "✨ Frequency synced. We suggest exploring these sessions.", suggestedEventIds: events.slice(0, 3).map(e => e.id) };
+      console.error("AI recommendation failed:", error);
+      return { reasoning: "✨ We recommend exploring these sessions.", suggestedEventIds: events.slice(0, 3).map(e => e.id) };
     }
   },
 
-  async getBookings(): Promise<Booking[]> {
-    const stored = localStorage.getItem(BOOKINGS_KEY);
-    return stored ? JSON.parse(stored) : [];
+  // Booking Management
+  async getBookings(userUid: string): Promise<Booking[]> {
+    try {
+      const bookingsCol = collection(db, 'bookings');
+      const q = query(bookingsCol, where('userUid', '==', userUid), orderBy('bookedAt', 'desc'));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Booking));
+    } catch (e) {
+      console.error("Error fetching bookings:", e);
+      return [];
+    }
   },
 
-  async saveBooking(booking: Booking): Promise<void> {
-    const current = await this.getBookings();
-    localStorage.setItem(BOOKINGS_KEY, JSON.stringify([booking, ...current]));
+  async saveBooking(booking: Booking, userUid: string): Promise<void> {
+    try {
+      const bookingsCol = collection(db, 'bookings');
+      const bookingData = {
+        ...booking,
+        userUid: userUid,
+        bookedAt: new Date().toISOString()
+      };
+      await addDoc(bookingsCol, bookingData);
+    } catch (e) {
+      console.error("Error saving booking:", e);
+      throw e;
+    }
   }
 };
