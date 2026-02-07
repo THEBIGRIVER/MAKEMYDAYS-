@@ -72,10 +72,14 @@ const CreateEventModal: React.FC<{ userUid: string, onClose: () => void, onSucce
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title || !formData.price || !formData.image || !singleDate || !formData.hostPhone) {
-      alert("Please complete all sections to finalize the launch.");
+    
+    // Validation Fix: Allow price to be 0
+    const isPriceValid = formData.price !== undefined && !isNaN(Number(formData.price));
+    if (!formData.title || !isPriceValid || !formData.image || !singleDate || !formData.hostPhone) {
+      alert("Please complete all sections to finalize the launch. Ensure an image is selected.");
       return;
     }
+
     setIsSubmitting(true);
     try {
       const newEvent: Event = {
@@ -95,7 +99,8 @@ const CreateEventModal: React.FC<{ userUid: string, onClose: () => void, onSucce
       setIsSuccessfullyLaunched(true);
       setTimeout(() => { onSuccess(); onClose(); }, 2500);
     } catch (err: any) {
-      alert("Launch disrupted. Please try again.");
+      console.error("Launch Error:", err);
+      alert(`Launch disrupted: ${err.message || "Permission denied. Check your Firestore rules."}`);
     } finally { setIsSubmitting(false); }
   };
 
@@ -130,18 +135,20 @@ const CreateEventModal: React.FC<{ userUid: string, onClose: () => void, onSucce
           </div>
           <div className="grid grid-cols-2 gap-4">
             <input required type="date" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white" value={singleDate} onChange={e => setSingleDate(e.target.value)} />
-            <input required type="time" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white" value={formData.slots![0].time} onChange={e => setFormData({...formData, slots: [{...formData.slots![0], time: e.target.value}]})} />
+            <input required type="time" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white" value={formData.slots![0].time} onChange={e => setFormData({...formData, slots: [{...formData.slots![0], time: e.target.value, availableSeats: 20}]})} />
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <input required type="number" placeholder="Price (₹)" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white" value={formData.price} onChange={e => setFormData({...formData, price: Number(e.target.value)})} />
+            <input required type="number" placeholder="Price (₹) - Use 0 for Free" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value === '' ? '' : Number(e.target.value)})} />
             <input required type="tel" placeholder="Your WhatsApp Number" className="w-full bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 text-emerald-400 font-bold" value={formData.hostPhone} onChange={e => setFormData({...formData, hostPhone: e.target.value.replace(/\D/g, '')})} />
           </div>
           <div onClick={() => !isSubmitting && fileInputRef.current?.click()} className="w-full h-32 bg-white/5 border-2 border-dashed border-white/10 rounded-2xl flex items-center justify-center cursor-pointer hover:border-brand-red transition-all relative overflow-hidden">
             <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
-            {imagePreview ? <img src={imagePreview} className="w-full h-full object-cover" /> : <span className="text-slate-500 font-black uppercase text-[10px]">Add Image Aura</span>}
+            {imagePreview ? <img src={imagePreview} className="w-full h-full object-cover" /> : <div className="text-center"><p className="text-slate-500 font-black uppercase text-[10px]">Add Image Aura</p><p className="text-slate-600 text-[8px] mt-1 font-bold italic">(Required to Launch)</p></div>}
           </div>
           <textarea required placeholder="Description..." rows={3} className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white resize-none" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
-          <button type="submit" disabled={isSubmitting} className="w-full py-5 bg-slate-200 text-slate-900 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-brand-red hover:text-white transition-all">Launch Experience</button>
+          <button type="submit" disabled={isSubmitting} className="w-full py-5 bg-slate-200 text-slate-900 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-brand-red hover:text-white transition-all disabled:opacity-50">
+            {isSubmitting ? "Broadcasting Frequency..." : "Launch Experience"}
+          </button>
         </form>
       </div>
     </div>
@@ -209,15 +216,21 @@ const Dashboard: React.FC<DashboardProps> = ({ events, bookings, currentUser, in
                 <button onClick={() => setShowCreateModal(true)} className="bg-slate-200 px-8 py-4 rounded-2xl font-black uppercase text-[10px] hover:bg-brand-red hover:text-white transition-all">Create Event</button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {myEvents.map(e => (
-                  <div key={e.id} className="glass-card rounded-[2rem] overflow-hidden border border-white/10 group">
-                    <div className="h-32 bg-slate-800 overflow-hidden"><img src={e.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform" /></div>
-                    <div className="p-6">
-                      <h4 className="text-slate-200 font-black italic uppercase text-base">{e.title}</h4>
-                      <button className="mt-4 w-full py-2 bg-slate-800 rounded-xl text-[9px] font-black uppercase text-slate-400 hover:bg-brand-red hover:text-white transition-all" onClick={async () => { if(confirm("Terminate broadcast?")){ await api.deleteEvent(e.id, currentUser?.uid || ''); onRefreshEvents?.(); } }}>Terminate</button>
-                    </div>
+                {myEvents.length === 0 ? (
+                  <div className="col-span-2 py-10 text-center text-slate-600 font-bold italic uppercase tracking-widest text-[10px]">
+                    No active broadcasts found from your node.
                   </div>
-                ))}
+                ) : (
+                  myEvents.map(e => (
+                    <div key={e.id} className="glass-card rounded-[2rem] overflow-hidden border border-white/10 group">
+                      <div className="h-32 bg-slate-800 overflow-hidden"><img src={e.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform" /></div>
+                      <div className="p-6">
+                        <h4 className="text-slate-200 font-black italic uppercase text-base">{e.title}</h4>
+                        <button className="mt-4 w-full py-2 bg-slate-800 rounded-xl text-[9px] font-black uppercase text-slate-400 hover:bg-brand-red hover:text-white transition-all" onClick={async () => { if(confirm("Terminate broadcast?")){ await api.deleteEvent(e.id, currentUser?.uid || ''); onRefreshEvents?.(); } }}>Terminate</button>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}
