@@ -29,17 +29,6 @@ const BookingModal: React.FC<BookingModalProps> = ({ event, onClose, onConfirm }
   }, []);
 
   const availableDates = useMemo(() => {
-    if (event.dates && event.dates.length > 0) {
-      return event.dates.map(dateStr => {
-        const parts = dateStr.split(' ');
-        const dayNum = parseInt(parts[0]);
-        return {
-          full: dateStr,
-          day: (parts[1] || 'DATE').toUpperCase(),
-          date: isNaN(dayNum) ? parts[0] : dayNum
-        };
-      });
-    }
     const dates = [];
     for (let i = 0; i < 7; i++) {
       const d = new Date();
@@ -51,77 +40,20 @@ const BookingModal: React.FC<BookingModalProps> = ({ event, onClose, onConfirm }
       });
     }
     return dates;
-  }, [event.dates]);
+  }, []);
 
   useEffect(() => {
-    if (availableDates.length > 0 && (!selectedDate || !availableDates.find(d => d.full === selectedDate))) {
-      setSelectedDate(availableDates[0].full);
-    }
-    if (event.slots.length > 0 && (!selectedSlot || !event.slots.find(s => s.time === selectedSlot.time))) {
-      setSelectedSlot(event.slots[0]);
-    }
+    if (availableDates.length > 0 && !selectedDate) setSelectedDate(availableDates[0].full);
+    if (event.slots.length > 0 && !selectedSlot) setSelectedSlot(event.slots[0]);
   }, [availableDates, event.slots]);
 
-  /**
-   * Enhanced Phone Normalization for WhatsApp Links:
-   * Handles domestic 0-prefix and adds 91 for standard Indian numbers.
-   */
-  const normalizePhoneNumber = (phone: string | number): string => {
-    let cleaned = String(phone).replace(/\D/g, ''); 
-    
-    // domestic Indian format (0-10 digits) -> strip 0
-    if (cleaned.length === 11 && cleaned.startsWith('0')) {
-      cleaned = cleaned.substring(1);
-    }
-    
-    // Already prefixed correctly
-    if (cleaned.startsWith('91') && cleaned.length === 12) {
-      return cleaned;
-    }
-    
-    // 10 digits -> assume Indian and prefix 91
-    if (cleaned.length === 10) {
-      cleaned = '91' + cleaned;
-    }
-    
-    return cleaned;
-  };
-
   const validateInputs = () => {
-    if (!guestName.trim()) { alert("Please provide your name."); return false; }
-    if (guestPhone.replace(/\D/g, '').length < 10) { alert("Please provide a valid 10-digit phone number."); return false; }
+    if (!guestName.trim()) { alert("Identity required."); return false; }
+    if (guestPhone.replace(/\D/g, '').length < 10) { alert("Invalid signal frequency (Phone number)."); return false; }
     localStorage.setItem('mmd_guest_name', guestName);
     localStorage.setItem('mmd_guest_phone', guestPhone);
     return true;
   };
-
-  const handleWhatsAppBooking = useCallback(() => {
-    if (!selectedSlot || !selectedDate || !validateInputs()) return;
-    
-    const bookingId = `MMD-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
-    const hostNumber = normalizePhoneNumber(event.hostPhone || "917686924919");
-    
-    const message = `Namaste! I'm interested in "${event.title}"
-Explorer: ${guestName}
-Phone: ${guestPhone}
-Date: ${selectedDate}
-Time: ${selectedSlot.time}
-Ref: ${bookingId}`;
-
-    const waUrl = `https://wa.me/${hostNumber}?text=${encodeURIComponent(message)}`;
-    window.open(waUrl, '_blank');
-
-    setModalState('processing');
-    setTimeout(async () => {
-        try {
-          await onConfirm(selectedSlot, selectedDate, guestName, guestPhone);
-          setGeneratedBookingId(bookingId);
-          setModalState('success');
-        } catch (err) {
-          setModalState('selecting');
-        }
-    }, 2000); 
-  }, [event, selectedSlot, selectedDate, guestName, guestPhone, onConfirm]);
 
   const handleGPay = useCallback(() => {
     if (!selectedSlot || !selectedDate || !validateInputs()) return;
@@ -133,23 +65,21 @@ Ref: ${bookingId}`;
         await onConfirm(selectedSlot, selectedDate, guestName, guestPhone);
         setGeneratedBookingId(`MMD-${Math.random().toString(36).substr(2, 6).toUpperCase()}`);
         setModalState('success');
-      } catch (err) {
-        setModalState('selecting');
-      }
+      } catch (err) { setModalState('selecting'); }
     }, 2000);
   }, [event, selectedSlot, selectedDate, guestName, guestPhone, onConfirm]);
 
   if (modalState === 'success') {
     return (
-      <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
-        <div className="absolute inset-0 bg-slate-950/98 backdrop-blur-3xl"></div>
-        <div className="relative bg-white w-full max-w-sm rounded-[3rem] p-10 text-center shadow-2xl animate-in zoom-in-95">
-          <div className="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg className="w-10 h-10 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" /></svg>
+      <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-xl">
+        <div className="absolute inset-0" onClick={onClose}></div>
+        <div className="relative bg-white w-full max-w-sm rounded-[2.5rem] p-10 text-center shadow-2xl animate-in zoom-in-95">
+          <div className="w-16 h-16 bg-brand-moss rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl animate-bounce">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" /></svg>
           </div>
-          <h2 className="text-2xl font-black italic uppercase text-slate-900">Anchor Locked</h2>
-          <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mt-2 mb-8">Ref: {generatedBookingId}</p>
-          <button onClick={onClose} className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest">Done</button>
+          <h2 className="text-xl font-black uppercase text-brand-forest">ROOTS ANCHORED</h2>
+          <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-2 mb-8">NODE ID: {generatedBookingId}</p>
+          <button onClick={onClose} className="w-full h-14 bg-brand-forest text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl">DISMISS</button>
         </div>
       </div>
     );
@@ -157,43 +87,47 @@ Ref: ${bookingId}`;
 
   return (
     <div className="fixed inset-0 z-[200] flex items-end justify-center">
-      <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm" onClick={onClose}></div>
-      <div className="relative bg-white w-full md:max-w-xl rounded-t-[3rem] p-8 space-y-8 animate-in slide-in-from-bottom duration-500">
-        <div className="flex justify-between items-start">
-          <h2 className="text-2xl font-black italic uppercase text-slate-900">{event.title}</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-900"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" /></svg></button>
+      <div className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm" onClick={onClose}></div>
+      <div className="relative bg-white w-full md:max-w-xl rounded-t-[2.5rem] p-5 pb-[calc(1.5rem + var(--sab))] md:p-10 space-y-6 animate-in slide-in-from-bottom duration-500 shadow-[0_-20px_80px_rgba(6,78,59,0.15)] max-h-[90vh] overflow-y-auto scrollbar-hide">
+        <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto md:hidden" />
+        
+        <div className="flex justify-between items-start pt-2">
+          <h2 className="text-lg md:text-2xl font-black uppercase tracking-tight text-brand-forest leading-tight pr-8">{event.title}</h2>
+          <button onClick={onClose} className="text-slate-300 p-2 hover:text-brand-forest transition-colors"><svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M6 18L18 6M6 6l12 12" /></svg></button>
         </div>
 
         <div className="space-y-4">
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Identity Details</p>
-          <div className="grid grid-cols-2 gap-3">
-            <input type="text" placeholder="Name" value={guestName} onChange={e => setGuestName(e.target.value)} className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-bold text-slate-900 outline-none focus:border-brand-red" />
-            <input type="tel" placeholder="Phone" value={guestPhone} onChange={e => setGuestPhone(e.target.value.replace(/\D/g, ''))} className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-bold text-slate-900 outline-none focus:border-brand-red" />
+          <p className="text-[9px] font-black uppercase tracking-widest text-brand-moss/60">Bearer Identity</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <input type="text" placeholder="Full Name" value={guestName} onChange={e => setGuestName(e.target.value)} className="bg-emerald-50/50 border border-emerald-100/50 rounded-2xl p-4 text-sm font-bold text-brand-forest outline-none h-14 focus:border-brand-moss focus:bg-white transition-all" />
+            <input type="tel" placeholder="WhatsApp Number" value={guestPhone} onChange={e => setGuestPhone(e.target.value.replace(/\D/g, ''))} className="bg-emerald-50/50 border border-emerald-100/50 rounded-2xl p-4 text-sm font-bold text-brand-forest outline-none h-14 focus:border-brand-moss focus:bg-white transition-all" />
           </div>
         </div>
 
         <div className="space-y-4">
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Frequency Schedule</p>
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
+          <p className="text-[9px] font-black uppercase tracking-widest text-brand-moss/60">Temporal Node (Scheduling)</p>
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 -mx-2 px-2">
             {availableDates.map((d, i) => (
-              <button key={i} onClick={() => setSelectedDate(d.full)} className={`flex flex-col items-center min-w-[60px] p-4 rounded-2xl border-2 transition-all ${selectedDate === d.full ? 'bg-slate-900 border-slate-900 text-white' : 'bg-slate-50 border-slate-50 text-slate-400'}`}>
-                <span className="text-[8px] font-black uppercase">{d.day}</span>
-                <span className="text-lg font-black">{d.date}</span>
+              <button key={i} onClick={() => setSelectedDate(d.full)} className={`flex flex-col items-center min-w-[65px] py-4 rounded-2xl border transition-all active:scale-95 ${selectedDate === d.full ? 'bg-brand-forest border-brand-forest text-white shadow-md' : 'bg-slate-50 border-slate-100 text-slate-400'}`}>
+                <span className="text-[7px] font-black uppercase mb-1">{d.day}</span>
+                <span className="text-base font-black">{d.date}</span>
               </button>
             ))}
           </div>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             {event.slots.map((s, i) => (
-              <button key={i} onClick={() => setSelectedSlot(s)} className={`p-4 rounded-2xl border-2 font-black text-xs ${selectedSlot?.time === s.time ? 'border-brand-red bg-brand-red/5 text-slate-900' : 'border-slate-50 bg-slate-50 text-slate-400'}`}>
+              <button key={i} onClick={() => setSelectedSlot(s)} className={`h-14 rounded-2xl border font-black text-[10px] uppercase tracking-wider transition-all active:scale-95 ${selectedSlot?.time === s.time ? 'border-brand-moss bg-brand-moss/5 text-brand-forest' : 'border-slate-100 bg-slate-50 text-slate-400'}`}>
                 {s.time}
               </button>
             ))}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 pt-4">
-          <button onClick={handleGPay} className="w-full h-16 bg-black text-white rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl">Pay with UPI — ₹{event.price}</button>
-          <button onClick={handleWhatsAppBooking} className="w-full h-14 bg-[#25D366] text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg">Connect to Host</button>
+        <div className="pt-4 space-y-3">
+          <button onClick={handleGPay} className="w-full h-14 md:h-16 bg-brand-forest text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-3">
+             ANCHOR — ₹{event.price}
+          </button>
+          <button onClick={onClose} className="w-full h-12 text-slate-400 font-black uppercase text-[8px] tracking-[0.3em] hover:text-brand-forest transition-colors">ABANDON SESSION</button>
         </div>
       </div>
     </div>
