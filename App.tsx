@@ -11,6 +11,7 @@ import AuthModal from './components/AuthModal.tsx';
 import { api } from './services/api.ts';
 import { auth } from './services/firebase.ts';
 import { onAuthStateChanged } from 'firebase/auth';
+import { INITIAL_EVENTS } from './constants.ts';
 
 const MOOD_MUSIC_URL = "https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3";
 
@@ -24,6 +25,26 @@ const MOODS = [
 
 const CATEGORIES: (Category | 'All' | 'Community')[] = ['All', 'Community', 'Shows', 'Activity', 'MMD Originals', 'Mindfulness', 'Workshop'];
 const AURA_STATES = ["TRUE", "SYNCED", "OPTIMAL", "PURE", "RESONATING", "FLUID", "DEEP"];
+
+const PermissionWarning = () => (
+  <div className="w-full bg-brand-red p-4 text-center animate-in slide-in-from-top duration-500">
+    <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-center gap-4">
+      <p className="text-white text-[11px] font-black uppercase tracking-widest">
+        ⚠️ Firestore Rules: Missing Permissions. Data is restricted to local samples.
+      </p>
+      <button 
+        onClick={() => {
+          const rules = `rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /events/{event} { allow read: if true; allow write: if request.auth != null; }\n    match /users/{userId} { allow read, write: if request.auth != null && request.auth.uid == userId; }\n    match /bookings/{booking} { allow read, write: if request.auth != null; }\n  }\n}`;
+          navigator.clipboard.writeText(rules);
+          alert("Safe Firestore Rules copied! Paste them in Firebase Console > Firestore > Rules");
+        }}
+        className="bg-white text-brand-red px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-xl hover:scale-105 transition-transform"
+      >
+        Copy Fixed Rules
+      </button>
+    </div>
+  </div>
+);
 
 const ConnectionLogo = ({ className = "w-8 h-8" }: { className?: string }) => (
   <svg viewBox="0 0 100 100" className={`${className} fill-current text-brand-red cursor-pointer active:scale-95 transition-transform`}>
@@ -46,38 +67,8 @@ const Visualizer = ({ isPlaying }: { isPlaying: boolean }) => (
   </div>
 );
 
-const CommunityPulseTicker = ({ eventsCount }: { eventsCount: number }) => {
-  const [pulseIdx, setPulseIdx] = useState(0);
-  const pulses = [
-    `NEW RESONANCE: Explorer just launched a new Workshop`,
-    `BOOKING CONFIRMED: Someone anchored for Midnight Forest Bathing`,
-    `LIVE PULSE: ${eventsCount} active streams currently broadcasting globally`,
-    `COMMUNITY CHOICE: Secret Rooftop Sunset Jam trending in high-energy`
-  ];
-
-  useEffect(() => {
-    const interval = setInterval(() => setPulseIdx(p => (p + 1) % pulses.length), 5000);
-    return () => clearInterval(interval);
-  }, [pulses.length]);
-
-  return (
-    <div className="w-full bg-brand-lime/10 border-y border-brand-lime/5 py-2 overflow-hidden flex whitespace-nowrap">
-      <div className="animate-marquee flex items-center gap-12">
-        {[...Array(3)].map((_, i) => (
-          <div key={i} className="flex items-center gap-4">
-            <span className="text-[9px] font-black uppercase tracking-[0.3em] text-brand-lime">
-               ● {pulses[pulseIdx]}
-            </span>
-            <div className="w-1.5 h-1.5 bg-brand-lime rounded-full animate-ping" />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
 const App: React.FC = () => {
-  const [events, setEvents] = useState<Event[]>([]);
+  const [events, setEvents] = useState<Event[]>(INITIAL_EVENTS);
   const [globalBookings, setGlobalBookings] = useState<Booking[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<Category | 'All' | 'Community'>('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -93,27 +84,23 @@ const App: React.FC = () => {
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [permissionError, setPermissionError] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const fetchData = useCallback(async (userUid?: string) => {
     try {
+      setPermissionError(false);
       const evs = await api.getEvents();
-      const sortedEvents = (evs || []).sort((a, b) => {
-        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        return timeB - timeA;
-      });
-      setEvents(sortedEvents);
-
+      setEvents(evs);
       if (userUid) {
         const bks = await api.getBookings(userUid);
-        setGlobalBookings(bks || []);
-      } else {
-        setGlobalBookings([]);
+        setGlobalBookings(bks);
       }
-      
-      setAiRec(null);
-    } catch (e) { console.error(e); }
+    } catch (e: any) { 
+      if (e.code === 'permission-denied') setPermissionError(true);
+      console.error(e); 
+      setEvents(INITIAL_EVENTS);
+    }
   }, []);
 
   useEffect(() => {
@@ -156,312 +143,102 @@ const App: React.FC = () => {
     }
   }, [isMusicPlaying]);
 
-  const handleLaunchClick = () => {
-    if (!currentUser) {
-      setShowAuthModal(true);
-      return;
-    }
-    setDashboardTab('hosting');
-    setShowDashboard(true);
-  };
-
   const handleMoodSearch = async (mood: string) => {
-    if (!mood.trim()) {
-      setAiRec(null);
-      return;
-    }
+    if (!mood.trim()) { setAiRec(null); return; }
     setIsAiLoading(true);
     try {
       const rec = await api.getRecommendations(mood, events);
       setAiRec(rec);
     } catch (err) { 
-      console.error(err); 
       setAiRec(null);
     } finally { 
       setIsAiLoading(false); 
     }
   };
 
-  const handleSearchInputChange = (val: string) => {
-    setUserMood(val);
-    setSearchQuery(val);
-    if (!val.trim()) {
-      setAiRec(null);
-    }
-  };
-
   const filteredEvents = useMemo(() => {
     return events.filter(e => {
-      let matchCat = false;
-      if (selectedCategory === 'All') {
-        matchCat = true;
-      } else if (selectedCategory === 'Community') {
-        matchCat = e.hostPhone !== '917686924919';
-      } else {
-        matchCat = e.category === selectedCategory;
-      }
-
+      let matchCat = selectedCategory === 'All' || (selectedCategory === 'Community' ? e.hostPhone !== '917686924919' : e.category === selectedCategory);
       const query = searchQuery.toLowerCase();
-      const matchText = e.title.toLowerCase().includes(query) || 
-                        e.category.toLowerCase().includes(query) ||
-                        e.description.toLowerCase().includes(query);
+      const matchText = e.title.toLowerCase().includes(query) || e.description.toLowerCase().includes(query);
       const matchAi = aiRec ? aiRec.suggestedEventIds.includes(e.id) : true;
-      const finalSearchMatch = aiRec ? matchAi : matchText;
-      return matchCat && finalSearchMatch;
+      return matchCat && (aiRec ? matchAi : matchText);
     });
   }, [events, selectedCategory, searchQuery, aiRec]);
 
   return (
-    <div className={`flex flex-col min-h-screen bg-black mesh-bg vibe-sunny selection:bg-brand-red selection:text-slate-200`}>
-      <nav className="fixed top-0 left-0 right-0 z-[100] h-16 glass-card border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
-          <div className="flex items-center gap-3 cursor-pointer group" onClick={() => { 
-            setShowDashboard(false); 
-            setShowAdmin(false); 
-            setAiRec(null); 
-            setSelectedCategory('All'); 
-            setUserMood('');
-            setSearchQuery('');
-          }}>
-            <ConnectionLogo />
-            <span className="text-xl font-black italic tracking-tighter text-slate-200 group-hover:text-brand-red transition-all">MakeMyDays</span>
-          </div>
+    <div className="flex flex-col min-h-screen bg-black mesh-bg vibe-sunny text-slate-200">
+      {permissionError && <PermissionWarning />}
+      
+      <nav className="fixed top-0 left-0 right-0 z-[100] h-16 glass-card border-b border-white/10 flex items-center justify-between px-6">
+        <div className="flex items-center gap-3 cursor-pointer group" onClick={() => { setShowDashboard(false); setAiRec(null); setSelectedCategory('All'); setSearchQuery(''); setUserMood(''); }}>
+          <ConnectionLogo />
+          <span className="text-xl font-black italic tracking-tighter uppercase">MakeMyDays</span>
+        </div>
 
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={handleLaunchClick}
-              className="hidden md:flex items-center gap-2 px-5 py-2 bg-brand-red text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-white hover:text-brand-red transition-all shadow-lg active:scale-95"
-            >
-              Launch Wave
-            </button>
-
-            <button onClick={toggleMusic} aria-label="Toggle Atmosphere" className={`relative group w-11 h-11 flex items-center justify-center rounded-full transition-all duration-500 border-2 ${isMusicPlaying ? 'bg-slate-900 border-brand-red shadow-lg' : 'bg-slate-800 border-white/10 hover:border-white/30'}`}>
-              {isMusicPlaying && <div className="absolute inset-0 rounded-full border border-brand-red/40 animate-music-pulse" />}
-              <div className="relative z-10 transition-transform group-hover:scale-110"><Visualizer isPlaying={isMusicPlaying} /></div>
-            </button>
-
-            {currentUser ? (
-              <button 
-                onClick={() => { setDashboardTab('bookings'); setShowDashboard(!showDashboard); }} 
-                className="px-6 py-2 bg-slate-100 text-slate-800 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg hover:bg-brand-red hover:text-slate-200 transition-all flex items-center gap-2"
-              >
-                <span className="w-1.5 h-1.5 bg-brand-red rounded-full animate-pulse"></span>
-                Sanctuary
-              </button>
-            ) : (
-              <button 
-                onClick={() => setShowAuthModal(true)} 
-                className="px-6 py-2 bg-brand-red text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg hover:bg-white hover:text-brand-red transition-all"
-              >
-                Enter Sanctuary
-              </button>
-            )}
-          </div>
+        <div className="flex items-center gap-4">
+          <button onClick={toggleMusic} className={`w-11 h-11 flex items-center justify-center rounded-full border-2 transition-all ${isMusicPlaying ? 'bg-slate-900 border-brand-red' : 'bg-slate-800 border-white/10'}`}>
+            <Visualizer isPlaying={isMusicPlaying} />
+          </button>
+          {currentUser ? (
+            <button onClick={() => { setDashboardTab('bookings'); setShowDashboard(!showDashboard); }} className="px-6 py-2 bg-white text-slate-900 rounded-xl text-[9px] font-black uppercase tracking-widest">Sanctuary</button>
+          ) : (
+            <button onClick={() => setShowAuthModal(true)} className="px-6 py-2 bg-brand-red text-white rounded-xl text-[9px] font-black uppercase tracking-widest">Login</button>
+          )}
         </div>
       </nav>
 
       <main className="flex-1 pt-24 px-6 max-w-7xl mx-auto w-full">
-        {showAdmin ? (
-          <AdminPanel 
-            events={events} 
-            bookings={globalBookings} 
-            userUid={currentUser?.uid}
-            onClose={() => setShowAdmin(false)} 
-            onRefresh={() => fetchData(currentUser?.uid)} 
-          />
-        ) : showDashboard ? (
-          <Dashboard 
-            events={events} bookings={globalBookings}
-            initialTab={dashboardTab}
-            currentUser={currentUser}
-            onOpenAdmin={() => setShowAdmin(true)} onOpenPolicy={setActivePolicy} onRefreshEvents={() => fetchData(currentUser?.uid)}
-          />
+        {showDashboard ? (
+          <Dashboard events={events} bookings={globalBookings} initialTab={dashboardTab} currentUser={currentUser} onRefreshEvents={() => fetchData(currentUser?.uid)} onOpenPolicy={setActivePolicy} />
         ) : (
           <div className="space-y-16 pb-20">
-            {/* Hero Section */}
-            <section className="text-center space-y-10">
-              <div className="inline-block relative">
-                <div className="absolute inset-0 bg-brand-lime/10 blur-xl"></div>
-                <div className="relative glass-card px-4 py-1 rounded-full border border-white/10 animate-float">
-                  <span className="text-slate-200 text-[9px] font-black uppercase tracking-[0.3em] italic">Aura: {AURA_STATES[auraIndex]}</span>
-                </div>
-              </div>
-              <h1 className="text-5xl md:text-8xl font-display font-black italic tracking-tighter leading-none text-slate-200 uppercase">
-                Find Your <br /><span className="frequency-text-gradient animate-freq-pulse">Frequency</span>
+            <header className="text-center space-y-10 pt-10">
+              <h1 className="text-6xl md:text-9xl font-display font-black italic tracking-tighter leading-none uppercase">
+                Find Your <span className="frequency-text-gradient">Frequency</span>
               </h1>
-              
-              <div id="mood-search-container" className="w-full max-w-3xl mx-auto space-y-12">
-                 <div className="relative dark-glass-card rounded-[2.5rem] p-4 flex flex-col md:flex-row items-center gap-3 ai-glow overflow-hidden group">
-                    <div className="flex-1 w-full px-5 py-3 flex items-center gap-4 z-10">
-                       <input 
-                         type="text" 
-                         placeholder="How is your energy? Or search by name..."
-                         className="w-full bg-transparent border-none text-slate-200 text-lg font-medium placeholder:text-slate-600 focus:outline-none"
-                         value={userMood} 
-                         onChange={(e) => handleSearchInputChange(e.target.value)}
-                         onKeyDown={(e) => e.key === 'Enter' && handleMoodSearch(userMood)}
-                       />
-                    </div>
-                    <button 
-                      onClick={() => handleMoodSearch(userMood)} 
-                      disabled={isAiLoading || !userMood.trim()}
-                      className={`w-full md:w-auto px-10 py-4 rounded-[1.5rem] font-black uppercase text-[11px] tracking-[0.2em] transition-all shadow-2xl flex items-center justify-center gap-2 ${
-                        isAiLoading || !userMood.trim() 
-                        ? 'bg-slate-800 text-slate-500 cursor-not-allowed' 
-                        : 'bg-brand-red text-slate-200 hover:bg-slate-100 hover:text-brand-red shadow-brand-red/40'
-                      }`}
-                    >
-                      {isAiLoading ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
-                          Calibrating...
-                        </>
-                      ) : 'SEARCH 🔍'}
-                    </button>
+              <div className="max-w-3xl mx-auto space-y-6">
+                 <div className="relative dark-glass-card rounded-[2.5rem] p-4 flex items-center gap-3">
+                    <input type="text" placeholder="How is your energy today?" className="flex-1 bg-transparent px-6 text-slate-200 text-lg outline-none" value={userMood} onChange={(e) => { setUserMood(e.target.value); setSearchQuery(e.target.value); if(!e.target.value) setAiRec(null); }} />
+                    <button onClick={() => handleMoodSearch(userMood)} className="bg-brand-red text-white px-10 py-4 rounded-3xl font-black uppercase text-[10px]">SEARCH</button>
                  </div>
-
-                 <div className="flex flex-wrap justify-center gap-3">
-                    {MOODS.map(mood => {
-                      const isActive = userMood.toLowerCase() === mood.label.toLowerCase();
-                      return (
-                        <button 
-                          key={mood.label} 
-                          onClick={() => { handleSearchInputChange(mood.label); handleMoodSearch(mood.label); }} 
-                          className={`group relative flex flex-col items-center justify-center p-0.5 rounded-[1.5rem] transition-all duration-500 hover:-translate-y-1 ${isActive ? 'scale-105' : ''}`} 
-                          style={{ minWidth: '80px' }}
-                        >
-                          <div className={`absolute inset-0 rounded-[1.5rem] blur-xl opacity-0 transition-opacity duration-500 group-hover:opacity-30 ${isActive ? 'opacity-50' : ''}`} style={{ backgroundColor: mood.glow }}></div>
-                          <div className={`relative z-10 w-full h-full p-2.5 rounded-[1.5rem] backdrop-blur-xl border transition-all duration-300 flex flex-col items-center gap-1.5 ${isActive ? `${mood.bg} border-transparent shadow-lg` : 'bg-slate-900/40 border-white/10'}`}>
-                            <span className={`text-2xl transition-transform duration-300 group-hover:scale-110 ${isActive ? 'animate-bounce' : ''}`}>{mood.emoji}</span>
-                            <span className={`text-[8px] font-black uppercase tracking-[0.15em] italic ${isActive ? 'text-slate-200' : 'text-slate-400 group-hover:text-slate-200'}`}>{mood.label}</span>
-                          </div>
-                        </button>
-                      );
-                    })}
+                 <div className="flex flex-wrap justify-center gap-2">
+                    {MOODS.map(m => (
+                      <button key={m.label} onClick={() => { setUserMood(m.label); setSearchQuery(m.label); handleMoodSearch(m.label); }} className="bg-slate-900/40 border border-white/10 px-5 py-2.5 rounded-full flex items-center gap-2 hover:bg-slate-800 transition-all">
+                        <span>{m.emoji}</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest">{m.label}</span>
+                      </button>
+                    ))}
                  </div>
-
-                 {aiRec && (
-                   <div className="animate-in slide-in-from-top-6 duration-700 pt-4">
-                     <div className="relative glass-card rounded-[3rem] p-8 border border-white/10 shadow-3xl flex flex-col md:flex-row items-center gap-8">
-                        <div className="w-16 h-16 rounded-full bg-brand-red flex items-center justify-center shrink-0 shadow-2xl relative"><span className="text-2xl animate-pulse">✨</span></div>
-                        <div className="flex-1 text-center md:text-left">
-                          <p className="text-[11px] font-black uppercase tracking-[0.3em] text-brand-red mb-2 italic">Frequency Harmonization</p>
-                          <p className="text-lg font-bold italic text-slate-100 leading-tight">"{aiRec.reasoning}"</p>
-                        </div>
-                        <button onClick={() => { setAiRec(null); setUserMood(''); setSearchQuery(''); }} className="p-3 text-slate-400 hover:text-brand-red transition-all transform hover:rotate-90">
-                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
-                     </div>
-                   </div>
-                 )}
               </div>
-            </section>
+            </header>
 
-            {/* Community Pulse Ticker */}
-            <div className="relative z-10 -mx-6">
-               <CommunityPulseTicker eventsCount={events.length} />
-            </div>
-
-            {/* Global Discovery Feed Section */}
-            <section id="event-grid-container" className="space-y-12 relative">
-              <div className="absolute inset-0 -z-10 opacity-10" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
-              
-              <div className="flex flex-col space-y-10 border-b border-white/5 pb-12">
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <span className="text-brand-accent text-[11px] font-black uppercase tracking-[0.5em] drop-shadow-[0_0_8px_rgba(0,245,255,0.4)]">Peer-to-Peer Network</span>
-                      <div className="h-0.5 w-12 bg-brand-accent/30 rounded-full"></div>
-                    </div>
-                    <h2 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter text-slate-100 leading-[0.9]">
-                      Global Discovery <br /> <span className="text-brand-accent">Feed</span>
-                    </h2>
-                  </div>
-                  <div className="flex flex-col items-end gap-3">
-                    <div className="flex items-center gap-4 bg-slate-900/80 backdrop-blur-xl px-6 py-3.5 rounded-2xl border border-white/10 shadow-2xl">
-                       <div className="flex items-center gap-3">
-                          <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_#10b981]"></div>
-                          <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em]">Sanctuary Active</span>
-                       </div>
-                       <div className="h-5 w-[1px] bg-white/10"></div>
-                       <div className="flex items-center gap-2">
-                         <span className="text-[10px] font-black text-slate-200 uppercase tracking-[0.2em]">{events.length}</span>
-                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Frequencies</span>
-                       </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide py-2">
-                  {CATEGORIES.map(cat => (
-                    <button 
-                      key={cat} 
-                      onClick={() => { setSelectedCategory(cat); setAiRec(null); }} 
-                      className={`whitespace-nowrap px-8 py-4 rounded-[1.75rem] text-[11px] font-black uppercase tracking-[0.2em] transition-all border-2 ${
-                        selectedCategory === cat 
-                        ? 'bg-slate-100 border-slate-100 text-slate-900 shadow-[0_15px_40px_rgba(255,255,255,0.15)] translate-y-[-4px]' 
-                        : 'bg-slate-900/40 border-white/5 text-slate-500 hover:border-white/20 hover:text-slate-200 hover:bg-slate-800/60'
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-10">
-                {filteredEvents.map(event => (
-                  <div key={event.id} className="animate-slide-up">
-                    <EventCard event={event} onClick={setSelectedEvent} />
-                  </div>
+            <section className="space-y-12">
+              <div className="flex items-center gap-4 overflow-x-auto scrollbar-hide py-2">
+                {CATEGORIES.map(cat => (
+                  <button key={cat} onClick={() => setSelectedCategory(cat)} className={`whitespace-nowrap px-8 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest border-2 transition-all ${selectedCategory === cat ? 'bg-white border-white text-slate-900' : 'bg-transparent border-white/10 text-slate-500'}`}>
+                    {cat}
+                  </button>
                 ))}
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+                {filteredEvents.map(e => <EventCard key={e.id} event={e} onClick={setSelectedEvent} />)}
               </div>
             </section>
           </div>
         )}
       </main>
 
-      <footer className="py-20 px-6 border-t border-white/5 bg-black/80 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-12 text-[11px] font-black tracking-[0.4em] text-slate-500 uppercase italic">
-          <div className="flex flex-col md:flex-row items-center gap-8">
-            <div className="flex items-center gap-4">
-              <ConnectionLogo className="w-8 h-8 opacity-60" />
-              <span className="text-slate-300 tracking-[0.2em]">MAKEMYDAYS — SANCTUARY NETWORK © 2024</span>
-            </div>
-          </div>
-          <div className="flex gap-12">
-            {['Terms', 'Privacy', 'Refund'].map(l => (
-              <button key={l} className="hover:text-brand-red transition-all hover:tracking-[0.6em] duration-500" onClick={() => setActivePolicy(l.toLowerCase() as any)}>{l}</button>
-            ))}
-          </div>
-        </div>
-      </footer>
-
-      {activePolicy && <LegalModal type={activePolicy} onClose={() => setActivePolicy(null)} />}
       {selectedEvent && <BookingModal event={selectedEvent} onClose={() => setSelectedEvent(null)} onConfirm={async (slot, date, guestName, guestPhone) => {
-          if (!selectedEvent || !currentUser) return;
-          const booking: Booking = { 
-            id: Math.random().toString(36).substr(2, 9), 
-            eventId: selectedEvent.id, 
-            eventTitle: selectedEvent.title, 
-            category: selectedEvent.category, 
-            time: slot.time, 
-            eventDate: date, 
-            price: selectedEvent.price, 
-            bookedAt: new Date().toISOString(), 
-            userName: guestName || currentUser.name, 
-            userPhone: guestPhone || currentUser.phone || ''
-          };
+          if (!currentUser) return;
+          const booking: Booking = { id: Math.random().toString(36).substr(2, 9), eventId: selectedEvent.id, eventTitle: selectedEvent.title, category: selectedEvent.category, time: slot.time, eventDate: date, price: selectedEvent.price, bookedAt: new Date().toISOString(), userName: guestName, userPhone: guestPhone };
           await api.saveBooking(booking, currentUser.uid);
           fetchData(currentUser.uid);
           setSelectedEvent(null);
       }} />}
-      {showAuthModal && (
-        <AuthModal 
-          onSuccess={() => setShowAuthModal(false)} 
-          onClose={() => setShowAuthModal(false)} 
-        />
-      )}
+      
+      {showAuthModal && <AuthModal onSuccess={() => setShowAuthModal(false)} onClose={() => setShowAuthModal(false)} />}
+      {activePolicy && <LegalModal type={activePolicy} onClose={() => setActivePolicy(null)} />}
       <ChatBot />
     </div>
   );

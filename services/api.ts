@@ -34,11 +34,7 @@ export const api = {
         });
       }
     } catch (e: any) {
-      if (e.code === 'permission-denied') {
-        console.warn("Profile Sync: Permission denied. Ensure Firestore Rules allow writes to /users/{uid}");
-      } else {
-        console.error("Profile sync failed:", e);
-      }
+      console.error("Profile sync failed:", e);
     }
   },
 
@@ -46,23 +42,17 @@ export const api = {
   async getEvents(): Promise<Event[]> {
     try {
       const eventsCol = collection(db, 'events');
-      // Note: This requires a composite index if the collection is large.
-      // For new projects, Firestore might throw a permission-denied error if rules aren't set.
       const q = query(eventsCol, orderBy('createdAt', 'desc'));
       const snapshot = await getDocs(q);
       
-      if (snapshot.empty) {
-        return INITIAL_EVENTS;
-      }
-      
+      if (snapshot.empty) return INITIAL_EVENTS;
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
     } catch (e: any) {
       if (e.code === 'permission-denied') {
-        console.error("Firestore Error: Missing or insufficient permissions to read 'events'. ACTION: Update your Firestore Rules in Firebase Console to 'allow read: if true;' for the events collection.");
-      } else {
-        console.error("Error fetching events:", e);
+        // We throw the error so the UI can catch it and show the warning banner
+        throw e;
       }
-      // Fallback to initial local events so the UI doesn't break
+      console.error("Error fetching events:", e);
       return INITIAL_EVENTS;
     }
   },
@@ -74,14 +64,9 @@ export const api = {
         ownerUid: userUid,
         createdAt: event.createdAt || new Date().toISOString()
       };
-      
       const eventRef = doc(db, 'events', event.id);
       await setDoc(eventRef, eventData);
     } catch (e: any) {
-      if (e.code === 'permission-denied') {
-        throw new Error("Permission Denied: You don't have rights to host events. Ensure your Firestore Rules allow 'write' for authenticated users.");
-      }
-      console.error("Error saving event:", e);
       throw e;
     }
   },
@@ -90,11 +75,8 @@ export const api = {
     try {
       const eventRef = doc(db, 'events', eventId);
       const eventSnap = await getDoc(eventRef);
-      
       if (eventSnap.exists() && eventSnap.data().ownerUid === userUid) {
         await deleteDoc(eventRef);
-      } else {
-        throw new Error("Unauthorized or event not found");
       }
     } catch (e: any) {
       console.error("Error deleting event:", e);
@@ -105,12 +87,12 @@ export const api = {
   // AI Recommendations
   async getRecommendations(mood: string, events: Event[]): Promise<AIRecommendation> {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const eventContext = events.map(e => ({ id: e.id, title: e.title, category: e.category, description: e.description }));
+    const eventContext = events.map(e => ({ id: e.id, title: e.title, category: e.category }));
 
     try {
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
-        contents: `USER MOOD: "${mood}". MATCH 1-3 EVENTS. REASONING START WITH EMOJI. EVENTS: ${JSON.stringify(eventContext)}`,
+        contents: `MOOD: "${mood}". MATCH 1-3 EVENTS. JSON ONLY. EVENTS: ${JSON.stringify(eventContext)}`,
         config: {
           responseMimeType: "application/json",
           responseSchema: {
@@ -125,8 +107,7 @@ export const api = {
       });
       return JSON.parse(response.text.trim());
     } catch (error) {
-      console.error("AI recommendation failed:", error);
-      return { reasoning: "✨ We recommend exploring these sessions.", suggestedEventIds: events.slice(0, 3).map(e => e.id) };
+      return { reasoning: "✨ Explore these high-frequency sessions.", suggestedEventIds: events.slice(0, 3).map(e => e.id) };
     }
   },
 
@@ -138,11 +119,6 @@ export const api = {
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Booking));
     } catch (e: any) {
-      if (e.code === 'permission-denied') {
-        console.warn("Bookings: Permission denied. This is expected if the user is logged out or rules are strict.");
-      } else {
-        console.error("Error fetching bookings:", e);
-      }
       return [];
     }
   },
@@ -150,17 +126,9 @@ export const api = {
   async saveBooking(booking: Booking, userUid: string): Promise<void> {
     try {
       const bookingsCol = collection(db, 'bookings');
-      const bookingData = {
-        ...booking,
-        userUid: userUid,
-        bookedAt: new Date().toISOString()
-      };
+      const bookingData = { ...booking, userUid, bookedAt: new Date().toISOString() };
       await addDoc(bookingsCol, bookingData);
     } catch (e: any) {
-      if (e.code === 'permission-denied') {
-        throw new Error("Permission Denied: Unable to anchor booking. Check Firestore Rules for the 'bookings' collection.");
-      }
-      console.error("Error saving booking:", e);
       throw e;
     }
   }

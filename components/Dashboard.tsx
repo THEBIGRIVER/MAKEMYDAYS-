@@ -73,10 +73,12 @@ const CreateEventModal: React.FC<{ userUid: string, onClose: () => void, onSucce
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validation Fix: Allow price to be 0
+    // Explicitly validate hostPhone exists and is long enough
+    const cleanPhone = (formData.hostPhone || '').replace(/\D/g, '');
     const isPriceValid = formData.price !== undefined && !isNaN(Number(formData.price));
-    if (!formData.title || !isPriceValid || !formData.image || !singleDate || !formData.hostPhone) {
-      alert("Please complete all sections to finalize the launch. Ensure an image is selected.");
+    
+    if (!formData.title || !isPriceValid || !formData.image || !singleDate || cleanPhone.length < 10) {
+      alert("Please complete all sections. Ensure WhatsApp number is at least 10 digits and an image aura is selected.");
       return;
     }
 
@@ -90,17 +92,17 @@ const CreateEventModal: React.FC<{ userUid: string, onClose: () => void, onSucce
         description: formData.description || '',
         image: formData.image || '',
         dates: [new Date(singleDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })],
-        hostPhone: formData.hostPhone || '',
+        hostPhone: cleanPhone, // Save cleaned string version
         slots: [formData.slots![0]],
         createdAt: new Date().toISOString()
       };
       await api.saveEvent(newEvent, userUid);
-      localStorage.setItem('mmd_host_phone', formData.hostPhone!);
+      localStorage.setItem('mmd_host_phone', cleanPhone);
       setIsSuccessfullyLaunched(true);
       setTimeout(() => { onSuccess(); onClose(); }, 2500);
     } catch (err: any) {
       console.error("Launch Error:", err);
-      alert(`Launch disrupted: ${err.message || "Permission denied. Check your Firestore rules."}`);
+      alert(`Launch disrupted: ${err.message || "Permission denied. Please check your console for instructions on fixing Firestore rules."}`);
     } finally { setIsSubmitting(false); }
   };
 
@@ -128,24 +130,24 @@ const CreateEventModal: React.FC<{ userUid: string, onClose: () => void, onSucce
         </div>
         <form onSubmit={handleSubmit} className="p-10 space-y-6 max-h-[70vh] overflow-y-auto scrollbar-hide">
           <div className="grid grid-cols-2 gap-4">
-            <input required placeholder="Event Title" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
-            <select className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value as Category})}>
+            <input required placeholder="Event Title" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white outline-none focus:border-brand-red transition-all" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
+            <select className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white outline-none focus:border-brand-red transition-all" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value as Category})}>
               <option value="Activity">Activity</option><option value="Shows">Shows</option><option value="Mindfulness">Mindfulness</option><option value="Workshop">Workshop</option><option value="MMD Originals">MMD Originals</option>
             </select>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <input required type="date" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white" value={singleDate} onChange={e => setSingleDate(e.target.value)} />
-            <input required type="time" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white" value={formData.slots![0].time} onChange={e => setFormData({...formData, slots: [{...formData.slots![0], time: e.target.value, availableSeats: 20}]})} />
+            <input required type="date" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white outline-none focus:border-brand-red transition-all" value={singleDate} onChange={e => setSingleDate(e.target.value)} />
+            <input required type="time" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white outline-none focus:border-brand-red transition-all" value={formData.slots![0].time} onChange={e => setFormData({...formData, slots: [{...formData.slots![0], time: e.target.value, availableSeats: 20}]})} />
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <input required type="number" placeholder="Price (₹) - Use 0 for Free" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value === '' ? '' : Number(e.target.value)})} />
-            <input required type="tel" placeholder="Your WhatsApp Number" className="w-full bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 text-emerald-400 font-bold" value={formData.hostPhone} onChange={e => setFormData({...formData, hostPhone: e.target.value.replace(/\D/g, '')})} />
+            <input required type="number" placeholder="Price (₹) - Use 0 for Free" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white outline-none focus:border-brand-red transition-all" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value === '' ? '' : Number(e.target.value)})} />
+            <input required type="tel" placeholder="WhatsApp Number" className="w-full bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 text-emerald-400 font-bold outline-none focus:border-emerald-400 transition-all" value={formData.hostPhone} onChange={e => setFormData({...formData, hostPhone: e.target.value.replace(/\D/g, '')})} />
           </div>
           <div onClick={() => !isSubmitting && fileInputRef.current?.click()} className="w-full h-32 bg-white/5 border-2 border-dashed border-white/10 rounded-2xl flex items-center justify-center cursor-pointer hover:border-brand-red transition-all relative overflow-hidden">
             <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
             {imagePreview ? <img src={imagePreview} className="w-full h-full object-cover" /> : <div className="text-center"><p className="text-slate-500 font-black uppercase text-[10px]">Add Image Aura</p><p className="text-slate-600 text-[8px] mt-1 font-bold italic">(Required to Launch)</p></div>}
           </div>
-          <textarea required placeholder="Description..." rows={3} className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white resize-none" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
+          <textarea required placeholder="Description..." rows={3} className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white resize-none outline-none focus:border-brand-red transition-all" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
           <button type="submit" disabled={isSubmitting} className="w-full py-5 bg-slate-200 text-slate-900 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-brand-red hover:text-white transition-all disabled:opacity-50">
             {isSubmitting ? "Broadcasting Frequency..." : "Launch Experience"}
           </button>
