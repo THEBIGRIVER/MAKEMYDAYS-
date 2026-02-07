@@ -21,7 +21,7 @@ const MOODS = [
   { label: "Earthy", emoji: "🍂", color: "amber-700" }
 ];
 
-const CATEGORIES: (Category | 'All' | 'Community')[] = ['All', 'Community', 'Shows', 'Activity', 'MMD Originals', 'Mindfulness', 'Workshop'];
+const CATEGORIES: (Category | 'All' | 'Community')[] = ['All', 'Community', 'Shows', 'Activity', 'MMD Originals', 'Mindfulness', 'Workshop', 'Therapy'];
 
 const ConnectionLogo = ({ className = "w-8 h-8" }: { className?: string }) => (
   <svg viewBox="0 0 100 100" className={`${className} fill-current text-brand-moss active:scale-95 transition-transform duration-500`}>

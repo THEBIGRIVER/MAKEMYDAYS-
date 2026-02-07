@@ -1,5 +1,5 @@
 
-export type Category = "Shows" | "Activity" | "MMD Originals" | "Mindfulness" | "Workshop";
+export type Category = "Shows" | "Activity" | "MMD Originals" | "Mindfulness" | "Workshop" | "Therapy";
 
 export interface Slot {
   time: string;

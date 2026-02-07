@@ -32,7 +32,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, onClose }) => {
     setIsProcessing(true);
     const provider = new GoogleAuthProvider();
     
-    // Web Client ID provided by user
     provider.setCustomParameters({ 
       prompt: 'select_account',
       client_id: '751688831675-hpjh8e4fd37d9fh81ri5edmvml5pqsjo.apps.googleusercontent.com'
@@ -76,12 +75,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, onClose }) => {
               </button>
             </div>
             <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">
-              Add it in: <span className="text-slate-900">Firebase Console > Auth > Settings > Authorized Domains</span>
+              Add it in: <span className="text-slate-900">Firebase Console &gt; Auth &gt; Settings &gt; Authorized Domains</span>
             </p>
           </div>
         );
       } else if (err.code === 'auth/popup-closed-by-user') {
-        // Just clear processing if user cancels
+        // Handled silently
       } else {
         setError("Celestial alignment failed. Please check your connection or try again.");
       }
@@ -187,7 +186,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, onClose }) => {
           </div>
 
           <div className="relative z-10">
-            <span className="text-brand-red text-[9px] font-black uppercase tracking-[0.4em] mb-2 block">Identity Sanctuary</span>
+            <span className="text-brand-moss text-[9px] font-black uppercase tracking-[0.4em] mb-2 block">Identity Sanctuary</span>
             <div className="flex gap-4 items-end">
               <h2 className="text-3xl font-black italic uppercase tracking-tighter leading-none text-slate-200">
                 {mode === 'login' ? 'Entry' : 'Manifest'}
@@ -208,14 +207,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, onClose }) => {
               </div>
             </div>
           </div>
-          <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-brand-red/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-brand-moss/10 rounded-full blur-3xl animate-pulse"></div>
         </div>
 
         <div className="p-10 pb-4">
           <button 
             onClick={handleGoogleLogin}
             disabled={isProcessing}
-            className="w-full py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl flex items-center justify-center gap-3 group hover:bg-white hover:border-brand-red transition-all shadow-sm active:scale-95 disabled:opacity-50"
+            className="w-full py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl flex items-center justify-center gap-3 group hover:bg-white hover:border-brand-moss transition-all shadow-sm active:scale-95 disabled:opacity-50"
           >
             {isProcessing ? (
               <div className="w-5 h-5 border-2 border-slate-900/10 border-t-slate-900 rounded-full animate-spin"></div>
@@ -246,7 +245,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, onClose }) => {
                 required
                 type="text" 
                 placeholder="Explorer Name"
-                className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-base font-bold text-slate-900 outline-none focus:border-brand-red transition-all"
+                className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-base font-bold text-slate-900 outline-none focus:border-brand-moss transition-all"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 disabled={isProcessing}
@@ -260,7 +259,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, onClose }) => {
               required
               type="email" 
               placeholder="explorer@sanctuary.com"
-              className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-base font-bold text-slate-900 outline-none focus:border-brand-red transition-all"
+              className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-base font-bold text-slate-900 outline-none focus:border-brand-moss transition-all"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isProcessing}
@@ -273,7 +272,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, onClose }) => {
               required
               type="password" 
               placeholder="••••••••"
-              className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-base font-bold text-slate-900 outline-none focus:border-brand-red transition-all"
+              className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-base font-bold text-slate-900 outline-none focus:border-brand-moss transition-all"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={isProcessing}
@@ -281,8 +280,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, onClose }) => {
           </div>
 
           {error && (
-            <div className={`p-6 rounded-2xl border transition-all duration-500 ${typeof error === 'string' ? 'bg-brand-red/10 border-brand-red/20' : 'bg-slate-50 border-slate-200'}`}>
-              <div className={typeof error === 'string' ? 'text-brand-red text-[10px] font-black uppercase text-center tracking-wider leading-relaxed' : ''}>
+            <div className={`p-6 rounded-2xl border transition-all duration-500 ${typeof error === 'string' ? 'bg-brand-moss/10 border-brand-moss/20' : 'bg-slate-50 border-slate-200'}`}>
+              <div className={typeof error === 'string' ? 'text-brand-moss text-[10px] font-black uppercase text-center tracking-wider leading-relaxed' : ''}>
                 {error}
               </div>
             </div>

@@ -16,7 +16,8 @@ const CATEGORY_THEMES: Record<Category, { color: string, glow: string }> = {
   "Activity": { color: "#10B981", glow: "rgba(16,185,129,0.15)" },
   "Mindfulness": { color: "#D1FAE5", glow: "rgba(209,250,229,0.2)" },
   "Workshop": { color: "#B45309", glow: "rgba(180,83,9,0.15)" },
-  "MMD Originals": { color: "#059669", glow: "rgba(5,150,105,0.15)" }
+  "MMD Originals": { color: "#059669", glow: "rgba(5,150,105,0.15)" },
+  "Therapy": { color: "#451A03", glow: "rgba(69,26,3,0.15)" }
 };
 
 const EventCard: React.FC<EventCardProps> = ({ event, onClick, id }) => {
