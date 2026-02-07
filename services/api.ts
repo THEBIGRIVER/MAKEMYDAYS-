@@ -33,8 +33,12 @@ export const api = {
           role: user.role || 'user'
         });
       }
-    } catch (e) {
-      console.error("Profile sync failed:", e);
+    } catch (e: any) {
+      if (e.code === 'permission-denied') {
+        console.warn("Profile Sync: Permission denied. Ensure Firestore Rules allow writes to /users/{uid}");
+      } else {
+        console.error("Profile sync failed:", e);
+      }
     }
   },
 
@@ -42,18 +46,23 @@ export const api = {
   async getEvents(): Promise<Event[]> {
     try {
       const eventsCol = collection(db, 'events');
+      // Note: This requires a composite index if the collection is large.
+      // For new projects, Firestore might throw a permission-denied error if rules aren't set.
       const q = query(eventsCol, orderBy('createdAt', 'desc'));
       const snapshot = await getDocs(q);
       
       if (snapshot.empty) {
-        // Optional: Seed initial events if DB is empty (First time run)
-        // For production, this should be handled by a migration script
         return INITIAL_EVENTS;
       }
       
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
-    } catch (e) {
-      console.error("Error fetching events:", e);
+    } catch (e: any) {
+      if (e.code === 'permission-denied') {
+        console.error("Firestore Error: Missing or insufficient permissions to read 'events'. ACTION: Update your Firestore Rules in Firebase Console to 'allow read: if true;' for the events collection.");
+      } else {
+        console.error("Error fetching events:", e);
+      }
+      // Fallback to initial local events so the UI doesn't break
       return INITIAL_EVENTS;
     }
   },
@@ -66,11 +75,12 @@ export const api = {
         createdAt: event.createdAt || new Date().toISOString()
       };
       
-      // Remove ID if it's a new event being handled by addDoc
-      // or use setDoc if we want to preserve IDs
       const eventRef = doc(db, 'events', event.id);
       await setDoc(eventRef, eventData);
-    } catch (e) {
+    } catch (e: any) {
+      if (e.code === 'permission-denied') {
+        throw new Error("Permission Denied: You don't have rights to host events. Ensure your Firestore Rules allow 'write' for authenticated users.");
+      }
       console.error("Error saving event:", e);
       throw e;
     }
@@ -86,7 +96,7 @@ export const api = {
       } else {
         throw new Error("Unauthorized or event not found");
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error("Error deleting event:", e);
       throw e;
     }
@@ -94,7 +104,6 @@ export const api = {
 
   // AI Recommendations
   async getRecommendations(mood: string, events: Event[]): Promise<AIRecommendation> {
-    // Guidelines specify using process.env.API_KEY directly when initializing.
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const eventContext = events.map(e => ({ id: e.id, title: e.title, category: e.category, description: e.description }));
 
@@ -114,7 +123,6 @@ export const api = {
           }
         }
       });
-      // The Gemini API response.text property directly returns the generated string.
       return JSON.parse(response.text.trim());
     } catch (error) {
       console.error("AI recommendation failed:", error);
@@ -129,8 +137,12 @@ export const api = {
       const q = query(bookingsCol, where('userUid', '==', userUid), orderBy('bookedAt', 'desc'));
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Booking));
-    } catch (e) {
-      console.error("Error fetching bookings:", e);
+    } catch (e: any) {
+      if (e.code === 'permission-denied') {
+        console.warn("Bookings: Permission denied. This is expected if the user is logged out or rules are strict.");
+      } else {
+        console.error("Error fetching bookings:", e);
+      }
       return [];
     }
   },
@@ -144,7 +156,10 @@ export const api = {
         bookedAt: new Date().toISOString()
       };
       await addDoc(bookingsCol, bookingData);
-    } catch (e) {
+    } catch (e: any) {
+      if (e.code === 'permission-denied') {
+        throw new Error("Permission Denied: Unable to anchor booking. Check Firestore Rules for the 'bookings' collection.");
+      }
       console.error("Error saving booking:", e);
       throw e;
     }

@@ -25,14 +25,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, onClose }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | React.ReactNode>('');
 
   const handleGoogleLogin = async () => {
     setError('');
     setIsProcessing(true);
     const provider = new GoogleAuthProvider();
     
-    // Add the Web Client ID as a hint for the provider
+    // Web Client ID provided by user
     provider.setCustomParameters({ 
       prompt: 'select_account',
       client_id: '751688831675-hpjh8e4fd37d9fh81ri5edmvml5pqsjo.apps.googleusercontent.com'
@@ -57,10 +57,31 @@ const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, onClose }) => {
       
       if (err.code === 'auth/unauthorized-domain') {
         const currentDomain = window.location.hostname;
-        setError(`Domain Unauthorized: Please add "${currentDomain}" to your Firebase Console > Authentication > Settings > Authorized Domains.`);
-        console.warn(`ACTION REQUIRED: Add "${currentDomain}" to Authorized Domains in Firebase Console.`);
+        setError(
+          <div className="text-left space-y-3">
+            <p className="font-black text-brand-red uppercase text-[10px] tracking-widest">Action Required: Domain Unauthorized</p>
+            <p className="text-[11px] leading-relaxed text-slate-600 font-bold italic">
+              Firebase security blocks logins from unknown domains. You must authorize this domain to proceed.
+            </p>
+            <div className="bg-slate-100 p-3 rounded-xl border border-slate-200 flex items-center justify-between">
+              <code className="text-[10px] font-black text-slate-900">{currentDomain}</code>
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(currentDomain);
+                  alert('Domain copied to clipboard!');
+                }}
+                className="text-[8px] font-black uppercase text-brand-red hover:underline"
+              >
+                Copy
+              </button>
+            </div>
+            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">
+              Add it in: <span className="text-slate-900">Firebase Console > Auth > Settings > Authorized Domains</span>
+            </p>
+          </div>
+        );
       } else if (err.code === 'auth/popup-closed-by-user') {
-        // Do nothing, user just closed the window
+        // Just clear processing if user cancels
       } else {
         setError("Celestial alignment failed. Please check your connection or try again.");
       }
@@ -260,10 +281,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, onClose }) => {
           </div>
 
           {error && (
-            <div className="p-4 bg-brand-red/10 border border-brand-red/20 rounded-2xl">
-              <p className="text-brand-red text-[10px] font-black uppercase text-center tracking-wider leading-relaxed">
+            <div className={`p-6 rounded-2xl border transition-all duration-500 ${typeof error === 'string' ? 'bg-brand-red/10 border-brand-red/20' : 'bg-slate-50 border-slate-200'}`}>
+              <div className={typeof error === 'string' ? 'text-brand-red text-[10px] font-black uppercase text-center tracking-wider leading-relaxed' : ''}>
                 {error}
-              </p>
+              </div>
             </div>
           )}
 
