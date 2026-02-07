@@ -17,6 +17,18 @@ import {
   orderBy
 } from 'firebase/firestore';
 
+/**
+ * FIRESTORE RULES REQUIRED:
+ * rules_version = '2';
+ * service cloud.firestore {
+ *   match /databases/{database}/documents {
+ *     match /events/{event} { allow read: if true; allow write: if request.auth != null; }
+ *     match /users/{userId} { allow read, write: if request.auth != null && request.auth.uid == userId; }
+ *     match /bookings/{booking} { allow read, write: if request.auth != null; }
+ *   }
+ * }
+ */
+
 export const api = {
   // User Profile Sync
   async syncUserProfile(user: User): Promise<void> {
@@ -34,7 +46,7 @@ export const api = {
         });
       }
     } catch (e: any) {
-      console.error("Profile sync failed:", e);
+      console.warn("Profile sync paused (Check Firestore Rules):", e.message);
     }
   },
 
@@ -48,11 +60,13 @@ export const api = {
       if (snapshot.empty) return INITIAL_EVENTS;
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
     } catch (e: any) {
-      if (e.code === 'permission-denied') {
-        // We throw the error so the UI can catch it and show the warning banner
-        throw e;
+      if (e.code === 'permission-denied' || e.message?.toLowerCase().includes('permissions')) {
+        console.warn("FIRESTORE ACCESS BLOCKED: Using local experience data as fallback.");
+        // Signal the UI to show the rules helper, but don't crash
+        const error = new Error('permission-denied');
+        (error as any).code = 'permission-denied';
+        throw error;
       }
-      console.error("Error fetching events:", e);
       return INITIAL_EVENTS;
     }
   },
@@ -67,6 +81,7 @@ export const api = {
       const eventRef = doc(db, 'events', event.id);
       await setDoc(eventRef, eventData);
     } catch (e: any) {
+      if (e.code === 'permission-denied') throw new Error('permission-denied');
       throw e;
     }
   },
@@ -79,7 +94,7 @@ export const api = {
         await deleteDoc(eventRef);
       }
     } catch (e: any) {
-      console.error("Error deleting event:", e);
+      console.error("Delete failed:", e);
       throw e;
     }
   },
@@ -107,7 +122,7 @@ export const api = {
       });
       return JSON.parse(response.text.trim());
     } catch (error) {
-      return { reasoning: "✨ Explore these high-frequency sessions.", suggestedEventIds: events.slice(0, 3).map(e => e.id) };
+      return { reasoning: "✨ Calibrating local frequencies for you.", suggestedEventIds: events.slice(0, 3).map(e => e.id) };
     }
   },
 
@@ -129,6 +144,7 @@ export const api = {
       const bookingData = { ...booking, userUid, bookedAt: new Date().toISOString() };
       await addDoc(bookingsCol, bookingData);
     } catch (e: any) {
+      if (e.code === 'permission-denied') throw new Error('permission-denied');
       throw e;
     }
   }

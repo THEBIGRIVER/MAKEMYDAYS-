@@ -24,24 +24,34 @@ const MOODS = [
 ];
 
 const CATEGORIES: (Category | 'All' | 'Community')[] = ['All', 'Community', 'Shows', 'Activity', 'MMD Originals', 'Mindfulness', 'Workshop'];
-const AURA_STATES = ["TRUE", "SYNCED", "OPTIMAL", "PURE", "RESONATING", "FLUID", "DEEP"];
 
-const PermissionWarning = () => (
-  <div className="w-full bg-brand-red p-4 text-center animate-in slide-in-from-top duration-500">
-    <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-center gap-4">
-      <p className="text-white text-[11px] font-black uppercase tracking-widest">
-        ⚠️ Firestore Rules: Missing Permissions. Data is restricted to local samples.
-      </p>
-      <button 
-        onClick={() => {
-          const rules = `rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /events/{event} { allow read: if true; allow write: if request.auth != null; }\n    match /users/{userId} { allow read, write: if request.auth != null && request.auth.uid == userId; }\n    match /bookings/{booking} { allow read, write: if request.auth != null; }\n  }\n}`;
-          navigator.clipboard.writeText(rules);
-          alert("Safe Firestore Rules copied! Paste them in Firebase Console > Firestore > Rules");
-        }}
-        className="bg-white text-brand-red px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-xl hover:scale-105 transition-transform"
-      >
-        Copy Fixed Rules
-      </button>
+const PermissionWarning = ({ onDismiss }: { onDismiss: () => void }) => (
+  <div className="fixed top-0 left-0 right-0 z-[1000] bg-brand-red p-4 shadow-2xl animate-in slide-in-from-top duration-500 border-b border-white/20">
+    <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center animate-pulse">
+           <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+        <div>
+          <p className="text-white text-xs font-black uppercase tracking-widest leading-none">Database Protocol Locked</p>
+          <p className="text-white/70 text-[9px] font-bold uppercase mt-1 tracking-wider">Deploying in Offline Demo Mode. Update Firestore Rules to enable live hosting.</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <button 
+          onClick={() => {
+            const rules = `rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /events/{event} { allow read: if true; allow write: if request.auth != null; }\n    match /users/{userId} { allow read, write: if request.auth != null && request.auth.uid == userId; }\n    match /bookings/{booking} { allow read, write: if request.auth != null; }\n  }\n}`;
+            navigator.clipboard.writeText(rules);
+            alert("Rules copied! Paste them in Firebase Console > Firestore > Rules");
+          }}
+          className="bg-white text-brand-red px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl hover:scale-105 active:scale-95 transition-all"
+        >
+          Get Rules
+        </button>
+        <button onClick={onDismiss} className="text-white/60 hover:text-white px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-colors">
+          Dismiss
+        </button>
+      </div>
     </div>
   </div>
 );
@@ -78,13 +88,12 @@ const App: React.FC = () => {
   const [userMood, setUserMood] = useState('');
   const [showDashboard, setShowDashboard] = useState(false);
   const [dashboardTab, setDashboardTab] = useState<'bookings' | 'hosting' | 'settings'>('bookings');
-  const [showAdmin, setShowAdmin] = useState(false);
-  const [auraIndex, setAuraIndex] = useState(0);
   const [activePolicy, setActivePolicy] = useState<PolicyType | null>(null);
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [permissionError, setPermissionError] = useState(false);
+  const [dismissedWarning, setDismissedWarning] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const fetchData = useCallback(async (userUid?: string) => {
@@ -97,8 +106,9 @@ const App: React.FC = () => {
         setGlobalBookings(bks);
       }
     } catch (e: any) { 
-      if (e.code === 'permission-denied') setPermissionError(true);
-      console.error(e); 
+      if (e.message === 'permission-denied' || e.code === 'permission-denied') {
+        setPermissionError(true);
+      }
       setEvents(INITIAL_EVENTS);
     }
   }, []);
@@ -128,8 +138,7 @@ const App: React.FC = () => {
     audioRef.current = new Audio(MOOD_MUSIC_URL);
     audioRef.current.loop = true;
     audioRef.current.volume = 0.25;
-    const interval = setInterval(() => setAuraIndex(p => (p + 1) % AURA_STATES.length), 4500);
-    return () => { audioRef.current?.pause(); clearInterval(interval); };
+    return () => { audioRef.current?.pause(); };
   }, []);
 
   const toggleMusic = useCallback(() => {
@@ -158,7 +167,7 @@ const App: React.FC = () => {
 
   const filteredEvents = useMemo(() => {
     return events.filter(e => {
-      let matchCat = selectedCategory === 'All' || (selectedCategory === 'Community' ? e.hostPhone !== '917686924919' : e.category === selectedCategory);
+      let matchCat = selectedCategory === 'All' || (selectedCategory === 'Community' ? (e.hostPhone !== '917686924919' && e.hostPhone !== '7686924919') : e.category === selectedCategory);
       const query = searchQuery.toLowerCase();
       const matchText = e.title.toLowerCase().includes(query) || e.description.toLowerCase().includes(query);
       const matchAi = aiRec ? aiRec.suggestedEventIds.includes(e.id) : true;
@@ -168,9 +177,9 @@ const App: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-black mesh-bg vibe-sunny text-slate-200">
-      {permissionError && <PermissionWarning />}
+      {permissionError && !dismissedWarning && <PermissionWarning onDismiss={() => setDismissedWarning(true)} />}
       
-      <nav className="fixed top-0 left-0 right-0 z-[100] h-16 glass-card border-b border-white/10 flex items-center justify-between px-6">
+      <nav className={`fixed top-0 left-0 right-0 z-[100] h-16 glass-card border-b border-white/10 flex items-center justify-between px-6 transition-all ${permissionError && !dismissedWarning ? 'mt-16' : ''}`}>
         <div className="flex items-center gap-3 cursor-pointer group" onClick={() => { setShowDashboard(false); setAiRec(null); setSelectedCategory('All'); setSearchQuery(''); setUserMood(''); }}>
           <ConnectionLogo />
           <span className="text-xl font-black italic tracking-tighter uppercase">MakeMyDays</span>
@@ -188,7 +197,7 @@ const App: React.FC = () => {
         </div>
       </nav>
 
-      <main className="flex-1 pt-24 px-6 max-w-7xl mx-auto w-full">
+      <main className={`flex-1 px-6 max-w-7xl mx-auto w-full transition-all ${permissionError && !dismissedWarning ? 'pt-40' : 'pt-24'}`}>
         {showDashboard ? (
           <Dashboard events={events} bookings={globalBookings} initialTab={dashboardTab} currentUser={currentUser} onRefreshEvents={() => fetchData(currentUser?.uid)} onOpenPolicy={setActivePolicy} />
         ) : (
@@ -231,7 +240,7 @@ const App: React.FC = () => {
 
       {selectedEvent && <BookingModal event={selectedEvent} onClose={() => setSelectedEvent(null)} onConfirm={async (slot, date, guestName, guestPhone) => {
           if (!currentUser) return;
-          const booking: Booking = { id: Math.random().toString(36).substr(2, 9), eventId: selectedEvent.id, eventTitle: selectedEvent.title, category: selectedEvent.category, time: slot.time, eventDate: date, price: selectedEvent.price, bookedAt: new Date().toISOString(), userName: guestName, userPhone: guestPhone };
+          const booking: Booking = { id: Math.random().toString(36).substr(2, 9), eventId: selectedEvent.id, eventTitle: selectedEvent.title, category: selectedEvent.category, time: slot.time, eventDate: date, price: selectedEvent.price, bookedAt: new Date().toISOString(), userName: guestName, userPhone: guestPhone, userUid: currentUser.uid };
           await api.saveBooking(booking, currentUser.uid);
           fetchData(currentUser.uid);
           setSelectedEvent(null);

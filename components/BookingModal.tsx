@@ -19,7 +19,6 @@ const BookingModal: React.FC<BookingModalProps> = ({ event, onClose, onConfirm }
   const [guestName, setGuestName] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
   const [modalState, setModalState] = useState<ModalState>('selecting');
-  const [errorMessage, setErrorMessage] = useState('');
   const [generatedBookingId, setGeneratedBookingId] = useState('');
 
   useEffect(() => {
@@ -63,30 +62,24 @@ const BookingModal: React.FC<BookingModalProps> = ({ event, onClose, onConfirm }
     }
   }, [availableDates, event.slots]);
 
-  const validateInputs = () => {
-    if (!guestName.trim()) { alert("Please provide your name."); return false; }
-    if (guestPhone.length < 10) { alert("Please provide a valid 10-digit number."); return false; }
-    localStorage.setItem('mmd_guest_name', guestName);
-    localStorage.setItem('mmd_guest_phone', guestPhone);
-    return true;
-  };
-
   /**
-   * FIX: Robust Phone Normalization
-   * Strips non-digits, handles leading 0, and ensures 91 prefix for wa.me
+   * Enhanced Phone Normalization for WhatsApp Links:
+   * Handles domestic 0-prefix and adds 91 for standard Indian numbers.
    */
-  const normalizePhoneNumber = (phone: string): string => {
-    let cleaned = phone.toString().replace(/\D/g, ''); // Ensure string and strip non-digits
+  const normalizePhoneNumber = (phone: string | number): string => {
+    let cleaned = String(phone).replace(/\D/g, ''); 
     
-    // If it starts with 0091 or 91, it's already international
-    if (cleaned.startsWith('0091')) cleaned = cleaned.substring(2);
-    
-    // If it starts with 0, it's likely a local Indian number (e.g. 09876...)
+    // domestic Indian format (0-10 digits) -> strip 0
     if (cleaned.length === 11 && cleaned.startsWith('0')) {
       cleaned = cleaned.substring(1);
     }
     
-    // If it's 10 digits, it needs the 91 prefix
+    // Already prefixed correctly
+    if (cleaned.startsWith('91') && cleaned.length === 12) {
+      return cleaned;
+    }
+    
+    // 10 digits -> assume Indian and prefix 91
     if (cleaned.length === 10) {
       cleaned = '91' + cleaned;
     }
@@ -94,9 +87,16 @@ const BookingModal: React.FC<BookingModalProps> = ({ event, onClose, onConfirm }
     return cleaned;
   };
 
+  const validateInputs = () => {
+    if (!guestName.trim()) { alert("Please provide your name."); return false; }
+    if (guestPhone.replace(/\D/g, '').length < 10) { alert("Please provide a valid 10-digit phone number."); return false; }
+    localStorage.setItem('mmd_guest_name', guestName);
+    localStorage.setItem('mmd_guest_phone', guestPhone);
+    return true;
+  };
+
   const handleWhatsAppBooking = useCallback(() => {
-    if (!selectedSlot || !selectedDate) return;
-    if (!validateInputs()) return;
+    if (!selectedSlot || !selectedDate || !validateInputs()) return;
     
     const bookingId = `MMD-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
     const hostNumber = normalizePhoneNumber(event.hostPhone || "917686924919");
@@ -129,9 +129,13 @@ Ref: ${bookingId}`;
     window.location.href = upiUrl;
     setModalState('processing');
     setTimeout(async () => {
-      await onConfirm(selectedSlot, selectedDate, guestName, guestPhone);
-      setGeneratedBookingId(`MMD-${Math.random().toString(36).substr(2, 6).toUpperCase()}`);
-      setModalState('success');
+      try {
+        await onConfirm(selectedSlot, selectedDate, guestName, guestPhone);
+        setGeneratedBookingId(`MMD-${Math.random().toString(36).substr(2, 6).toUpperCase()}`);
+        setModalState('success');
+      } catch (err) {
+        setModalState('selecting');
+      }
     }, 2000);
   }, [event, selectedSlot, selectedDate, guestName, guestPhone, onConfirm]);
 
