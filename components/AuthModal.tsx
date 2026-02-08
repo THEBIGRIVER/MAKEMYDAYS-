@@ -75,7 +75,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, onClose }) => {
               </button>
             </div>
             <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">
-              Add it in: <span className="text-slate-900">Firebase Console &gt; Auth &gt; Settings &gt; Authorized Domains</span>
+              Add it in: <span className="text-slate-900">Firebase Console {'>'} Auth {'>'} Settings {'>'} Authorized Domains</span>
             </p>
           </div>
         );
