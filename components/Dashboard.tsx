@@ -7,16 +7,6 @@ import { auth } from '../services/firebase.ts';
 // Fixed: Changed from 'firebase/auth' to '@firebase/auth' to resolve export resolution issues in TypeScript
 import { signOut } from '@firebase/auth';
 
-interface DashboardProps {
-  events: Event[];
-  bookings: Booking[];
-  currentUser: User | null;
-  initialTab?: 'bookings' | 'hosting' | 'settings';
-  onOpenAdmin?: () => void;
-  onOpenPolicy?: (type: PolicyType) => void;
-  onRefreshEvents?: () => void;
-}
-
 const compressImage = (base64Str: string): Promise<string> => {
   return new Promise((resolve) => {
     const timeout = setTimeout(() => resolve(base64Str), 5000);
@@ -61,7 +51,9 @@ const CreateEventModal: React.FC<{ userUid: string, onClose: () => void, onSucce
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Fixed: Added const to the declaration of fileInputRef to resolve "Cannot find name 'fileInputRef'" error.
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const normalizeHostPhone = (phone: string): string => {
     let cleaned = phone.replace(/\D/g, '');
@@ -226,7 +218,6 @@ const CreateEventModal: React.FC<{ userUid: string, onClose: () => void, onSucce
           <div className="space-y-4">
             <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Contact & Exchange</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Fixed: Changed '' to 0 to satisfy the 'number' type requirement of Event.price */}
               <input required type="number" placeholder="Price (₹)" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-base outline-none focus:border-brand-red transition-all" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value === '' ? 0 : Number(e.target.value)})} />
               <input required type="tel" placeholder="WhatsApp Number" className="w-full bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 text-emerald-400 font-bold text-base outline-none focus:border-emerald-400 transition-all" value={formData.hostPhone} onChange={e => setFormData({...formData, hostPhone: e.target.value})} />
             </div>
