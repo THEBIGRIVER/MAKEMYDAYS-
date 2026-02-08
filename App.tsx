@@ -9,7 +9,8 @@ import LegalModal, { PolicyType } from './components/LegalModal.tsx';
 import AuthModal from './components/AuthModal.tsx';
 import { api } from './services/api.ts';
 import { auth } from './services/firebase.ts';
-import { onAuthStateChanged } from 'firebase/auth';
+// Fixed: Changed from 'firebase/auth' to '@firebase/auth' to resolve export resolution issues in TypeScript
+import { onAuthStateChanged } from '@firebase/auth';
 import { INITIAL_EVENTS } from './constants.ts';
 
 const FOREST_SOUNDS_URL = "https://cdn.pixabay.com/audio/2022/03/10/audio_f8396555cc.mp3";

@@ -1,7 +1,9 @@
+
 import React, { useState } from 'react';
 import { User } from '../types.ts';
 import { auth } from '../services/firebase.ts';
 import { api } from '../services/api.ts';
+// Fixed: Changed from 'firebase/auth' to '@firebase/auth' to resolve export resolution issues in TypeScript
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword,
@@ -10,7 +12,7 @@ import {
   signOut,
   GoogleAuthProvider,
   signInWithPopup
-} from 'firebase/auth';
+} from '@firebase/auth';
 
 interface AuthModalProps {
   onSuccess: () => void;
