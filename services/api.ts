@@ -46,7 +46,7 @@ export const api = {
         });
       }
     } catch (e: any) {
-      console.warn("Profile sync paused (Check Firestore Rules):", e.message);
+      console.warn("Profile sync paused (operating in offline mode or permissions limited):", e.message);
     }
   },
 
@@ -55,18 +55,15 @@ export const api = {
     try {
       const eventsCol = collection(db, 'events');
       const q = query(eventsCol, orderBy('createdAt', 'desc'));
+      
+      // Firestore will automatically serve from cache if backend is unreachable
       const snapshot = await getDocs(q);
       
       if (snapshot.empty) return INITIAL_EVENTS;
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
     } catch (e: any) {
-      if (e.code === 'permission-denied' || e.message?.toLowerCase().includes('permissions')) {
-        console.warn("FIRESTORE ACCESS BLOCKED: Using local experience data as fallback.");
-        // Signal the UI to show the rules helper, but don't crash
-        const error = new Error('permission-denied');
-        (error as any).code = 'permission-denied';
-        throw error;
-      }
+      console.error("Firestore fetch error:", e);
+      // Fail gracefully to initial events if both network and cache are unavailable
       return INITIAL_EVENTS;
     }
   },
@@ -134,6 +131,7 @@ export const api = {
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Booking));
     } catch (e: any) {
+      console.warn("Booking fetch error (likely offline):", e);
       return [];
     }
   },

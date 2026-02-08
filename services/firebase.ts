@@ -1,7 +1,7 @@
 
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCjJxL6Vq-TZFHhuQ-XtUpOHVkBPO1XnQw",
@@ -14,4 +14,11 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+
+// Initialize Firestore with settings to resolve connectivity issues
+// experimentalForceLongPolling: true bypasses WebSocket issues that often cause the 10s timeout error.
+// localCache ensures the app remains functional in offline mode as requested.
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+  experimentalForceLongPolling: true 
+});
