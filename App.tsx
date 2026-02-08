@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { Event, Category, Booking, AIRecommendation, User, Slot } from './types.ts';
+import { Event, Category, Booking, Slot, AIRecommendation, User } from './types.ts';
 import EventCard from './components/EventCard.tsx';
 import BookingModal from './components/BookingModal.tsx';
 import Dashboard from './components/Dashboard.tsx';
@@ -215,9 +215,22 @@ const App: React.FC = () => {
         )}
       </main>
 
-      {selectedEvent && <BookingModal event={selectedEvent} onClose={() => setSelectedEvent(null)} onConfirm={async (slot: Slot, date, guestName, guestPhone) => {
+      {selectedEvent && <BookingModal event={selectedEvent} onClose={() => setSelectedEvent(null)} onConfirm={async (slot, date, guestName, guestPhone) => {
           if (!currentUser) return;
-          const booking: Booking = { id: Math.random().toString(36).substr(2, 9), eventId: selectedEvent.id, eventTitle: selectedEvent.title, category: selectedEvent.category, time: slot.time, eventDate: date, price: selectedEvent.price, bookedAt: new Date().toISOString(), userName: guestName, userPhone: guestPhone, userUid: currentUser.uid };
+          const booking: Booking = { 
+            id: Math.random().toString(36).substr(2, 9), 
+            eventId: selectedEvent.id, 
+            eventTitle: selectedEvent.title, 
+            category: selectedEvent.category, 
+            time: slot.time, 
+            eventDate: date, 
+            price: selectedEvent.price, 
+            bookedAt: new Date().toISOString(), 
+            userName: guestName, 
+            userPhone: guestPhone, 
+            hostPhone: selectedEvent.hostPhone, // Attach host phone for easy connection
+            userUid: currentUser.uid 
+          };
           await api.saveBooking(booking, currentUser.uid);
           fetchData(currentUser.uid);
           setSelectedEvent(null);

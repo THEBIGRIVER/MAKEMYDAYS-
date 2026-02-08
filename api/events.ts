@@ -1,9 +1,6 @@
 import { INITIAL_EVENTS } from '../constants.ts';
 
-type ApiRequest = { method: string; body?: any };
-type ApiResponse = { status: (code: number) => ApiResponse; json: (data: any) => ApiResponse };
-
-export default async function handler(req: ApiRequest, res: ApiResponse) {
+export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }

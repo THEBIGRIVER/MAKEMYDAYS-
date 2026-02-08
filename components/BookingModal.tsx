@@ -69,6 +69,18 @@ const BookingModal: React.FC<BookingModalProps> = ({ event, onClose, onConfirm }
     }, 2000);
   }, [event, selectedSlot, selectedDate, guestName, guestPhone, onConfirm]);
 
+  const handleWhatsAppHost = () => {
+    const message = `Hi, I just booked your experience "${event.title}" on ${selectedDate} via MAKEMYDAYS! My booking ID is ${generatedBookingId}. Looking forward to it.`;
+    const url = `https://wa.me/${event.hostPhone}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
+  };
+
+  const handleChatWithHostBeforeBooking = () => {
+    const message = `Hi! I'm looking at your experience "${event.title}" on MAKEMYDAYS and had a few questions before I book.`;
+    const url = `https://wa.me/${event.hostPhone}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
+  };
+
   if (modalState === 'success') {
     return (
       <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-xl">
@@ -79,7 +91,19 @@ const BookingModal: React.FC<BookingModalProps> = ({ event, onClose, onConfirm }
           </div>
           <h2 className="text-xl font-black uppercase text-brand-forest">ROOTS ANCHORED</h2>
           <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-2 mb-8">NODE ID: {generatedBookingId}</p>
-          <button onClick={onClose} className="w-full h-14 bg-brand-forest text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl">DISMISS</button>
+          
+          <div className="space-y-3">
+            <button 
+              onClick={handleWhatsAppHost}
+              className="w-full h-14 bg-emerald-500 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg flex items-center justify-center gap-3 active:scale-95 transition-all hover:bg-emerald-600"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.148-.669-1.611-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.414 0 .004 5.408 0 12.044c0 2.123.555 4.197 1.608 6.044L0 24l6.102-1.601a11.81 11.81 0 005.94 1.595h.005c6.635 0 12.045-5.41 12.05-12.048a11.82 11.82 0 00-3.582-8.52"/>
+              </svg>
+              Chat with Host
+            </button>
+            <button onClick={onClose} className="w-full h-14 bg-brand-forest text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition-all">DISMISS</button>
+          </div>
         </div>
       </div>
     );
@@ -127,7 +151,15 @@ const BookingModal: React.FC<BookingModalProps> = ({ event, onClose, onConfirm }
           <button onClick={handleGPay} className="w-full h-14 md:h-16 bg-brand-forest text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-3">
              ANCHOR — ₹{event.price}
           </button>
-          <button onClick={onClose} className="w-full h-12 text-slate-400 font-black uppercase text-[8px] tracking-[0.3em] hover:text-brand-forest transition-colors">ABANDON SESSION</button>
+          <button 
+            onClick={handleChatWithHostBeforeBooking} 
+            className="w-full h-12 flex items-center justify-center gap-2 text-emerald-600 bg-emerald-50/50 rounded-2xl font-black uppercase text-[8px] tracking-[0.2em] hover:bg-emerald-100 transition-all active:scale-95"
+          >
+            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.148-.669-1.611-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.414 0 .004 5.408 0 12.044c0 2.123.555 4.197 1.608 6.044L0 24l6.102-1.601a11.81 11.81 0 005.94 1.595h.005c6.635 0 12.045-5.41 12.05-12.048a11.82 11.82 0 00-3.582-8.52"/>
+            </svg>
+            Chat with Host
+          </button>
         </div>
       </div>
     </div>

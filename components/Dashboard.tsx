@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useMemo } from 'react';
 import { Booking, Event, Category, User, Slot } from '../types.ts';
 import { PolicyType } from './LegalModal.tsx';
@@ -215,11 +216,12 @@ const CreateEventModal: React.FC<{ userUid: string, onClose: () => void, onSucce
           </div>
 
           <div className="space-y-4">
-            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Contact & Exchange</p>
+            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Contact & Exchange (WhatsApp for Direct Connection)</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input required type="number" placeholder="Price (₹)" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-base outline-none focus:border-brand-red transition-all" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value === '' ? 0 : Number(e.target.value)})} />
-              <input required type="tel" placeholder="WhatsApp Number" className="w-full bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 text-emerald-400 font-bold text-base outline-none focus:border-emerald-400 transition-all" value={formData.hostPhone} onChange={e => setFormData({...formData, hostPhone: e.target.value})} />
+              <input required type="tel" placeholder="Host WhatsApp Number" className="w-full bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 text-emerald-400 font-bold text-base outline-none focus:border-emerald-400 transition-all" value={formData.hostPhone} onChange={e => setFormData({...formData, hostPhone: e.target.value})} />
             </div>
+            <p className="text-[8px] text-slate-500 font-medium italic">Your number allows bookers to connect with you directly after their anchor is confirmed.</p>
           </div>
 
           <div className="space-y-4 pb-10">
@@ -251,7 +253,6 @@ const CreateEventModal: React.FC<{ userUid: string, onClose: () => void, onSucce
   );
 };
 
-// Fixed: Added missing DashboardProps interface definition to fix the "Cannot find name 'DashboardProps'" error.
 interface DashboardProps {
   events: Event[];
   bookings: Booking[];
@@ -269,6 +270,16 @@ const Dashboard: React.FC<DashboardProps> = ({ events, bookings, currentUser, in
 
   const handleLogout = async () => {
     try { await signOut(auth); window.location.reload(); } catch (err) { console.error("Logout failed:", err); }
+  };
+
+  const connectToHost = (booking: Booking) => {
+    if (!booking.hostPhone) {
+      alert("Host contact details are not available for this legacy booking.");
+      return;
+    }
+    const message = `Hi, I have booked your experience '${booking.eventTitle}' on ${booking.eventDate} via MAKEMYDAYS. Looking forward to it!`;
+    const url = `https://wa.me/${booking.hostPhone}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
   };
 
   return (
@@ -304,16 +315,27 @@ const Dashboard: React.FC<DashboardProps> = ({ events, bookings, currentUser, in
                 </div>
               ) :
                 bookings.map((b) => (
-                  <div key={b.id} className="glass-card p-5 md:p-6 rounded-[2rem] border border-white/10 group hover:border-brand-red/30 transition-all">
+                  <div key={b.id} className="glass-card p-5 md:p-6 rounded-[2rem] border border-white/10 group hover:border-brand-red/30 transition-all flex flex-col justify-between h-full min-h-[220px]">
                     <div className="flex justify-between items-start gap-4">
-                      <div>
+                      <div className="flex-1">
                         <span className="text-brand-red text-[8px] font-black uppercase tracking-widest">{b.category}</span>
-                        <h4 className="text-slate-100 font-black italic text-base md:text-lg leading-tight mt-1 group-hover:text-brand-red transition-colors">{b.eventTitle}</h4>
+                        <h4 className="text-slate-100 font-black italic text-base md:text-lg leading-tight mt-1 group-hover:text-brand-red transition-colors line-clamp-2">{b.eventTitle}</h4>
                         <p className="text-slate-500 text-[9px] uppercase font-bold mt-2 tracking-wider">{b.eventDate} <span className="text-white/20 px-1">•</span> {b.time}</p>
                       </div>
                       <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center shrink-0">
                          <svg className="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
                       </div>
+                    </div>
+                    <div className="mt-6 flex flex-col gap-2">
+                       <button 
+                        onClick={() => connectToHost(b)}
+                        className="w-full py-4 bg-emerald-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10"
+                      >
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.148-.669-1.611-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.414 0 .004 5.408 0 12.044c0 2.123.555 4.197 1.608 6.044L0 24l6.102-1.601a11.81 11.81 0 005.94 1.595h.005c6.635 0 12.045-5.41 12.05-12.048a11.82 11.82 0 00-3.582-8.52"/>
+                        </svg>
+                        Connect via WhatsApp
+                      </button>
                     </div>
                   </div>
                 ))

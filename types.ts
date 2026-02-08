@@ -33,6 +33,7 @@ export interface Booking {
   bookedAt: string;
   userName?: string;
   userPhone?: string;
+  hostPhone?: string; // Phone number of the event host
   confirmationEmail?: string;
   reminderSent?: boolean;
 }

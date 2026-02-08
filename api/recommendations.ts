@@ -1,9 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
-type ApiRequest = { method: string; body?: any };
-type ApiResponse = { status: (code: number) => ApiResponse; json: (data: any) => ApiResponse };
-
-export default async function handler(req: ApiRequest, res: ApiResponse) {
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -16,7 +13,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   try {
-    const eventContext = (events || []).map((e: { id: string; title: string; category: string; description: string }) => ({
+    const eventContext = (events || []).map(e => ({
       id: e.id,
       title: e.title,
       category: e.category,
@@ -56,7 +53,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       }
     });
 
-    const recommendation = JSON.parse((response.text?.trim() || '{}'));
+    const recommendation = JSON.parse(response.text.trim());
     return res.status(200).json(recommendation);
   } catch (error) {
     console.error("Backend AI Error:", error);
