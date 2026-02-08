@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { chatService } from '../services/chatService.ts';
 
@@ -51,7 +50,7 @@ const ChatBot: React.FC = () => {
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[90%] px-4 py-3 text-xs leading-relaxed rounded-2xl ${
-                  m.role === 'user' ? 'bg-brand-royal text-slate-200' : 'bg-slate-800 text-slate-200 border border-white/5'
+                  m.role === 'user' ? 'bg-brand-forest text-slate-200' : 'bg-slate-800 text-slate-200 border border-white/5'
                 }`}>
                   {m.text}
                 </div>
