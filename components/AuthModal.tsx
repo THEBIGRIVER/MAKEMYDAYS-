@@ -65,8 +65,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, onClose }) => {
               Add this domain in:
               <br />
               <span className="text-slate-900">
-                Firebase Console &gt; Authentication &gt; Settings &gt; Authorized Domains
-              </span>
+  Firebase Console {'>'} Authentication {'>'} Settings {'>'} Authorized Domains
+</span>
+
             </p>
           </div>
         );
