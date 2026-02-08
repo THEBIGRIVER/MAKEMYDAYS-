@@ -14,7 +14,7 @@ import {
 
 interface AuthModalProps {
   onSuccess: () => void;
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 const AuthModal: React.FC<AuthModalProps> = ({ onSuccess }) => {
