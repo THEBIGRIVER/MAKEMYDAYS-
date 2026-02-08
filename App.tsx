@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { Event, Category, Booking, Slot, AIRecommendation, User } from './types.ts';
+import { Event, Category, Booking, AIRecommendation, User } from './types.ts';
 import EventCard from './components/EventCard.tsx';
 import BookingModal from './components/BookingModal.tsx';
 import Dashboard from './components/Dashboard.tsx';

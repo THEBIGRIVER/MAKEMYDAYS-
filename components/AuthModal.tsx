@@ -17,7 +17,7 @@ interface AuthModalProps {
   onClose: () => void;
 }
 
-const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, onClose }) => {
+const AuthModal: React.FC<AuthModalProps> = ({ onSuccess }) => {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [showVerificationScreen, setShowVerificationScreen] = useState(false);
   const [name, setName] = useState('');
