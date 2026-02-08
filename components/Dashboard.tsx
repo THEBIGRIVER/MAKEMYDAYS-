@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useMemo } from 'react';
 import { Booking, Event, Category, User, Slot } from '../types.ts';
 import { PolicyType } from './LegalModal.tsx';
@@ -251,6 +250,16 @@ const CreateEventModal: React.FC<{ userUid: string, onClose: () => void, onSucce
     </div>
   );
 };
+
+// Fixed: Added missing DashboardProps interface definition to fix the "Cannot find name 'DashboardProps'" error.
+interface DashboardProps {
+  events: Event[];
+  bookings: Booking[];
+  currentUser: User | null;
+  initialTab?: 'bookings' | 'hosting' | 'settings';
+  onOpenPolicy?: (policy: PolicyType) => void;
+  onRefreshEvents?: () => void;
+}
 
 const Dashboard: React.FC<DashboardProps> = ({ events, bookings, currentUser, initialTab, onOpenPolicy, onRefreshEvents }) => {
   const [activeTab, setActiveTab] = useState<'bookings' | 'hosting' | 'settings'>(initialTab || 'bookings');
