@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import type { Event, Booking, AIRecommendation, User } from '../types.ts';
+import { Event, Booking, AIRecommendation, User } from '../types.ts';
 import { INITIAL_EVENTS } from '../constants.ts';
 import { db } from './firebase.ts';
 import { 
@@ -14,7 +14,8 @@ import {
   addDoc, 
   getDoc,
   serverTimestamp,
-  orderBy
+  orderBy,
+  runTransaction
 } from 'firebase/firestore';
 
 /**
@@ -56,14 +57,23 @@ export const api = {
       const eventsCol = collection(db, 'events');
       const q = query(eventsCol, orderBy('createdAt', 'desc'));
       
-      // Firestore will automatically serve from cache if backend is unreachable
       const snapshot = await getDocs(q);
       
       if (snapshot.empty) return INITIAL_EVENTS;
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
+      
+      const firestoreEvents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
+      
+      // Merge initial events with firestore events (preferring firestore versions)
+      const merged = [...firestoreEvents];
+      INITIAL_EVENTS.forEach(ie => {
+        if (!merged.find(me => me.id === ie.id)) {
+          merged.push(ie);
+        }
+      });
+      
+      return merged;
     } catch (e: any) {
       console.error("Firestore fetch error:", e);
-      // Fail gracefully to initial events if both network and cache are unavailable
       return INITIAL_EVENTS;
     }
   },
@@ -117,7 +127,7 @@ export const api = {
           }
         }
       });
-      return JSON.parse(((response.text ?? '').trim() || '{}'));
+      return JSON.parse(response.text.trim());
     } catch (error) {
       return { reasoning: "✨ Calibrating local frequencies for you.", suggestedEventIds: events.slice(0, 3).map(e => e.id) };
     }
@@ -143,6 +153,44 @@ export const api = {
       await addDoc(bookingsCol, bookingData);
     } catch (e: any) {
       if (e.code === 'permission-denied') throw new Error('permission-denied');
+      throw e;
+    }
+  },
+
+  async submitRating(bookingId: string, eventId: string, rating: number): Promise<void> {
+    try {
+      await runTransaction(db, async (transaction) => {
+        const bookingRef = doc(db, 'bookings', bookingId);
+        const eventRef = doc(db, 'events', eventId);
+        
+        const eventSnap = await transaction.get(eventRef);
+        
+        // Update booking
+        transaction.update(bookingRef, { rating });
+        
+        // Update event average rating
+        let eventData: any;
+        if (eventSnap.exists()) {
+          eventData = eventSnap.data();
+        } else {
+          // If event doc doesn't exist yet (e.g. initial event not modified), seed it
+          const initialEvent = INITIAL_EVENTS.find(e => e.id === eventId);
+          eventData = initialEvent ? { ...initialEvent } : {};
+        }
+
+        const currentTotal = eventData.totalRatings || 0;
+        const currentAvg = eventData.averageRating || 0;
+        const newTotal = currentTotal + 1;
+        const newAvg = ((currentAvg * currentTotal) + rating) / newTotal;
+
+        transaction.set(eventRef, {
+          ...eventData,
+          averageRating: newAvg,
+          totalRatings: newTotal
+        }, { merge: true });
+      });
+    } catch (e) {
+      console.error("Rating transaction failed:", e);
       throw e;
     }
   }

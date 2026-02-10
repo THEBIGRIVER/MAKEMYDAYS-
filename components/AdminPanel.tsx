@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import type { Event, Booking, Category } from '../types.ts';
+import { Event, Booking, Category } from '../types.ts';
 import { api } from '../services/api.ts';
 
 interface AdminPanelProps {

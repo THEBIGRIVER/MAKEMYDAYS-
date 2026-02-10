@@ -103,8 +103,8 @@
       }
       body {
         font-family: 'Inter', sans-serif;
-        background-color: #F7F9F7; 
-        color: #064E3B;
+        background-color: #000000; 
+        color: #F8FAFC;
         -webkit-font-smoothing: antialiased;
         position: relative;
         cursor: none;
@@ -114,7 +114,7 @@
         position: fixed;
         width: 350px;
         height: 350px;
-        background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 75%);
+        background: radial-gradient(circle, rgba(16, 185, 129, 0.25) 0%, transparent 75%);
         border-radius: 50%;
         pointer-events: none;
         z-index: 9999;
@@ -126,19 +126,19 @@
         position: fixed;
         border-radius: 50%;
         filter: blur(120px);
-        opacity: 0.15;
+        opacity: 0.3;
         z-index: -1;
         pointer-events: none;
       }
-      .bloom-1 { width: 100vw; height: 100vw; background: #065F46; top: -40%; left: -20%; animation: drift 60s infinite linear; }
+      .bloom-1 { width: 100vw; height: 100vw; background: #064E3B; top: -40%; left: -20%; animation: drift 60s infinite linear; }
       .bloom-2 { width: 80vw; height: 80vw; background: #10B981; bottom: -30%; right: -15%; animation: drift 50s infinite reverse; }
-      .bloom-3 { width: 45vw; height: 45vw; background: #FCD34D; top: 15%; right: 10%; opacity: 0.1; }
+      .bloom-3 { width: 45vw; height: 45vw; background: #FCD34D; top: 15%; right: 10%; opacity: 0.15; }
 
       .grain-overlay {
         position: fixed;
         inset: 0;
         z-index: 50;
-        opacity: 0.04;
+        opacity: 0.08;
         pointer-events: none;
         background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
       }
@@ -151,15 +151,16 @@
         pointer-events: none;
         background-image: url("https://www.transparenttextures.com/patterns/leaves.png");
         background-size: 400px;
+        filter: invert(1);
       }
 
       .dappled-light {
         position: fixed;
         inset: -50%;
         z-index: -1;
-        background: radial-gradient(circle at center, rgba(255, 255, 255, 0.3) 0%, transparent 60%);
+        background: radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
         background-size: 300px 300px;
-        opacity: 0.2;
+        opacity: 0.15;
         animation: dapple 25s infinite alternate ease-in-out;
         pointer-events: none;
       }
@@ -167,25 +168,25 @@
       .font-display { font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: -0.04em; }
       
       .glass-card {
-        background: rgba(255, 255, 255, 0.85);
+        background: rgba(15, 23, 42, 0.75);
         backdrop-filter: blur(25px) saturate(180%);
         -webkit-backdrop-filter: blur(25px) saturate(180%);
-        border: 1px solid rgba(16, 185, 129, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         box-shadow: 
-          0 4px 30px rgba(6, 78, 59, 0.03),
-          0 10px 60px rgba(16, 185, 129, 0.04);
+          0 4px 30px rgba(0, 0, 0, 0.3),
+          0 10px 60px rgba(16, 185, 129, 0.1);
         transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.4s ease;
       }
 
       .nexus-input {
-        background: rgba(255, 255, 255, 0.96);
+        background: rgba(255, 255, 255, 0.05);
         backdrop-filter: blur(40px);
-        border: 1px solid rgba(16, 185, 129, 0.18);
-        box-shadow: 0 20px 70px rgba(6, 78, 59, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 20px 70px rgba(0, 0, 0, 0.4);
       }
       
       .liquid-text {
-        background: linear-gradient(to right, #064E3B 0%, #10B981 25%, #FCD34D 50%, #10B981 75%, #064E3B 100%);
+        background: linear-gradient(to right, #ffffff 0%, #10B981 25%, #FCD34D 50%, #10B981 75%, #ffffff 100%);
         background-size: 200% auto;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
@@ -197,10 +198,10 @@
         max-width: 1100px;
         margin-top: calc(16px + var(--sat));
         border-radius: 24px;
-        background: rgba(255, 255, 255, 0.96);
+        background: rgba(15, 23, 42, 0.85);
         backdrop-filter: blur(30px) saturate(200%);
-        border: 1px solid rgba(16, 185, 129, 0.15);
-        box-shadow: 0 12px 45px rgba(6, 78, 59, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        box-shadow: 0 12px 45px rgba(0, 0, 0, 0.5);
       }
 
       @media (max-width: 768px) {

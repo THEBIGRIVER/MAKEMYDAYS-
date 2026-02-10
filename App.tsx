@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import type { Event, Category, Booking, AIRecommendation, User } from './types.ts';
+import { Event, Category, Booking, Slot, AIRecommendation, User } from './types.ts';
 import EventCard from './components/EventCard.tsx';
 import BookingModal from './components/BookingModal.tsx';
 import Dashboard from './components/Dashboard.tsx';
@@ -9,11 +9,49 @@ import LegalModal, { PolicyType } from './components/LegalModal.tsx';
 import AuthModal from './components/AuthModal.tsx';
 import { api } from './services/api.ts';
 import { auth } from './services/firebase.ts';
-// Fixed: Changed from 'firebase/auth' to '@firebase/auth' to resolve export resolution issues in TypeScript
 import { onAuthStateChanged } from '@firebase/auth';
 import { INITIAL_EVENTS } from './constants.ts';
 
-const FOREST_SOUNDS_URL = "https://cdn.pixabay.com/audio/2022/03/10/audio_f8396555cc.mp3";
+const FOREST_SOUNDS_URL = "https://assets.mixkit.co/music/preview/mixkit-forest-ambience-with-birds-chirping-1216.mp3";
+
+const SLIDESHOW_CONTENT = [
+  {
+    title: "Primal Athletics",
+    label: "Sports & Energy",
+    image: "https://images.unsplash.com/photo-1533107862482-0e6974b06ec4?auto=format&fit=crop&q=80&w=1200",
+    description: "Testing human limits in high-cadence environments."
+  },
+  {
+    title: "Uncharted Paths",
+    label: "Adventure Image",
+    image: "https://images.unsplash.com/photo-1501555088652-021faa106b9b?auto=format&fit=crop&q=80&w=1200",
+    description: "Deep exploration of the world's most silent corners."
+  },
+  {
+    title: "Earth Excursions",
+    label: "Excursion Image",
+    image: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&q=80&w=1200",
+    description: "Grounded journeys curated for the restless soul."
+  },
+  {
+    title: "Maker Frequency",
+    label: "Workshop Image",
+    image: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&q=80&w=1200",
+    description: "Tactile creation meets focused consciousness."
+  },
+  {
+    title: "Inner Resonance",
+    label: "Wellness Image",
+    image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&q=80&w=1200",
+    description: "Somatic release and meditative recalibration."
+  },
+  {
+    title: "Institute of Calling",
+    label: "Elements of Calling",
+    image: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&q=80&w=1200",
+    description: "The core curriculum of presence and purpose."
+  }
+];
 
 const MOODS = [
   { label: "Grounded", emoji: "🌲", color: "brand-forest" },
@@ -26,9 +64,15 @@ const CATEGORIES: (Category | 'All' | 'Community')[] = ['All', 'Community', 'Sho
 
 const ConnectionLogo = ({ className = "w-8 h-8" }: { className?: string }) => (
   <svg viewBox="0 0 100 100" className={`${className} fill-current text-brand-moss active:scale-95 transition-transform duration-500`}>
-    <path d="M50 15 C30 35 15 55 15 75 C15 88 28 95 50 95 C72 95 85 88 85 75 C85 55 70 35 50 15 Z" fill="none" stroke="currentColor" strokeWidth="5" />
-    <circle cx="50" cy="60" r="10" fill="currentColor" />
-    <path d="M50 70 L50 88" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
+    {/* Parachute Canopy */}
+    <path d="M20 45 C 20 20, 80 20, 80 45 C 80 40, 20 40, 20 45 Z" fill="currentColor" />
+    {/* Suspension Lines */}
+    <path d="M22 44 L50 65 M78 44 L50 65 M40 42 L50 65 M60 42 L50 65" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    {/* Skydiver Body */}
+    <circle cx="50" cy="68" r="4" fill="currentColor" />
+    <path d="M50 72 Q 50 80 50 82" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+    <path d="M50 75 L35 70 M50 75 L65 70" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" />
+    <path d="M50 82 L40 92 M50 82 L60 92" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" />
   </svg>
 );
 
@@ -58,6 +102,7 @@ const App: React.FC = () => {
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentSlide, setCurrentSlide] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const fetchData = useCallback(async (userUid?: string) => {
@@ -94,21 +139,48 @@ const App: React.FC = () => {
     return () => unsubscribe();
   }, [fetchData]);
 
+  // Slideshow interval
   useEffect(() => {
-    audioRef.current = new Audio(FOREST_SOUNDS_URL);
-    audioRef.current.loop = true;
-    audioRef.current.volume = 0.12;
-    return () => { audioRef.current?.pause(); };
+    const interval = setInterval(() => {
+      setCurrentSlide(prev => (prev + 1) % SLIDESHOW_CONTENT.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (!audioRef.current) {
+      const audio = new Audio(FOREST_SOUNDS_URL);
+      audio.loop = true;
+      audio.volume = 0.12;
+      audioRef.current = audio;
+    }
+    
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
   }, []);
 
   const toggleMusic = useCallback(() => {
     if (!audioRef.current) return;
+    
     if (isMusicPlaying) {
       audioRef.current.pause();
       setIsMusicPlaying(false);
     } else {
-      audioRef.current.play().catch(() => {});
-      setIsMusicPlaying(true);
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setIsMusicPlaying(true);
+          })
+          .catch(error => {
+            console.warn("Audio playback interrupted or blocked:", error);
+            setIsMusicPlaying(false);
+          });
+      }
     }
   }, [isMusicPlaying]);
 
@@ -138,15 +210,15 @@ const App: React.FC = () => {
         <div className="floating-island-nav h-14 md:h-16 flex items-center justify-between px-4 md:px-8 pointer-events-auto">
           <div className="flex items-center gap-2.5 cursor-pointer group" onClick={() => { setShowDashboard(false); setAiRec(null); setSelectedCategory('All'); setSearchQuery(''); setUserMood(''); window.scrollTo({top:0, behavior:'smooth'}); }}>
             <ConnectionLogo className="w-6 h-6 md:w-7 md:h-7 group-hover:scale-110" />
-            <span className="text-[15px] md:text-lg font-display uppercase tracking-tighter text-brand-forest truncate max-w-[140px] md:max-w-none">MAKEMYDAYS</span>
+            <span className="text-[15px] md:text-lg font-display uppercase tracking-tighter text-white truncate max-w-[140px] md:max-w-none">MAKEMYDAYS</span>
           </div>
 
           <div className="flex items-center gap-3 md:gap-4">
-            <button onClick={toggleMusic} className="w-10 h-10 md:w-11 md:h-11 flex items-center justify-center rounded-full transition-all bg-emerald-50/80 border border-emerald-100/50 shadow-sm hover:bg-emerald-100 active:scale-90">
+            <button onClick={toggleMusic} className="w-10 h-10 md:w-11 md:h-11 flex items-center justify-center rounded-full transition-all bg-white/5 border border-white/10 shadow-sm hover:bg-white/10 active:scale-90">
               <Visualizer isPlaying={isMusicPlaying} />
             </button>
             {currentUser ? (
-              <button onClick={() => { setDashboardTab('bookings'); setShowDashboard(!showDashboard); }} className="px-4 md:px-6 h-10 md:h-11 bg-brand-forest text-white rounded-xl text-[10px] md:text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all shadow-md">Portal</button>
+              <button onClick={() => { setDashboardTab('bookings'); setShowDashboard(!showDashboard); }} className="px-4 md:px-6 h-10 md:h-11 bg-white text-slate-900 rounded-xl text-[10px] md:text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all shadow-md">Portal</button>
             ) : (
               <button onClick={() => setShowAuthModal(true)} className="px-5 md:px-6 h-10 md:h-11 bg-brand-moss text-white rounded-xl text-[10px] md:text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all shadow-md shadow-brand-moss/10">Join</button>
             )}
@@ -162,52 +234,86 @@ const App: React.FC = () => {
             <header className="text-center space-y-10 md:space-y-14">
               <div className="space-y-6">
                 <span className="text-brand-moss text-[10px] md:text-[12px] font-black uppercase tracking-[0.45em] block animate-pulse-soft">PRIMAL FREQUENCY</span>
-                <h1 className="text-4xl sm:text-7xl md:text-[10.5rem] font-display font-black leading-[1.05] md:leading-[0.85] tracking-[-0.055em] uppercase text-brand-forest">
+                <h1 className="text-4xl sm:text-7xl md:text-[10.5rem] font-display font-black leading-[1.05] md:leading-[0.85] tracking-[-0.055em] uppercase text-white">
                   SYNC WITH <br className="hidden sm:block" /> <span className="liquid-text italic">THE WILD</span>
                 </h1>
-                <p className="text-slate-500 text-[11px] md:text-sm font-medium uppercase tracking-[0.12em] max-w-[280px] md:max-w-lg mx-auto leading-relaxed">
+                <p className="text-slate-400 text-[11px] md:text-sm font-medium uppercase tracking-[0.12em] max-w-[280px] md:max-w-lg mx-auto leading-relaxed">
                   Curating grounded experiences for the restless modern spirit. 
                   <span className="hidden md:inline"> Recalibrate your inner rhythm.</span>
                 </p>
               </div>
               
               <div className="max-w-4xl mx-auto space-y-8 md:space-y-12">
-                 <div className="nexus-input rounded-[2.2rem] md:rounded-[4.5rem] p-2 md:p-3 flex items-center gap-2 md:gap-4 group ring-0 focus-within:ring-4 ring-brand-moss/10 transition-all">
-                    <div className="w-10 h-10 md:w-16 md:h-16 bg-brand-moss/10 rounded-full flex items-center justify-center shrink-0 transition-transform group-focus-within:scale-110">
-                      <svg className="w-4 h-4 md:w-7 md:h-7 text-brand-moss" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                 {/* Automatic Slideshow Section */}
+                 <div className="w-full aspect-video rounded-[2.2rem] md:rounded-[3.5rem] overflow-hidden border border-white/10 bg-slate-900/50 shadow-3xl relative group">
+                    <div className="absolute inset-0 transition-all duration-1000 ease-in-out">
+                       {SLIDESHOW_CONTENT.map((slide, idx) => (
+                         <div 
+                           key={idx}
+                           className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${currentSlide === idx ? 'opacity-100' : 'opacity-0'}`}
+                         >
+                           <img 
+                             src={slide.image} 
+                             alt={slide.title}
+                             className="w-full h-full object-cover transition-transform duration-[10s] ease-linear group-hover:scale-105"
+                           />
+                           <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-90" />
+                           <div className="absolute bottom-6 left-6 md:bottom-12 md:left-12 text-left space-y-2 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+                             <span className="text-brand-moss text-[9px] md:text-[11px] font-black uppercase tracking-[0.4em] block">{slide.label}</span>
+                             <h3 className="text-white text-xl md:text-4xl font-display uppercase tracking-tighter italic">{slide.title}</h3>
+                             <p className="text-slate-400 text-[10px] md:text-sm font-medium uppercase tracking-widest opacity-60">{slide.description}</p>
+                           </div>
+                         </div>
+                       ))}
                     </div>
-                    <input type="text" placeholder="Breathe. Your current vibe?" className="flex-1 bg-transparent text-lg md:text-3xl font-medium outline-none placeholder:text-slate-300 text-brand-forest h-14 md:h-20" value={userMood} onChange={(e) => { setUserMood(e.target.value); setSearchQuery(e.target.value); if(!e.target.value) setAiRec(null); }} onKeyPress={(e) => e.key === 'Enter' && handleMoodSearch(userMood)} />
-                    <button onClick={() => handleMoodSearch(userMood)} className="bg-brand-forest text-white h-12 md:h-16 px-6 md:px-12 rounded-[1.8rem] md:rounded-[3.5rem] font-black uppercase text-[10px] md:text-[12px] tracking-widest active:scale-95 transition-all shadow-lg hover:bg-brand-moss">SYNC</button>
+                    
+                    {/* Slideshow Progress Indicators */}
+                    <div className="absolute bottom-6 right-6 md:bottom-12 md:right-12 flex gap-1.5">
+                       {SLIDESHOW_CONTENT.map((_, idx) => (
+                         <div 
+                           key={idx} 
+                           className={`h-1 rounded-full transition-all duration-500 ${currentSlide === idx ? 'w-6 md:w-8 bg-brand-moss' : 'w-1.5 bg-white/20'}`}
+                         />
+                       ))}
+                    </div>
+                 </div>
+
+                 <div id="mood-search-container" className="nexus-input rounded-[2.2rem] md:rounded-[4.5rem] p-2 md:p-3 flex items-center gap-2 md:gap-4 group transition-all border border-white/10">
+                    <div className="w-10 h-10 md:w-16 md:h-16 bg-white/5 rounded-full flex items-center justify-center shrink-0 transition-transform group-focus-within:scale-110">
+                      <svg className="w-4 h-4 md:w-7 md:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </div>
+                    <input type="text" placeholder="Breathe. Your current vibe?" className="flex-1 bg-transparent text-lg md:text-3xl font-medium outline-none placeholder:text-slate-600 text-white h-14 md:h-20" value={userMood} onChange={(e) => { setUserMood(e.target.value); setSearchQuery(e.target.value); if(!e.target.value) setAiRec(null); }} onKeyPress={(e) => e.key === 'Enter' && handleMoodSearch(userMood)} />
+                    <button onClick={() => handleMoodSearch(userMood)} className="bg-white text-slate-900 h-12 md:h-16 px-6 md:px-12 rounded-[1.8rem] md:rounded-[3.5rem] font-black uppercase text-[10px] md:text-[12px] tracking-widest active:scale-95 transition-all shadow-lg hover:bg-brand-moss hover:text-white">SYNC</button>
                  </div>
                  
                  <div className="flex flex-wrap justify-center gap-2.5 md:gap-4">
                     {MOODS.map(m => (
-                      <button key={m.label} onClick={() => { setUserMood(m.label); setSearchQuery(m.label); handleMoodSearch(m.label); }} className="bg-white/70 backdrop-blur-lg border border-brand-moss/10 px-4.5 py-3 md:px-8 md:py-4.5 rounded-full flex items-center gap-2.5 md:gap-4 hover:border-brand-moss/30 hover:bg-white hover:shadow-2xl hover:translate-y-[-2px] transition-all active:scale-95 group">
+                      <button key={m.label} onClick={() => { setUserMood(m.label); setSearchQuery(m.label); handleMoodSearch(m.label); }} className="bg-white/5 backdrop-blur-lg border border-white/10 px-4.5 py-3 md:px-8 md:py-4.5 rounded-full flex items-center gap-2.5 md:gap-4 hover:border-white/30 hover:bg-white/10 hover:shadow-2xl hover:translate-y-[-2px] transition-all active:scale-95 group">
                         <span className="text-xl group-hover:scale-125 transition-transform duration-500">{m.emoji}</span>
-                        <span className="text-[10px] md:text-[11px] font-black uppercase tracking-widest text-slate-500 group-hover:text-brand-forest">{m.label}</span>
+                        <span className="text-[10px] md:text-[11px] font-black uppercase tracking-widest text-slate-400 group-hover:text-white">{m.label}</span>
                       </button>
                     ))}
                  </div>
               </div>
             </header>
 
-            <section className="space-y-10 md:space-y-20">
+            <section id="event-grid-container" className="space-y-10 md:space-y-20">
               <div className="flex items-center gap-2.5 md:gap-5 overflow-x-auto scrollbar-hide py-3 px-1 -mx-4 px-4 md:mx-0">
                 {CATEGORIES.map(cat => (
-                  <button key={cat} onClick={() => setSelectedCategory(cat)} className={`whitespace-nowrap px-6 py-3.5 md:px-10 md:py-5 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest border transition-all active:scale-95 ${selectedCategory === cat ? 'bg-brand-forest border-brand-forest text-white shadow-xl translate-y-[-2px]' : 'bg-white/80 border-brand-moss/10 text-slate-400 hover:border-brand-moss/30 hover:text-brand-forest'}`}>
+                  <button key={cat} onClick={() => setSelectedCategory(cat)} className={`whitespace-nowrap px-6 py-3.5 md:px-10 md:py-5 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest border transition-all active:scale-95 ${selectedCategory === cat ? 'bg-white border-white text-slate-900 shadow-xl translate-y-[-2px]' : 'bg-white/5 border-white/10 text-slate-500 hover:border-white/30 hover:text-white'}`}>
                     {cat}
                   </button>
                 ))}
               </div>
               
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-10">
-                {filteredEvents.map(e => <EventCard key={e.id} event={e} onClick={setSelectedEvent} />)}
+                {filteredEvents.map((e, i) => <EventCard key={e.id} event={e} index={i} onClick={setSelectedEvent} />)}
               </div>
               
               {filteredEvents.length === 0 && (
                 <div className="py-24 text-center space-y-6">
                   <div className="text-5xl md:text-7xl opacity-20 animate-pulse">🍃</div>
-                  <p className="text-slate-400 font-display uppercase text-[10px] md:text-xs tracking-[0.4em]">RESONANCE UNDETECTED IN THIS AREA</p>
+                  <p className="text-slate-600 font-display uppercase text-[10px] md:text-xs tracking-[0.4em]">RESONANCE UNDETECTED IN THIS AREA</p>
                 </div>
               )}
             </section>
@@ -228,7 +334,7 @@ const App: React.FC = () => {
             bookedAt: new Date().toISOString(), 
             userName: guestName, 
             userPhone: guestPhone, 
-            hostPhone: selectedEvent.hostPhone, // Attach host phone for easy connection
+            hostPhone: selectedEvent.hostPhone, 
             userUid: currentUser.uid 
           };
           await api.saveBooking(booking, currentUser.uid);

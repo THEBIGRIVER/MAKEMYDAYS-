@@ -19,6 +19,8 @@ export interface Event {
   dates: string[]; 
   hostPhone: string;
   createdAt?: string; 
+  averageRating?: number;
+  totalRatings?: number;
 }
 
 export interface Booking {
@@ -36,6 +38,7 @@ export interface Booking {
   hostPhone?: string; // Phone number of the event host
   confirmationEmail?: string;
   reminderSent?: boolean;
+  rating?: number;
 }
 
 export interface User {
