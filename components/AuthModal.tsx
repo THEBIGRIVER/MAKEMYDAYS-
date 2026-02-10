@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User } from '../types';
+import type { User } from '../types';
 import { auth } from '../services/firebase';
 import { api } from '../services/api';
 // Fixed: Changed from 'firebase/auth' to '@firebase/auth' to resolve export resolution issues in TypeScript
@@ -18,7 +18,7 @@ interface AuthModalProps {
   onClose: () => void;
 }
 
-const AuthModal: React.FC<AuthModalProps> = ({ onSuccess, onClose }) => {
+const AuthModal: React.FC<AuthModalProps> = ({ onSuccess }) => {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [showVerificationScreen, setShowVerificationScreen] = useState(false);
   const [name, setName] = useState('');

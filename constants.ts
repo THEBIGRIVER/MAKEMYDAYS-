@@ -1,5 +1,5 @@
 
-import { Event } from './types.ts';
+import type { Event } from './types.ts';
 
 export const DEFAULT_HOST = '917686924919';
 const EXPLORER_1 = '9820012345';

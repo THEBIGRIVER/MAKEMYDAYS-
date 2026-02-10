@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Event, Category } from '../types.ts';
+import type { Event } from '../types.ts';
 
 interface EventCardProps {
   event: Event;
@@ -10,15 +10,6 @@ interface EventCardProps {
 
 const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=60&w=800";
 const FAVORITES_KEY = 'makemydays_favorites_v1';
-
-const CATEGORY_THEMES: Record<Category, { color: string, glow: string }> = {
-  "Shows": { color: "#064E3B", glow: "rgba(6,78,59,0.15)" },
-  "Activity": { color: "#10B981", glow: "rgba(16,185,129,0.15)" },
-  "Mindfulness": { color: "#D1FAE5", glow: "rgba(209,250,229,0.2)" },
-  "Workshop": { color: "#B45309", glow: "rgba(180,83,9,0.15)" },
-  "MMD Originals": { color: "#059669", glow: "rgba(5,150,105,0.15)" },
-  "Therapy": { color: "#451A03", glow: "rgba(69,26,3,0.15)" }
-};
 
 const EventCard: React.FC<EventCardProps> = ({ event, onClick, id }) => {
   const [imgSrc, setImgSrc] = useState(event.image);
@@ -49,7 +40,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick, id }) => {
     window.open(url, '_blank');
   };
 
-  const theme = CATEGORY_THEMES[event.category] || CATEGORY_THEMES["Activity"];
+
 
   return (
     <div 

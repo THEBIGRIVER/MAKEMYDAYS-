@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Event, Slot } from '../types.ts';
+import type { Event, Slot } from '../types.ts';
 
 interface BookingModalProps {
   event: Event;

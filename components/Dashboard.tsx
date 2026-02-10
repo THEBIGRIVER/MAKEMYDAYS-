@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useMemo } from 'react';
-import { Booking, Event, Category, User, Slot } from '../types.ts';
+import type { Booking, Event, Category, User, Slot } from '../types.ts';
 import { PolicyType } from './LegalModal.tsx';
 import { api } from '../services/api.ts';
 import { auth } from '../services/firebase.ts';

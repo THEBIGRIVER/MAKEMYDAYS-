@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { Event, Booking, AIRecommendation, User } from '../types.ts';
+import type { Event, Booking, AIRecommendation, User } from '../types.ts';
 import { INITIAL_EVENTS } from '../constants.ts';
 import { db } from './firebase.ts';
 import { 
@@ -117,7 +117,7 @@ export const api = {
           }
         }
       });
-      return JSON.parse(response.text.trim());
+      return JSON.parse(((response.text ?? '').trim() || '{}'));
     } catch (error) {
       return { reasoning: "✨ Calibrating local frequencies for you.", suggestedEventIds: events.slice(0, 3).map(e => e.id) };
     }
