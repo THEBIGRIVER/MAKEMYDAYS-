@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import type { Event, Slot } from '../types.ts';
+import { formatForWhatsApp } from '../utils/phone';
 
 interface BookingModalProps {
   event: Event;
@@ -71,13 +72,17 @@ const BookingModal: React.FC<BookingModalProps> = ({ event, onClose, onConfirm }
 
   const handleWhatsAppHost = () => {
     const message = `Hi, I just booked your experience "${event.title}" on ${selectedDate} via MAKEMYDAYS! My booking ID is ${generatedBookingId}. Looking forward to it.`;
-    const url = `https://wa.me/${event.hostPhone}?text=${encodeURIComponent(message)}`;
+    const waNumber = formatForWhatsApp(event.hostPhone);
+    if (!waNumber) { alert('Host phone number not available'); return; }
+    const url = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
   };
 
   const handleChatWithHostBeforeBooking = () => {
     const message = `Hi! I'm looking at your experience "${event.title}" on MAKEMYDAYS and had a few questions before I book.`;
-    const url = `https://wa.me/${event.hostPhone}?text=${encodeURIComponent(message)}`;
+    const waNumber = formatForWhatsApp(event.hostPhone);
+    if (!waNumber) { alert('Host phone number not available'); return; }
+    const url = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
   };
 

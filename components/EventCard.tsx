@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import type { Event } from '../types.ts';
+import { formatForWhatsApp } from '../utils/phone';
 
 interface EventCardProps {
   event: Event;
@@ -36,7 +37,9 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick, id }) => {
   const handleConnect = (e: React.MouseEvent) => {
     e.stopPropagation();
     const message = `Hi! I found your experience "${event.title}" on MAKEMYDAYS. I'd love to chat and find out more!`;
-    const url = `https://wa.me/${event.hostPhone}?text=${encodeURIComponent(message)}`;
+    const waNumber = formatForWhatsApp(event.hostPhone);
+    if (!waNumber) { alert('Host phone number not available'); return; }
+    const url = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
   };
 
