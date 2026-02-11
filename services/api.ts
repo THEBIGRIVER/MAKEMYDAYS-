@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { Event, Booking, AIRecommendation, User } from '../types.ts';
 import { INITIAL_EVENTS } from '../constants.ts';
@@ -15,20 +14,9 @@ import {
   getDoc,
   serverTimestamp,
   orderBy,
-  runTransaction
+  runTransaction,
+  DocumentData
 } from 'firebase/firestore';
-
-/**
- * FIRESTORE RULES REQUIRED:
- * rules_version = '2';
- * service cloud.firestore {
- *   match /databases/{database}/documents {
- *     match /events/{event} { allow read: if true; allow write: if request.auth != null; }
- *     match /users/{userId} { allow read, write: if request.auth != null && request.auth.uid == userId; }
- *     match /bookings/{booking} { allow read, write: if request.auth != null; }
- *   }
- * }
- */
 
 export const api = {
   // User Profile Sync
@@ -65,7 +53,7 @@ export const api = {
       
       // Merge initial events with firestore events (preferring firestore versions)
       const merged = [...firestoreEvents];
-      INITIAL_EVENTS.forEach(ie => {
+      INITIAL_EVENTS.forEach((ie: Event) => {
         if (!merged.find(me => me.id === ie.id)) {
           merged.push(ie);
         }
@@ -97,7 +85,7 @@ export const api = {
     try {
       const eventRef = doc(db, 'events', eventId);
       const eventSnap = await getDoc(eventRef);
-      if (eventSnap.exists() && eventSnap.data().ownerUid === userUid) {
+      if (eventSnap.exists() && eventSnap.data()?.ownerUid === userUid) {
         await deleteDoc(eventRef);
       }
     } catch (e: any) {
@@ -108,8 +96,12 @@ export const api = {
 
   // AI Recommendations
   async getRecommendations(mood: string, events: Event[]): Promise<AIRecommendation> {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const eventContext = events.map(e => ({ id: e.id, title: e.title, category: e.category }));
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) {
+      return { reasoning: "✨ Recalibrating local frequencies.", suggestedEventIds: events.slice(0, 3).map(e => e.id) };
+    }
+    const ai = new GoogleGenAI({ apiKey });
+    const eventContext = events.map((e: Event) => ({ id: e.id, title: e.title, category: e.category }));
 
     try {
       const response = await ai.models.generateContent({
@@ -127,7 +119,14 @@ export const api = {
           }
         }
       });
-      return JSON.parse(response.text.trim());
+      
+      if (!response) {
+        throw new Error("No response from AI");
+      }
+      
+      const text = response.text;
+      if (text === undefined) throw new Error("Empty AI response");
+      return JSON.parse(text.trim());
     } catch (error) {
       return { reasoning: "✨ Calibrating local frequencies for you.", suggestedEventIds: events.slice(0, 3).map(e => e.id) };
     }
@@ -169,9 +168,9 @@ export const api = {
         transaction.update(bookingRef, { rating });
         
         // Update event average rating
-        let eventData: any;
+        let eventData: DocumentData;
         if (eventSnap.exists()) {
-          eventData = eventSnap.data();
+          eventData = eventSnap.data() as DocumentData;
         } else {
           // If event doc doesn't exist yet (e.g. initial event not modified), seed it
           const initialEvent = INITIAL_EVENTS.find(e => e.id === eventId);
@@ -189,7 +188,7 @@ export const api = {
           totalRatings: newTotal
         }, { merge: true });
       });
-    } catch (e) {
+    } catch (e: any) {
       console.error("Rating transaction failed:", e);
       throw e;
     }

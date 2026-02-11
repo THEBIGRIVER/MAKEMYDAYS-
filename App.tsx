@@ -1,6 +1,5 @@
-
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { Event, Category, Booking, Slot, AIRecommendation, User } from './types.ts';
+import { Event, Category, Booking, AIRecommendation, User } from './types.ts';
 import EventCard from './components/EventCard.tsx';
 import BookingModal from './components/BookingModal.tsx';
 import Dashboard from './components/Dashboard.tsx';
@@ -30,7 +29,7 @@ const SLIDESHOW_CONTENT = [
   {
     title: "Earth Excursions",
     label: "Excursion Image",
-    image: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&q=80&w=1200",
+    image: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=crop&q=80&w=1200",
     description: "Grounded journeys curated for the restless soul."
   },
   {
@@ -97,7 +96,7 @@ const App: React.FC = () => {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [userMood, setUserMood] = useState('');
   const [showDashboard, setShowDashboard] = useState(false);
-  const [dashboardTab, setDashboardTab] = useState<'bookings' | 'hosting' | 'settings'>('bookings');
+  const [dashboardTab] = useState<'bookings' | 'hosting' | 'settings'>('bookings');
   const [activePolicy, setActivePolicy] = useState<PolicyType | null>(null);
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -218,7 +217,7 @@ const App: React.FC = () => {
               <Visualizer isPlaying={isMusicPlaying} />
             </button>
             {currentUser ? (
-              <button onClick={() => { setDashboardTab('bookings'); setShowDashboard(!showDashboard); }} className="px-4 md:px-6 h-10 md:h-11 bg-white text-slate-900 rounded-xl text-[10px] md:text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all shadow-md">Portal</button>
+              <button onClick={() => { setShowDashboard(!showDashboard); }} className="px-4 md:px-6 h-10 md:h-11 bg-white text-slate-900 rounded-xl text-[10px] md:text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all shadow-md">Portal</button>
             ) : (
               <button onClick={() => setShowAuthModal(true)} className="px-5 md:px-6 h-10 md:h-11 bg-brand-moss text-white rounded-xl text-[10px] md:text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all shadow-md shadow-brand-moss/10">Join</button>
             )}

@@ -1,4 +1,3 @@
-
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { INITIAL_EVENTS } from '../constants.ts';
 import { Event } from '../types.ts';

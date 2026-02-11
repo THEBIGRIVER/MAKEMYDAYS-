@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Chat } from "@google/genai";
 import { INITIAL_EVENTS } from "../constants.ts";
 
@@ -37,7 +36,8 @@ export class ChatService {
     try {
       if (!this.chat) throw new Error("Chat not initialized");
       const result = await this.chat.sendMessage({ message });
-      return result.text || "I'm having trouble processing that right now.";
+      const text = result.text;
+      return text || "I'm having trouble processing that right now.";
     } catch (error) {
       console.error("Chat error:", error);
       return "My frequency is currently disrupted. Let's try recalibrating in a moment.";

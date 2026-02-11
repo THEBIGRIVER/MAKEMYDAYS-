@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { Event, AIRecommendation } from "../types.ts";
 
@@ -8,7 +7,7 @@ export const getAIRecommendations = async (userMood: string, allEvents: Event[])
 
   const ai = new GoogleGenAI({ apiKey });
   
-  const eventContext = allEvents.map(e => ({
+  const eventContext = allEvents.map((e: Event) => ({
     id: e.id,
     title: e.title,
     category: e.category,
