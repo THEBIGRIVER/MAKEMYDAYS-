@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Event } from '../types.ts';
 
@@ -13,36 +12,36 @@ const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1618005182384-a83a8bd5
 const FAVORITES_KEY = 'makemydays_favorites_v1';
 
 /**
- * Deep & Electric Grounded Palette
- * Colors tuned for "Extra Deep Resonance"
+ * High-Energy Electric Palette
+ * Colors tuned for "Maximum Vibrancy and Pulse"
  */
 const COLOR_SEQUENCE = [
   { 
-    bg: '#001A4D', // Extra Deep Midnight Blue
-    border: '#003B8E', 
+    bg: '#0EA5E9', // Bright Electric Blue
+    border: '#38BDF8', 
     text: 'text-white', 
     subtext: 'text-blue-50', 
-    accent: 'bg-white/20'
+    accent: 'bg-white/30'
   }, 
   { 
-    bg: '#5C0000', // Extra Deep Blood Red
-    border: '#940E0E', 
+    bg: '#FF0000', // Proper Electric Red
+    border: '#FF4D4D', 
     text: 'text-white', 
     subtext: 'text-red-50', 
-    accent: 'bg-white/20'
+    accent: 'bg-white/30'
   },   
   { 
-    bg: '#052B14', // Extra Deep Forest Pine
-    border: '#0C4B25', 
+    bg: '#22C55E', // Vivid Spring Green
+    border: '#4ADE80', 
     text: 'text-white', 
     subtext: 'text-emerald-50', 
-    accent: 'bg-white/20'
+    accent: 'bg-white/30'
   }, 
   { 
-    bg: '#D97706', // Deep Ochre Yellow - PRESERVED AS REQUESTED
-    border: '#F9AB00', 
-    text: 'text-white', 
-    subtext: 'text-amber-50', 
+    bg: '#FFFF00', // Standard Pure Yellow
+    border: '#EAB308', 
+    text: 'text-slate-900', 
+    subtext: 'text-slate-800', 
     accent: 'bg-black/10'
   }    
 ];
@@ -100,7 +99,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, index, onClick, id }) => {
             className={`w-10 h-10 md:w-14 md:h-14 rounded-full backdrop-blur-3xl border transition-all duration-500 flex items-center justify-center active:scale-75 shadow-2xl ${
               isFavorited 
                 ? 'bg-white border-white text-brand-forest' 
-                : 'bg-white/10 border-white/20 text-white hover:bg-white/30'
+                : 'bg-white/20 border-white/40 text-white hover:bg-white/40'
             }`}
           >
             <svg viewBox="0 0 24 24" className="w-5 h-5 md:w-6 md:h-6 fill-current">
@@ -124,7 +123,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, index, onClick, id }) => {
       {/* Narrative Section: Bottom */}
       <div className="flex flex-col flex-1 mt-4 md:mt-6 px-4 pb-6 md:px-5 md:pb-8 relative">
         <div className="mb-2 md:mb-3">
-          <span className={`inline-flex items-center text-[8px] md:text-[10px] font-black uppercase tracking-[0.25em] px-4 py-1.5 rounded-full border border-white/20 ${theme.accent} backdrop-blur-md shadow-sm text-white`}>
+          <span className={`inline-flex items-center text-[8px] md:text-[10px] font-black uppercase tracking-[0.25em] px-4 py-1.5 rounded-full border border-black/10 ${theme.accent} backdrop-blur-md shadow-sm ${theme.text}`}>
             {event.category}
           </span>
         </div>
@@ -134,13 +133,13 @@ const EventCard: React.FC<EventCardProps> = ({ event, index, onClick, id }) => {
         </h4>
         
         <div className={`mt-6 md:mt-8 flex items-center justify-between gap-3 opacity-90 ${theme.text} transition-all duration-300 group-hover:opacity-100`}>
-          <div className={`px-4 py-2 md:px-5 md:py-2.5 rounded-2xl border border-white/20 ${theme.accent} backdrop-blur-md shadow-lg flex items-center`}>
+          <div className={`px-4 py-2 md:px-5 md:py-2.5 rounded-2xl border border-black/10 ${theme.accent} backdrop-blur-md shadow-lg flex items-center`}>
             <span className="text-base md:text-2xl font-black tracking-tighter drop-shadow-md">
               ₹{event.price.toLocaleString()}
             </span>
           </div>
           
-          <div className="flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/10 border border-white/10 group-hover:bg-white/20 transition-all">
+          <div className={`flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full border border-black/10 ${theme.accent} group-hover:bg-black/20 transition-all`}>
             <svg className="w-5 h-5 md:w-6 md:h-6 transition-transform duration-500 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
             </svg>
