@@ -13,32 +13,31 @@ const FAVORITES_KEY = 'makemydays_favorites_v1';
 
 /**
  * High-Energy Electric Palette
- * Colors tuned for "Maximum Vibrancy and Pulse"
  */
 const COLOR_SEQUENCE = [
   { 
-    bg: '#0EA5E9', // Bright Electric Blue
+    bg: '#0EA5E9', 
     border: '#38BDF8', 
     text: 'text-white', 
     subtext: 'text-blue-50', 
     accent: 'bg-white/30'
   }, 
   { 
-    bg: '#FF0000', // Proper Electric Red
+    bg: '#FF0000', 
     border: '#FF4D4D', 
     text: 'text-white', 
     subtext: 'text-red-50', 
     accent: 'bg-white/30'
   },   
   { 
-    bg: '#22C55E', // Vivid Spring Green
+    bg: '#22C55E', 
     border: '#4ADE80', 
     text: 'text-white', 
     subtext: 'text-emerald-50', 
     accent: 'bg-white/30'
   }, 
   { 
-    bg: '#FFFF00', // Standard Pure Yellow
+    bg: '#FFFF00', 
     border: '#EAB308', 
     text: 'text-slate-900', 
     subtext: 'text-slate-800', 
@@ -78,41 +77,38 @@ const EventCard: React.FC<EventCardProps> = ({ event, index, onClick, id }) => {
         backgroundColor: theme.bg,
         borderColor: theme.border
       }}
-      className={`group cursor-pointer flex flex-col h-full p-2 md:p-3 rounded-[2.8rem] md:rounded-[3.5rem] relative overflow-hidden transition-all duration-700 hover:translate-y-[-12px] border-2 shadow-2xl`}
+      className={`group cursor-pointer flex flex-col h-full p-1.5 md:p-2.5 rounded-[2.5rem] md:rounded-[3rem] relative overflow-hidden transition-all duration-700 hover:translate-y-[-8px] border-2 shadow-xl`}
     >
-      {/* Visual Section: Top */}
-      <div className="relative aspect-[4/5] md:aspect-[3.4/5] w-full overflow-hidden rounded-[2.2rem] md:rounded-[2.8rem] bg-black/20 shrink-0 shadow-inner">
+      <div className="relative aspect-[4/5] md:aspect-[3.5/5] w-full overflow-hidden rounded-[2rem] md:rounded-[2.5rem] bg-black/10 shrink-0">
         <img 
           src={imgSrc} 
           alt={event.title} 
           onError={() => setImgSrc(FALLBACK_IMAGE)}
-          className="w-full h-full object-cover transition-transform duration-[15s] ease-out group-hover:scale-110 saturate-[1.4] contrast-[1.1] brightness-[0.95]" 
+          className="w-full h-full object-cover transition-transform duration-[10s] ease-out group-hover:scale-105 saturate-[1.2] brightness-[0.9]" 
         />
         
-        {/* Subtle overlay gradient for better image blending */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-30" />
         
-        <div className="absolute top-4 right-4 md:top-6 md:right-6 flex flex-col gap-2 items-end">
+        <div className="absolute top-3 right-3 md:top-5 md:right-5 flex flex-col gap-2 items-end">
           <button 
             onClick={handleToggleFavorite}
-            aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
-            className={`w-10 h-10 md:w-14 md:h-14 rounded-full backdrop-blur-3xl border transition-all duration-500 flex items-center justify-center active:scale-75 shadow-2xl ${
+            className={`w-8 h-8 md:w-11 md:h-11 rounded-full backdrop-blur-3xl border transition-all duration-500 flex items-center justify-center active:scale-75 ${
               isFavorited 
-                ? 'bg-white border-white text-brand-forest' 
-                : 'bg-white/20 border-white/40 text-white hover:bg-white/40'
+                ? 'bg-white border-white text-slate-900' 
+                : 'bg-white/10 border-white/30 text-white'
             }`}
           >
-            <svg viewBox="0 0 24 24" className="w-5 h-5 md:w-6 md:h-6 fill-current">
+            <svg viewBox="0 0 24 24" className="w-4 h-4 md:w-5 md:h-5 fill-current">
               <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
             </svg>
           </button>
           
           {event.averageRating && (
-            <div className="bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-white/10 shadow-lg scale-90 md:scale-100 origin-right">
-              <svg className="w-3.5 h-3.5 text-brand-gold fill-current" viewBox="0 0 24 24">
+            <div className="bg-black/40 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1 border border-white/5 shadow-sm scale-75 md:scale-90 origin-right">
+              <svg className="w-2.5 h-2.5 text-brand-gold fill-current" viewBox="0 0 24 24">
                 <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
               </svg>
-              <span className="text-white text-[10px] md:text-[11px] font-black tracking-tighter">
+              <span className="text-white text-[8px] md:text-[9px] font-black">
                 {event.averageRating.toFixed(1)}
               </span>
             </div>
@@ -120,27 +116,26 @@ const EventCard: React.FC<EventCardProps> = ({ event, index, onClick, id }) => {
         </div>
       </div>
 
-      {/* Narrative Section: Bottom */}
-      <div className="flex flex-col flex-1 mt-4 md:mt-6 px-4 pb-6 md:px-5 md:pb-8 relative">
-        <div className="mb-2 md:mb-3">
-          <span className={`inline-flex items-center text-[8px] md:text-[10px] font-black uppercase tracking-[0.25em] px-4 py-1.5 rounded-full border border-black/10 ${theme.accent} backdrop-blur-md shadow-sm ${theme.text}`}>
+      <div className="flex flex-col flex-1 mt-2.5 md:mt-4 px-2 pb-4 md:px-3 md:pb-6 relative">
+        <div className="mb-1 md:mb-1.5">
+          <span className={`inline-flex items-center text-[6px] md:text-[8px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-full border border-black/5 ${theme.accent} backdrop-blur-md ${theme.text}`}>
             {event.category}
           </span>
         </div>
 
-        <h4 className={`text-[18px] sm:text-[20px] md:text-[26px] font-display uppercase tracking-tight leading-[1.15] ${theme.text} line-clamp-2 transition-all duration-500 group-hover:tracking-normal flex-1`}>
+        <h4 className={`text-[13px] sm:text-[14px] md:text-[16px] font-display uppercase tracking-tight leading-[1.15] ${theme.text} line-clamp-2 transition-all duration-500 flex-1`}>
           {event.title}
         </h4>
         
-        <div className={`mt-6 md:mt-8 flex items-center justify-between gap-3 opacity-90 ${theme.text} transition-all duration-300 group-hover:opacity-100`}>
-          <div className={`px-4 py-2 md:px-5 md:py-2.5 rounded-2xl border border-black/10 ${theme.accent} backdrop-blur-md shadow-lg flex items-center`}>
-            <span className="text-base md:text-2xl font-black tracking-tighter drop-shadow-md">
+        <div className={`mt-3 md:mt-4 flex items-center justify-between gap-2 opacity-90 ${theme.text}`}>
+          <div className={`px-2.5 py-1 md:px-3.5 md:py-1.5 rounded-lg border border-black/5 ${theme.accent} backdrop-blur-sm flex items-center`}>
+            <span className="text-[11px] md:text-[14px] font-black tracking-tighter">
               ₹{event.price.toLocaleString()}
             </span>
           </div>
           
-          <div className={`flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full border border-black/10 ${theme.accent} group-hover:bg-black/20 transition-all`}>
-            <svg className="w-5 h-5 md:w-6 md:h-6 transition-transform duration-500 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className={`flex items-center justify-center w-7 h-7 md:w-9 md:h-9 rounded-full border border-black/5 ${theme.accent} transition-all`}>
+            <svg className="w-3 h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
             </svg>
           </div>
