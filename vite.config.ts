@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  // Native esbuild configuration for production cleaning
+  // Native esbuild configuration for production cleaning (applied before minification)
   esbuild: {
     drop: ['console', 'debugger'],
   },
@@ -20,8 +20,14 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
-    // Use the native, faster esbuild minifier
-    minify: 'esbuild',
+    // Explicitly using terser as requested by the Vercel build runner
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
     rollupOptions: {
       output: {
         manualChunks: {
