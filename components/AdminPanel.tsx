@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Event, Booking, Category } from '../types.ts';
 import { api } from '../services/api.ts';
@@ -28,6 +27,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, bookings, onClose, onRe
         id: editingEvent.id || `admin-${Math.random().toString(36).substr(2, 9)}`,
         slots: editingEvent.slots || [{ time: '10:00 AM', availableSeats: 10 }],
         price: Number(editingEvent.price) || 0,
+        capacity: Number(editingEvent.capacity) || 10,
         image: editingEvent.image || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=60&w=800',
         description: editingEvent.description || '',
         hostPhone: editingEvent.hostPhone || '917686924919'
@@ -161,7 +161,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, bookings, onClose, onRe
                 <option value="">Select Category</option>
                 <option value="Shows">Shows</option><option value="Activity">Activity</option><option value="MMD Originals">MMD Originals</option><option value="Mindfulness">Mindfulness</option><option value="Workshop">Workshop</option>
               </select>
-              <input type="number" placeholder="Price (₹)" value={editingEvent.price || ''} onChange={e => setEditingEvent({...editingEvent, price: Number(e.target.value)})} className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-white text-base outline-none focus:border-brand-red" required />
+              <div className="grid grid-cols-2 gap-4">
+                <input type="number" placeholder="Price (₹)" value={editingEvent.price || ''} onChange={e => setEditingEvent({...editingEvent, price: Number(e.target.value)})} className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-white text-base outline-none focus:border-brand-red" required />
+                <input type="number" placeholder="Capacity" value={editingEvent.capacity || ''} onChange={e => setEditingEvent({...editingEvent, capacity: Number(e.target.value)})} className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-white text-base outline-none focus:border-brand-red" required />
+              </div>
               <div className="pt-4 border-t border-white/5">
                 <input type="password" placeholder="Admin Passkey" value={adminPasskey} onChange={e => setAdminPasskey(e.target.value)} className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-white text-base outline-none focus:border-brand-red" required />
                 {error && <p className="text-brand-red text-[10px] font-black uppercase mt-2 tracking-widest">{error}</p>}

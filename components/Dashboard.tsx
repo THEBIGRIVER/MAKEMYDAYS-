@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useMemo } from 'react';
 import { Booking, Event, Category, User, Slot } from '../types.ts';
 import { PolicyType } from './LegalModal.tsx';
@@ -36,6 +35,7 @@ const CreateEventModal: React.FC<{ userUid: string, onClose: () => void, onSucce
     title: '',
     category: 'Activity',
     price: 0,
+    capacity: 0,
     description: '',
     image: '',
     hostPhone: localStorage.getItem('mmd_host_phone') || '',
@@ -116,11 +116,13 @@ const CreateEventModal: React.FC<{ userUid: string, onClose: () => void, onSucce
     e.preventDefault();
     const cleanPhone = normalizeHostPhone(formData.hostPhone || '');
     const isPriceValid = formData.price !== undefined && !isNaN(Number(formData.price));
+    const isCapacityValid = formData.capacity !== undefined && !isNaN(Number(formData.capacity)) && Number(formData.capacity) > 0;
     
     if (!formData.title) { alert("Experience Title required."); return; }
     if (dates.length === 0) { alert("Add at least one available Date (Single or Multiple)."); return; }
     if (slots.length === 0) { alert("Choose at least one Time Slot & Capacity."); return; }
     if (!isPriceValid) { alert("Enter a valid price."); return; }
+    if (!isCapacityValid) { alert("Enter a valid total capacity (at least 1)."); return; }
     
     if (cleanPhone.length !== 10) { 
       alert("Please enter a valid 10-digit mobile number."); 
@@ -136,6 +138,7 @@ const CreateEventModal: React.FC<{ userUid: string, onClose: () => void, onSucce
         title: formData.title || '',
         category: formData.category as Category || 'Activity',
         price: Number(formData.price),
+        capacity: Number(formData.capacity),
         description: formData.description || '',
         image: formData.image || '',
         dates: dates,
@@ -240,8 +243,9 @@ const CreateEventModal: React.FC<{ userUid: string, onClose: () => void, onSucce
 
           <div className="space-y-4">
             <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Contact & Exchange</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <input required type="number" placeholder="Price (₹)" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-base outline-none focus:border-brand-moss transition-all" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value === '' ? 0 : Number(e.target.value)})} />
+              <input required type="number" placeholder="Total Capacity" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-base outline-none focus:border-brand-moss transition-all" value={formData.capacity === 0 ? '' : formData.capacity} onChange={e => setFormData({...formData, capacity: e.target.value === '' ? 0 : Number(e.target.value)})} />
               <input required type="tel" placeholder="10-digit WhatsApp Number" className="w-full bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 text-emerald-400 font-bold text-base outline-none focus:border-emerald-400 transition-all" value={formData.hostPhone} onChange={e => setFormData({...formData, hostPhone: e.target.value})} />
             </div>
           </div>
@@ -455,9 +459,14 @@ const Dashboard: React.FC<DashboardProps> = ({ events, bookings, currentUser, in
                       </div>
                       <div className="p-5 flex-1 flex flex-col">
                         <h4 className="text-slate-200 font-black italic uppercase text-sm md:text-base leading-tight mb-2">{e.title}</h4>
-                        <p className="text-[8px] text-slate-500 font-black uppercase tracking-widest mb-4">
-                          {e.dates.length} Days Scheduled
-                        </p>
+                        <div className="flex items-center gap-2 mb-4">
+                          <p className="text-[8px] text-slate-500 font-black uppercase tracking-widest">
+                            {e.dates.length} Days Scheduled
+                          </p>
+                          <span className="text-[8px] bg-brand-moss/10 text-brand-moss px-2 py-0.5 rounded-full font-black uppercase border border-brand-moss/20">
+                            Cap: {e.capacity}
+                          </span>
+                        </div>
                         <div className="mt-auto flex gap-2">
                           <button className="flex-1 py-2.5 bg-slate-800 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-400 hover:bg-brand-moss hover:text-white transition-all active:scale-95" onClick={async () => { if(confirm("Terminate broadcast?")){ await api.deleteEvent(e.id, currentUser?.uid || ''); onRefreshEvents?.(); } }}>Terminate</button>
                           <button className="flex-1 py-2.5 bg-white/5 border border-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-white">Edit</button>

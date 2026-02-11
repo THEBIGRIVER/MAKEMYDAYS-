@@ -63,11 +63,8 @@ const CATEGORIES: (Category | 'All' | 'Community')[] = ['All', 'Community', 'Sho
 
 const ConnectionLogo = ({ className = "w-8 h-8" }: { className?: string }) => (
   <svg viewBox="0 0 100 100" className={`${className} fill-current text-brand-moss active:scale-95 transition-transform duration-500`}>
-    {/* Parachute Canopy */}
     <path d="M20 45 C 20 20, 80 20, 80 45 C 80 40, 20 40, 20 45 Z" fill="currentColor" />
-    {/* Suspension Lines */}
     <path d="M22 44 L50 65 M78 44 L50 65 M40 42 L50 65 M60 42 L50 65" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    {/* Skydiver Body */}
     <circle cx="50" cy="68" r="4" fill="currentColor" />
     <path d="M50 72 Q 50 80 50 82" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
     <path d="M50 75 L35 70 M50 75 L65 70" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" />
@@ -138,6 +135,53 @@ const App: React.FC = () => {
     return () => unsubscribe();
   }, [fetchData]);
 
+  // History API management for back button
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      // If we're going back, close any active overlays
+      setSelectedEvent(null);
+      setShowDashboard(false);
+      setActivePolicy(null);
+      setShowAuthModal(false);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Monitor selectedEvent and showDashboard to push history state
+  useEffect(() => {
+    if (selectedEvent || showDashboard || activePolicy || showAuthModal) {
+      // Only push if we're not already in an overlay state (simple check)
+      if (!window.history.state || window.history.state.overlay !== true) {
+        window.history.pushState({ overlay: true }, '');
+      }
+    }
+  }, [selectedEvent, showDashboard, activePolicy, showAuthModal]);
+
+  const handleCloseEvent = useCallback(() => {
+    setSelectedEvent(null);
+    if (window.history.state?.overlay) window.history.back();
+  }, []);
+
+  const handleToggleDashboard = useCallback(() => {
+    const nextState = !showDashboard;
+    setShowDashboard(nextState);
+    if (!nextState && window.history.state?.overlay) {
+      window.history.back();
+    }
+  }, [showDashboard]);
+
+  const handleClosePolicy = useCallback(() => {
+    setActivePolicy(null);
+    if (window.history.state?.overlay) window.history.back();
+  }, []);
+
+  const handleCloseAuth = useCallback(() => {
+    setShowAuthModal(false);
+    if (window.history.state?.overlay) window.history.back();
+  }, []);
+
   // Slideshow interval
   useEffect(() => {
     const interval = setInterval(() => {
@@ -207,7 +251,7 @@ const App: React.FC = () => {
     <div className="flex flex-col min-h-screen selection:bg-brand-moss/30">
       <nav className="fixed top-0 left-0 right-0 z-[100] flex justify-center px-4 pointer-events-none safe-top">
         <div className="floating-island-nav h-14 md:h-16 flex items-center justify-between px-4 md:px-8 pointer-events-auto">
-          <div className="flex items-center gap-2.5 cursor-pointer group" onClick={() => { setShowDashboard(false); setAiRec(null); setSelectedCategory('All'); setSearchQuery(''); setUserMood(''); window.scrollTo({top:0, behavior:'smooth'}); }}>
+          <div className="flex items-center gap-2.5 cursor-pointer group" onClick={() => { setShowDashboard(false); setAiRec(null); setSelectedCategory('All'); setSearchQuery(''); setUserMood(''); window.scrollTo({top:0, behavior:'smooth'}); if(window.history.state?.overlay) window.history.back(); }}>
             <ConnectionLogo className="w-6 h-6 md:w-7 md:h-7 group-hover:scale-110" />
             <span className="text-[15px] md:text-lg font-display uppercase tracking-tighter text-white truncate max-w-[140px] md:max-w-none">MAKEMYDAYS</span>
           </div>
@@ -217,7 +261,7 @@ const App: React.FC = () => {
               <Visualizer isPlaying={isMusicPlaying} />
             </button>
             {currentUser ? (
-              <button onClick={() => { setShowDashboard(!showDashboard); }} className="px-4 md:px-6 h-10 md:h-11 bg-white text-slate-900 rounded-xl text-[10px] md:text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all shadow-md">Portal</button>
+              <button onClick={handleToggleDashboard} className="px-4 md:px-6 h-10 md:h-11 bg-white text-slate-900 rounded-xl text-[10px] md:text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all shadow-md">Portal</button>
             ) : (
               <button onClick={() => setShowAuthModal(true)} className="px-5 md:px-6 h-10 md:h-11 bg-brand-moss text-white rounded-xl text-[10px] md:text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all shadow-md shadow-brand-moss/10">Join</button>
             )}
@@ -243,7 +287,6 @@ const App: React.FC = () => {
               </div>
               
               <div className="max-w-4xl mx-auto space-y-8 md:space-y-12">
-                 {/* Automatic Slideshow Section */}
                  <div className="w-full aspect-video rounded-[2.2rem] md:rounded-[3.5rem] overflow-hidden border border-white/10 bg-slate-900/50 shadow-3xl relative group">
                     <div className="absolute inset-0 transition-all duration-1000 ease-in-out">
                        {SLIDESHOW_CONTENT.map((slide, idx) => (
@@ -265,8 +308,6 @@ const App: React.FC = () => {
                          </div>
                        ))}
                     </div>
-                    
-                    {/* Slideshow Progress Indicators */}
                     <div className="absolute bottom-6 right-6 md:bottom-12 md:right-12 flex gap-1.5">
                        {SLIDESHOW_CONTENT.map((_, idx) => (
                          <div 
@@ -320,7 +361,7 @@ const App: React.FC = () => {
         )}
       </main>
 
-      {selectedEvent && <BookingModal event={selectedEvent} onClose={() => setSelectedEvent(null)} onConfirm={async (slot, date, guestName, guestPhone) => {
+      {selectedEvent && <BookingModal event={selectedEvent} onClose={handleCloseEvent} onConfirm={async (slot, date, guestName, guestPhone) => {
           if (!currentUser) return;
           const booking: Booking = { 
             id: Math.random().toString(36).substr(2, 9), 
@@ -341,8 +382,8 @@ const App: React.FC = () => {
           setSelectedEvent(null);
       }} />}
       
-      {showAuthModal && <AuthModal onSuccess={() => setShowAuthModal(false)} onClose={() => setShowAuthModal(false)} />}
-      {activePolicy && <LegalModal type={activePolicy} onClose={() => setActivePolicy(null)} />}
+      {showAuthModal && <AuthModal onSuccess={() => setShowAuthModal(false)} onClose={handleCloseAuth} />}
+      {activePolicy && <LegalModal type={activePolicy} onClose={handleClosePolicy} />}
       <ChatBot />
     </div>
   );

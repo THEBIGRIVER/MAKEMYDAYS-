@@ -1,4 +1,3 @@
-
 export type Category = "Shows" | "Activity" | "MMD Originals" | "Mindfulness" | "Workshop" | "Therapy";
 
 export interface Slot {
@@ -14,6 +13,7 @@ export interface Event {
   image: string;
   description: string;
   price: number;
+  capacity: number; // Specified total capacity for the event
   originalPrice?: number;
   slots: Slot[];
   dates: string[]; 
