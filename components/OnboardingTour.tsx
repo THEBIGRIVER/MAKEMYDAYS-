@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface OnboardingTourProps {
   onComplete: () => void;
@@ -35,7 +35,6 @@ const steps = [
 const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [coords, setCoords] = useState({ top: 0, left: 0, width: 0, height: 0 });
-  const tourRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const step = steps[currentStep];

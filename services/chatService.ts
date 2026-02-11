@@ -7,8 +7,8 @@ export class ChatService {
 
   private initChat() {
     const eventContext = INITIAL_EVENTS.map(e => `${e.title} (${e.category}): ${e.description}`).join('\n');
-    // Guidelines specify using process.env.API_KEY directly when initializing.
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const apiKey = process.env.API_KEY || "";
+    const ai = new GoogleGenAI({ apiKey });
     
     this.chat = ai.chats.create({
       model: 'gemini-3-flash-preview',
@@ -35,9 +35,9 @@ export class ChatService {
     }
     
     try {
-      const result = await this.chat!.sendMessage({ message });
-      // The Gemini API result.text property directly returns the generated string.
-      return result.text;
+      if (!this.chat) throw new Error("Chat not initialized");
+      const result = await this.chat.sendMessage({ message });
+      return result.text || "I'm having trouble processing that right now.";
     } catch (error) {
       console.error("Chat error:", error);
       return "My frequency is currently disrupted. Let's try recalibrating in a moment.";

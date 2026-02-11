@@ -1,8 +1,12 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { Event, AIRecommendation } from "../types.ts";
 
 export const getAIRecommendations = async (userMood: string, allEvents: Event[]): Promise<AIRecommendation | null> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) return null;
+
+  const ai = new GoogleGenAI({ apiKey });
   
   const eventContext = allEvents.map(e => ({
     id: e.id,
@@ -46,7 +50,9 @@ export const getAIRecommendations = async (userMood: string, allEvents: Event[])
       }
     });
 
-    const text = response.text || "{}";
+    const text = response.text;
+    if (!text) return null;
+
     return JSON.parse(text.trim());
   } catch (error) {
     console.error("AI recommendation failed:", error);

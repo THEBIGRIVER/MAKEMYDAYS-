@@ -1,6 +1,9 @@
-import { GoogleGenAI, Type } from "@google/genai";
 
-export default async function handler(req, res) {
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { GoogleGenAI, Type } from "@google/genai";
+import { Event } from "../types.ts";
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -10,10 +13,15 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Mood query is required' });
   }
 
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) {
+    return res.status(500).json({ error: 'Internal server configuration error' });
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
 
   try {
-    const eventContext = (events || []).map(e => ({
+    const eventContext = (events || []).map((e: Event) => ({
       id: e.id,
       title: e.title,
       category: e.category,
@@ -53,9 +61,14 @@ export default async function handler(req, res) {
       }
     });
 
-    const recommendation = JSON.parse(response.text.trim());
+    const text = response.text;
+    if (!text) {
+      throw new Error("Empty response from AI");
+    }
+
+    const recommendation = JSON.parse(text.trim());
     return res.status(200).json(recommendation);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Backend AI Error:", error);
     return res.status(500).json({ error: 'Failed to generate recommendations' });
   }
