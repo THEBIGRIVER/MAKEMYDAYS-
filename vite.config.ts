@@ -4,9 +4,12 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  // Native esbuild configuration for production cleaning
+  esbuild: {
+    drop: ['console', 'debugger'],
+  },
   define: {
     // Ensuring process.env is consistently mapped for Gemini SDK compatibility in browser environments.
-    // Handles both VITE_ prefixed and standard API_KEY vars provided by different CI/CD pipelines.
     'process.env.API_KEY': JSON.stringify(process.env.VITE_GEMINI_API_KEY || process.env.API_KEY || ""),
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
   },
@@ -17,13 +20,8 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-      },
-    },
+    // Use the native, faster esbuild minifier
+    minify: 'esbuild',
     rollupOptions: {
       output: {
         manualChunks: {
