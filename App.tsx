@@ -52,7 +52,6 @@ const RhythmTuner = ({ events, onSelect }: { events: Event[], onSelect: (e: Even
       
       if (newTaps.length === 5) {
         setIsCalibrated(true);
-        // High BPM (>110) = Activity/Shows, Low BPM (<90) = Mindfulness/Therapy
         let filtered = events;
         if (calculatedBpm > 110) filtered = events.filter(e => ['Activity', 'Shows'].includes(e.category));
         else if (calculatedBpm < 90) filtered = events.filter(e => ['Mindfulness', 'Therapy'].includes(e.category));
@@ -284,7 +283,7 @@ const ExperienceRoulette = ({ events, onSelect }: { events: Event[], onSelect: (
             onClick={spin}
             className="w-14 h-14 bg-white/5 border border-white/10 text-white rounded-xl flex items-center justify-center active:scale-95 transition-all"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357-2H15" /></svg>
           </button>
         </div>
       ) : (
@@ -402,7 +401,6 @@ const App: React.FC = () => {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   
-  // Chatbot state
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatInitialQuery, setChatInitialQuery] = useState('');
 
@@ -419,7 +417,6 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // History management for Back Button support
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
       if (!event.state) {
@@ -672,7 +669,6 @@ const App: React.FC = () => {
         </main>
       )}
 
-      {/* Modern Sticky Navigation (Mobile) */}
       <nav className="md:hidden fixed bottom-6 left-6 right-6 z-[200] bg-[#1A242E]/80 backdrop-blur-3xl border border-white/10 h-16 rounded-[2rem] flex items-center justify-around px-2 shadow-2xl shadow-black/50">
         <button onClick={() => { 
           if (showDashboard) window.history.back();

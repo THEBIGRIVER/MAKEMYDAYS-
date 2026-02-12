@@ -32,14 +32,12 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick, isFavorite, onTog
         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-80 group-hover:opacity-100" 
       />
       
-      {/* Price Badge (Premium Tag) */}
       <div className="absolute top-3 left-3 z-40 transition-all duration-500 group-hover:scale-105 origin-top-left">
         <div className="bg-[#0F171E]/60 backdrop-blur-2xl border border-white/10 px-3 py-1 rounded-lg shadow-2xl flex items-center group-hover:bg-brand-prime group-hover:border-brand-prime transition-all duration-300">
           <span className="text-xs font-bold text-white tracking-tight">₹{event.price}</span>
         </div>
       </div>
 
-      {/* Modern Overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-brand-navy via-brand-navy/20 to-transparent opacity-0 md:group-hover:opacity-100 transition-all duration-500 p-5 flex flex-col justify-end">
         <div className="translate-y-6 md:group-hover:translate-y-0 transition-transform duration-500 space-y-3">
           <div className="flex items-center justify-between">
@@ -55,7 +53,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick, isFavorite, onTog
             
             <button 
               onClick={handleToggle}
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${isFavorite ? 'bg-red-500 text-white shadow-lg' : 'bg-white/10 text-white hover:bg-white/30 backdrop-blur-2xl'}`}
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${isFavorite ? 'bg-red-500 text-white shadow-lg' : 'bg-white/10 text-white hover:bg-white/20 backdrop-blur-2xl'}`}
             >
               <svg className={`w-5 h-5 ${isFavorite ? 'fill-current' : 'fill-none'}`} stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
@@ -75,7 +73,6 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick, isFavorite, onTog
         </div>
       </div>
 
-      {/* Mobile Persistent Tags */}
       <div className="md:hidden absolute bottom-3 left-3 right-3 flex justify-between items-end z-40">
          <div className="space-y-1.5">
            <span className="bg-black/40 backdrop-blur-2xl text-white text-[11px] font-bold px-3 py-1.5 rounded-lg border border-white/10 block w-fit">
