@@ -154,13 +154,6 @@ const App: React.FC = () => {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // Sync internal state with history when opening modals or sections
-  const navigateToHome = useCallback(() => {
-    if (selectedEvent || showDashboard || activePolicy || showAuthModal) {
-      window.history.back();
-    }
-  }, [selectedEvent, showDashboard, activePolicy, showAuthModal]);
-
   const handleOpenEvent = (event: Event) => {
     setSelectedEvent(event);
     window.history.pushState({ view: 'event', id: event.id }, '');
