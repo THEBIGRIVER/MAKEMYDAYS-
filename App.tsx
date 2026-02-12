@@ -1,105 +1,130 @@
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { Event, Category, Booking, AIRecommendation, User } from './types.ts';
-import EventCard from './components/EventCard.tsx';
-import BookingModal from './components/BookingModal.tsx';
-import Dashboard from './components/Dashboard.tsx';
-import ChatBot from './components/ChatBot.tsx';
-import LegalModal, { PolicyType } from './components/LegalModal.tsx';
-import AuthModal from './components/AuthModal.tsx';
-import { api } from './services/api.ts';
-import { auth } from './services/firebase.ts';
-import { onAuthStateChanged } from '@firebase/auth';
-import { INITIAL_EVENTS } from './constants.ts';
+import { Event, Category, Booking, AIRecommendation, User } from './types';
+import EventCard from './components/EventCard';
+import BookingModal from './components/BookingModal';
+import Dashboard from './components/Dashboard';
+import ChatBot from './components/ChatBot';
+import LegalModal, { PolicyType } from './components/LegalModal';
+import AuthModal from './components/AuthModal';
+import { api } from './services/api';
+import { auth } from './services/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import { INITIAL_EVENTS } from './constants';
 
 const FOREST_SOUNDS_URL = "https://assets.mixkit.co/music/preview/mixkit-forest-ambience-with-birds-chirping-1216.mp3";
 
-const SLIDESHOW_CONTENT = [
-  {
-    title: "Primal Athletics",
-    label: "Sports & Energy",
-    image: "https://images.unsplash.com/photo-1533107862482-0e6974b06ec4?auto=format&fit=crop&q=80&w=1200",
-    description: "Testing human limits in high-cadence environments."
-  },
-  {
-    title: "Uncharted Paths",
-    label: "Adventure Image",
-    image: "https://images.unsplash.com/photo-1501555088652-021faa106b9b?auto=format&fit=crop&q=80&w=1200",
-    description: "Deep exploration of the world's most silent corners."
-  },
-  {
-    title: "Earth Excursions",
-    label: "Excursion Image",
-    image: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=crop&q=80&w=1200",
-    description: "Grounded journeys curated for the restless soul."
-  },
-  {
-    title: "Maker Frequency",
-    label: "Workshop Image",
-    image: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&q=80&w=1200",
-    description: "Tactile creation meets focused consciousness."
-  },
-  {
-    title: "Inner Resonance",
-    label: "Wellness Image",
-    image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&q=80&w=1200",
-    description: "Somatic release and meditative recalibration."
-  },
-  {
-    title: "Institute of Calling",
-    label: "Elements of Calling",
-    image: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&q=80&w=1200",
-    description: "The core curriculum of presence and purpose."
-  }
-];
+const CATEGORIES: Category[] = ['Activity', 'Shows', 'MMD Originals', 'Mindfulness', 'Workshop', 'Therapy'];
 
-const MOODS = [
-  { label: "Grounded", emoji: "🌲", color: "brand-forest" },
-  { label: "Wild", emoji: "🌿", color: "brand-moss" },
-  { label: "Lush", emoji: "🍀", color: "emerald-500" },
-  { label: "Earthy", emoji: "🍂", color: "amber-700" }
-];
+const HeroSection = ({ trendingEvents, onBook }: { trendingEvents: Event[], onBook: (e: Event) => void }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
-const CATEGORIES: (Category | 'All' | 'Community')[] = ['All', 'Community', 'Shows', 'Activity', 'MMD Originals', 'Mindfulness', 'Workshop', 'Therapy'];
+  useEffect(() => {
+    const timer = setInterval(() => {
+      handleNext();
+    }, 8000);
+    return () => clearInterval(timer);
+  }, [currentIndex]);
 
-const ConnectionLogo = ({ className = "w-8 h-8" }: { className?: string }) => (
-  <svg viewBox="0 0 100 100" className={`${className} fill-current text-brand-moss active:scale-95 transition-transform duration-500`}>
-    <path d="M20 45 C 20 20, 80 20, 80 45 C 80 40, 20 40, 20 45 Z" fill="currentColor" />
-    <path d="M22 44 L50 65 M78 44 L50 65 M40 42 L50 65 M60 42 L50 65" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    <circle cx="50" cy="68" r="4" fill="currentColor" />
-    <path d="M50 72 Q 50 80 50 82" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-    <path d="M50 75 L35 70 M50 75 L65 70" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" />
-    <path d="M50 82 L40 92 M50 82 L60 92" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" />
-  </svg>
-);
+  const handleNext = () => {
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentIndex((prev) => (prev + 1) % trendingEvents.length);
+      setIsTransitioning(false);
+    }, 500);
+  };
 
-const Visualizer = ({ isPlaying }: { isPlaying: boolean }) => (
-  <div className="flex items-center justify-center gap-[1.5px] h-3.5">
-    {[0.2, 0.5, 0.8, 0.4, 0.6].map((delay, i) => (
-      <div 
-        key={i} 
-        className={`w-[2.5px] rounded-full transition-all duration-300 ${isPlaying ? 'bg-brand-moss animate-music-visualizer' : 'bg-slate-300 h-2'}`}
-        style={{ animationDelay: `${delay}s` }}
-      />
-    ))}
-  </div>
-);
+  const activeEvent = trendingEvents[currentIndex];
+
+  if (!activeEvent) return null;
+
+  return (
+    <div className="relative w-full h-[85vh] md:h-[95vh] overflow-hidden bg-brand-netflix">
+      {/* Slideshow background with crossfade */}
+      <div className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+        <img 
+          src={activeEvent.image} 
+          className="w-full h-full object-cover" 
+          alt={activeEvent.title}
+        />
+      </div>
+      
+      {/* Overlays */}
+      <div className="absolute inset-0 bg-gradient-to-r from-brand-netflix via-brand-netflix/60 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-brand-netflix via-transparent to-transparent" />
+      
+      {/* Content Container */}
+      <div className={`absolute bottom-[15%] left-[5%] md:left-[8%] max-w-[90%] md:max-w-[45%] space-y-4 md:space-y-6 transition-all duration-700 ${isTransitioning ? 'translate-y-10 opacity-0' : 'translate-y-0 opacity-100'}`}>
+        <div className="flex items-center gap-3">
+          <div className="w-1 h-6 bg-brand-red rounded-full animate-pulse"></div>
+          <span className="text-brand-red font-black uppercase tracking-[0.4em] text-[10px] md:text-xs">Trending Now</span>
+        </div>
+        
+        <h1 className="text-4xl md:text-8xl font-display font-black leading-tight uppercase text-white drop-shadow-2xl">
+          {activeEvent.title}
+        </h1>
+        
+        <p className="text-slate-200 text-sm md:text-lg font-medium leading-relaxed line-clamp-3 md:line-clamp-none max-w-xl">
+          {activeEvent.description}
+        </p>
+        
+        <div className="flex items-center gap-4 pt-4">
+          <button 
+            onClick={() => onBook(activeEvent)}
+            className="px-8 md:px-12 h-12 md:h-14 bg-white text-black rounded-md font-bold text-sm md:text-lg hover:bg-white/80 transition-all flex items-center gap-3 active:scale-95 group"
+          >
+            <svg className="w-6 h-6 fill-current group-hover:scale-110 transition-transform" viewBox="0 0 24 24"><path d="M7 6v12l10-6z"/></svg>
+            Book Experience
+          </button>
+          <button className="px-8 md:px-12 h-12 md:h-14 bg-white/20 backdrop-blur-md text-white rounded-md font-bold text-sm md:text-lg hover:bg-white/30 transition-all flex items-center gap-3">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Learn More
+          </button>
+        </div>
+      </div>
+
+      {/* Pagination Indicators */}
+      <div className="absolute bottom-10 right-10 flex items-center gap-3 z-20">
+        {trendingEvents.map((_, idx) => (
+          <button
+            key={idx}
+            onClick={() => setCurrentIndex(idx)}
+            className={`transition-all duration-300 h-1.5 rounded-full ${currentIndex === idx ? 'w-10 bg-brand-red' : 'w-4 bg-white/30 hover:bg-white/50'}`}
+          />
+        ))}
+      </div>
+
+      {/* Slide Progress bar (bottom thin line) */}
+      <div className="absolute bottom-0 left-0 h-1 bg-brand-red/30 w-full z-10">
+        <div 
+          key={currentIndex}
+          className="h-full bg-brand-red animate-[progress_8s_linear_forwards]" 
+          style={{ transformOrigin: 'left' }}
+        />
+      </div>
+      
+      <style>{`
+        @keyframes progress {
+          from { transform: scaleX(0); }
+          to { transform: scaleX(1); }
+        }
+      `}</style>
+    </div>
+  );
+};
 
 const App: React.FC = () => {
   const [events, setEvents] = useState<Event[]>(INITIAL_EVENTS);
   const [globalBookings, setGlobalBookings] = useState<Booking[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<Category | 'All' | 'Community'>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [aiRec, setAiRec] = useState<AIRecommendation | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [userMood, setUserMood] = useState('');
   const [showDashboard, setShowDashboard] = useState(false);
-  const [dashboardTab] = useState<'bookings' | 'hosting' | 'settings'>('bookings');
   const [activePolicy, setActivePolicy] = useState<PolicyType | null>(null);
-  const [isMusicPlaying, setIsMusicPlaying] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   const fetchData = useCallback(async (userUid?: string) => {
     try {
@@ -132,100 +157,37 @@ const App: React.FC = () => {
         fetchData();
       }
     });
-    return () => unsubscribe();
+
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      unsubscribe();
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, [fetchData]);
 
-  // History API management for back button
+  // Handle Back Button
   useEffect(() => {
-    const handlePopState = (event: PopStateEvent) => {
-      // If we're going back, close any active overlays
+    const handlePopState = () => {
       setSelectedEvent(null);
       setShowDashboard(false);
       setActivePolicy(null);
       setShowAuthModal(false);
     };
-
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // Monitor selectedEvent and showDashboard to push history state
   useEffect(() => {
     if (selectedEvent || showDashboard || activePolicy || showAuthModal) {
-      // Only push if we're not already in an overlay state (simple check)
       if (!window.history.state || window.history.state.overlay !== true) {
         window.history.pushState({ overlay: true }, '');
       }
     }
   }, [selectedEvent, showDashboard, activePolicy, showAuthModal]);
-
-  const handleCloseEvent = useCallback(() => {
-    setSelectedEvent(null);
-    if (window.history.state?.overlay) window.history.back();
-  }, []);
-
-  const handleToggleDashboard = useCallback(() => {
-    const nextState = !showDashboard;
-    setShowDashboard(nextState);
-    if (!nextState && window.history.state?.overlay) {
-      window.history.back();
-    }
-  }, [showDashboard]);
-
-  const handleClosePolicy = useCallback(() => {
-    setActivePolicy(null);
-    if (window.history.state?.overlay) window.history.back();
-  }, []);
-
-  const handleCloseAuth = useCallback(() => {
-    setShowAuthModal(false);
-    if (window.history.state?.overlay) window.history.back();
-  }, []);
-
-  // Slideshow interval
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentSlide(prev => (prev + 1) % SLIDESHOW_CONTENT.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    if (!audioRef.current) {
-      const audio = new Audio(FOREST_SOUNDS_URL);
-      audio.loop = true;
-      audio.volume = 0.12;
-      audioRef.current = audio;
-    }
-    
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-    };
-  }, []);
-
-  const toggleMusic = useCallback(() => {
-    if (!audioRef.current) return;
-    
-    if (isMusicPlaying) {
-      audioRef.current.pause();
-      setIsMusicPlaying(false);
-    } else {
-      const playPromise = audioRef.current.play();
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            setIsMusicPlaying(true);
-          })
-          .catch(error => {
-            console.warn("Audio playback interrupted or blocked:", error);
-            setIsMusicPlaying(false);
-          });
-      }
-    }
-  }, [isMusicPlaying]);
 
   const handleMoodSearch = async (mood: string) => {
     if (!mood.trim()) { setAiRec(null); return; }
@@ -237,153 +199,195 @@ const App: React.FC = () => {
     }
   };
 
-  const filteredEvents = useMemo(() => {
+  const trendingEvents = useMemo(() => {
+    // Take the first 5 events for the slideshow
+    return events.slice(0, 5);
+  }, [events]);
+
+  const getRowEvents = (category: Category) => {
     return events.filter(e => {
-      let matchCat = selectedCategory === 'All' || (selectedCategory === 'Community' ? (e.hostPhone !== '917686924919' && e.hostPhone !== '7686924919') : e.category === selectedCategory);
-      const query = searchQuery.toLowerCase();
-      const matchText = e.title.toLowerCase().includes(query) || e.description.toLowerCase().includes(query);
+      const matchCat = e.category === category;
+      const matchSearch = searchQuery.toLowerCase() === '' || 
+                         e.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         e.description.toLowerCase().includes(searchQuery.toLowerCase());
       const matchAi = aiRec ? aiRec.suggestedEventIds.includes(e.id) : true;
-      return matchCat && (aiRec ? matchAi : matchText);
+      return matchCat && (aiRec ? matchAi : matchSearch);
     });
-  }, [events, selectedCategory, searchQuery, aiRec]);
+  };
 
   return (
-    <div className="flex flex-col min-h-screen selection:bg-brand-moss/30">
-      <nav className="fixed top-0 left-0 right-0 z-[100] flex justify-center px-4 pointer-events-none safe-top">
-        <div className="floating-island-nav h-14 md:h-16 flex items-center justify-between px-4 md:px-8 pointer-events-auto">
-          <div className="flex items-center gap-2.5 cursor-pointer group" onClick={() => { setShowDashboard(false); setAiRec(null); setSelectedCategory('All'); setSearchQuery(''); setUserMood(''); window.scrollTo({top:0, behavior:'smooth'}); if(window.history.state?.overlay) window.history.back(); }}>
-            <ConnectionLogo className="w-6 h-6 md:w-7 md:h-7 group-hover:scale-110" />
-            <span className="text-[15px] md:text-lg font-display uppercase tracking-tighter text-white truncate max-w-[140px] md:max-w-none">MAKEMYDAYS</span>
+    <div className="flex flex-col min-h-screen bg-brand-netflix text-white selection:bg-brand-red selection:text-white">
+      {/* Navigation */}
+      <nav className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 px-6 md:px-12 h-16 md:h-20 flex items-center justify-between ${isScrolled ? 'bg-brand-netflix shadow-2xl translate-y-0' : 'bg-gradient-to-b from-brand-netflix/80 to-transparent translate-y-0'}`}>
+        <div className="flex items-center gap-8 md:gap-12">
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo({top:0, behavior:'smooth'})}>
+            <span className="text-xl md:text-3xl font-display font-black text-brand-red tracking-tighter">MAKEMYDAYS</span>
           </div>
+          <div className="hidden lg:flex items-center gap-6 text-[13px] font-bold text-slate-300">
+            <button className="hover:text-white transition-colors" onClick={() => setShowDashboard(false)}>Home</button>
+            <button className="hover:text-white transition-colors">TV Shows</button>
+            <button className="hover:text-white transition-colors">Experiences</button>
+            <button className="hover:text-white transition-colors">New & Popular</button>
+            <button className="hover:text-white transition-colors">My List</button>
+          </div>
+        </div>
 
-          <div className="flex items-center gap-3 md:gap-4">
-            <button onClick={toggleMusic} className="w-10 h-10 md:w-11 md:h-11 flex items-center justify-center rounded-full transition-all bg-white/5 border border-white/10 shadow-sm hover:bg-white/10 active:scale-90">
-              <Visualizer isPlaying={isMusicPlaying} />
-            </button>
-            {currentUser ? (
-              <button onClick={handleToggleDashboard} className="px-4 md:px-6 h-10 md:h-11 bg-white text-slate-900 rounded-xl text-[10px] md:text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all shadow-md">Portal</button>
-            ) : (
-              <button onClick={() => setShowAuthModal(true)} className="px-5 md:px-6 h-10 md:h-11 bg-brand-moss text-white rounded-xl text-[10px] md:text-[11px] font-black uppercase tracking-widest active:scale-95 transition-all shadow-md shadow-brand-moss/10">Join</button>
-            )}
-          </div>
+        <div className="flex items-center gap-6">
+           <div className={`flex items-center gap-3 bg-black/40 border border-white/10 px-4 py-2 rounded-full transition-all group ${isScrolled ? 'opacity-100' : 'opacity-0 md:opacity-100'}`}>
+              <svg className="w-4 h-4 text-slate-400 group-focus-within:text-brand-red transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              <input 
+                type="text" 
+                placeholder="Search experiences..." 
+                className="bg-transparent border-none outline-none text-xs w-24 md:w-48 placeholder:text-slate-600 focus:placeholder:text-slate-400"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+           </div>
+           {currentUser ? (
+              <button onClick={() => setShowDashboard(true)} className="w-8 h-8 rounded-md bg-blue-500 flex items-center justify-center font-black text-xs hover:ring-2 ring-white transition-all">
+                {currentUser.name.charAt(0)}
+              </button>
+           ) : (
+              <button onClick={() => setShowAuthModal(true)} className="px-5 h-8 bg-brand-red text-white rounded text-[11px] font-bold uppercase tracking-wider hover:bg-brand-red/80 transition-all">Join</button>
+           )}
         </div>
       </nav>
 
-      <main className="flex-1 px-4 md:px-10 max-w-7xl mx-auto w-full pt-28 md:pt-44">
-        {showDashboard ? (
-          <Dashboard events={events} bookings={globalBookings} initialTab={dashboardTab} currentUser={currentUser} onRefreshEvents={() => fetchData(currentUser?.uid)} onOpenPolicy={setActivePolicy} />
-        ) : (
-          <div className="space-y-16 md:space-y-32 pb-32">
-            <header className="text-center space-y-10 md:space-y-14">
-              <div className="space-y-6">
-                <span className="text-brand-moss text-[10px] md:text-[12px] font-black uppercase tracking-[0.45em] block animate-pulse-soft">PRIMAL FREQUENCY</span>
-                <h1 className="text-4xl sm:text-7xl md:text-[10.5rem] font-display font-black leading-[1.05] md:leading-[0.85] tracking-[-0.055em] uppercase text-white">
-                  SYNC WITH <br className="hidden sm:block" /> <span className="liquid-text italic">THE WILD</span>
-                </h1>
-                <p className="text-slate-400 text-[11px] md:text-sm font-medium uppercase tracking-[0.12em] max-w-[280px] md:max-w-lg mx-auto leading-relaxed">
-                  Curating grounded experiences for the restless modern spirit. 
-                  <span className="hidden md:inline"> Recalibrate your inner rhythm.</span>
-                </p>
-              </div>
-              
-              <div className="max-w-4xl mx-auto space-y-8 md:space-y-12">
-                 <div className="w-full aspect-video rounded-[2.2rem] md:rounded-[3.5rem] overflow-hidden border border-white/10 bg-slate-900/50 shadow-3xl relative group">
-                    <div className="absolute inset-0 transition-all duration-1000 ease-in-out">
-                       {SLIDESHOW_CONTENT.map((slide, idx) => (
-                         <div 
-                           key={idx}
-                           className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${currentSlide === idx ? 'opacity-100' : 'opacity-0'}`}
-                         >
-                           <img 
-                             src={slide.image} 
-                             alt={slide.title}
-                             className="w-full h-full object-cover transition-transform duration-[10s] ease-linear group-hover:scale-105"
-                           />
-                           <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-90" />
-                           <div className="absolute bottom-6 left-6 md:bottom-12 md:left-12 text-left space-y-2 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-                             <span className="text-brand-moss text-[9px] md:text-[11px] font-black uppercase tracking-[0.4em] block">{slide.label}</span>
-                             <h3 className="text-white text-xl md:text-4xl font-display uppercase tracking-tighter italic">{slide.title}</h3>
-                             <p className="text-slate-400 text-[10px] md:text-sm font-medium uppercase tracking-widest opacity-60">{slide.description}</p>
-                           </div>
-                         </div>
-                       ))}
-                    </div>
-                    <div className="absolute bottom-6 right-6 md:bottom-12 md:right-12 flex gap-1.5">
-                       {SLIDESHOW_CONTENT.map((_, idx) => (
-                         <div 
-                           key={idx} 
-                           className={`h-1 rounded-full transition-all duration-500 ${currentSlide === idx ? 'w-6 md:w-8 bg-brand-moss' : 'w-1.5 bg-white/20'}`}
-                         />
-                       ))}
-                    </div>
-                 </div>
+      {showDashboard ? (
+        <main className="pt-24 px-6 md:px-12">
+          <Dashboard events={events} bookings={globalBookings} currentUser={currentUser} onRefreshEvents={() => fetchData(currentUser?.uid)} onOpenPolicy={setActivePolicy} />
+        </main>
+      ) : (
+        <main className="flex-1 pb-32">
+          {/* Hero Section - Slideshow */}
+          <HeroSection trendingEvents={trendingEvents} onBook={setSelectedEvent} />
 
-                 <div id="mood-search-container" className="nexus-input rounded-[2.2rem] md:rounded-[4.5rem] p-2 md:p-3 flex items-center gap-2 md:gap-4 group transition-all border border-white/10">
-                    <div className="w-10 h-10 md:w-16 md:h-16 bg-white/5 rounded-full flex items-center justify-center shrink-0 transition-transform group-focus-within:scale-110">
-                      <svg className="w-4 h-4 md:w-7 md:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                    </div>
-                    <input type="text" placeholder="Breathe. Your current vibe?" className="flex-1 bg-transparent text-lg md:text-3xl font-medium outline-none placeholder:text-slate-600 text-white h-14 md:h-20" value={userMood} onChange={(e) => { setUserMood(e.target.value); setSearchQuery(e.target.value); if(!e.target.value) setAiRec(null); }} onKeyPress={(e) => e.key === 'Enter' && handleMoodSearch(userMood)} />
-                    <button onClick={() => handleMoodSearch(userMood)} className="bg-white text-slate-900 h-12 md:h-16 px-6 md:px-12 rounded-[1.8rem] md:rounded-[3.5rem] font-black uppercase text-[10px] md:text-[12px] tracking-widest active:scale-95 transition-all shadow-lg hover:bg-brand-moss hover:text-white">SYNC</button>
-                 </div>
-                 
-                 <div className="flex flex-wrap justify-center gap-2.5 md:gap-4">
-                    {MOODS.map(m => (
-                      <button key={m.label} onClick={() => { setUserMood(m.label); setSearchQuery(m.label); handleMoodSearch(m.label); }} className="bg-white/5 backdrop-blur-lg border border-white/10 px-4.5 py-3 md:px-8 md:py-4.5 rounded-full flex items-center gap-2.5 md:gap-4 hover:border-white/30 hover:bg-white/10 hover:shadow-2xl hover:translate-y-[-2px] transition-all active:scale-95 group">
-                        <span className="text-xl group-hover:scale-125 transition-transform duration-500">{m.emoji}</span>
-                        <span className="text-[10px] md:text-[11px] font-black uppercase tracking-widest text-slate-400 group-hover:text-white">{m.label}</span>
-                      </button>
+          {/* Content Rows */}
+          <div className="relative z-10 -mt-16 md:-mt-32 px-6 md:px-12 space-y-12">
+            
+            {/* Rows by Category */}
+            {CATEGORIES.map(category => {
+              const rowEvents = getRowEvents(category);
+              if (rowEvents.length === 0) return null;
+              
+              return (
+                <div key={category} className="space-y-4">
+                  <h2 className="text-xl md:text-2xl font-bold tracking-tight text-slate-100 flex items-center gap-3">
+                    {category}
+                    <div className="h-0.5 flex-1 bg-white/5"></div>
+                  </h2>
+                  <div className="flex gap-4 overflow-x-auto pb-6 -mx-4 px-4 scrollbar-hide scroll-smooth">
+                    {rowEvents.map((e, i) => (
+                      <div key={e.id} className="min-w-[280px] md:min-w-[340px] transform transition-all duration-300 hover:scale-110 hover:z-20">
+                        <EventCard event={e} index={i} onClick={setSelectedEvent} />
+                      </div>
                     ))}
-                 </div>
-              </div>
-            </header>
-
-            <section id="event-grid-container" className="space-y-10 md:space-y-20">
-              <div className="flex items-center gap-2.5 md:gap-5 overflow-x-auto scrollbar-hide py-3 px-1 -mx-4 px-4 md:mx-0">
-                {CATEGORIES.map(cat => (
-                  <button key={cat} onClick={() => setSelectedCategory(cat)} className={`whitespace-nowrap px-6 py-3.5 md:px-10 md:py-5 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest border transition-all active:scale-95 ${selectedCategory === cat ? 'bg-white border-white text-slate-900 shadow-xl translate-y-[-2px]' : 'bg-white/5 border-white/10 text-slate-500 hover:border-white/30 hover:text-white'}`}>
-                    {cat}
-                  </button>
-                ))}
-              </div>
-              
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-10">
-                {filteredEvents.map((e, i) => <EventCard key={e.id} event={e} index={i} onClick={setSelectedEvent} />)}
-              </div>
-              
-              {filteredEvents.length === 0 && (
-                <div className="py-24 text-center space-y-6">
-                  <div className="text-5xl md:text-7xl opacity-20 animate-pulse">🍃</div>
-                  <p className="text-slate-600 font-display uppercase text-[10px] md:text-xs tracking-[0.4em]">RESONANCE UNDETECTED IN THIS AREA</p>
+                  </div>
                 </div>
-              )}
-            </section>
-          </div>
-        )}
-      </main>
+              );
+            })}
 
-      {selectedEvent && <BookingModal event={selectedEvent} onClose={handleCloseEvent} onConfirm={async (slot, date, guestName, guestPhone) => {
-          if (!currentUser) return;
-          const booking: Booking = { 
-            id: Math.random().toString(36).substr(2, 9), 
-            eventId: selectedEvent.id, 
-            eventTitle: selectedEvent.title, 
-            category: selectedEvent.category, 
-            time: slot.time, 
-            eventDate: date, 
-            price: selectedEvent.price, 
-            bookedAt: new Date().toISOString(), 
-            userName: guestName, 
-            userPhone: guestPhone, 
-            hostPhone: selectedEvent.hostPhone, 
-            userUid: currentUser.uid 
-          };
-          await api.saveBooking(booking, currentUser.uid);
-          fetchData(currentUser.uid);
-          setSelectedEvent(null);
-      }} />}
+            {/* AI Recommendation Section */}
+            <div className="py-20 flex flex-col items-center justify-center gap-10 bg-gradient-to-t from-brand-red/5 to-transparent rounded-[3rem] border border-white/5">
+               <div className="text-center max-w-2xl space-y-6 px-6">
+                 <h3 className="text-3xl md:text-5xl font-display font-black tracking-tight uppercase">Vibe-Check Your Journey</h3>
+                 <p className="text-slate-400 text-sm md:text-base leading-relaxed">Not feeling the frequency? Tell us your current mood and let the MMD Oracle curate a unique path for your soul.</p>
+                 <div className="flex flex-col md:flex-row gap-4 pt-4">
+                    <div className="relative flex-1">
+                      <input 
+                        type="text" 
+                        placeholder="Ex: 'I need a primal release' or 'Feeling zen'..." 
+                        className="bg-white/5 border border-white/20 px-8 h-14 rounded-full text-sm w-full outline-none focus:border-brand-red focus:ring-4 ring-brand-red/10 transition-all"
+                        value={userMood}
+                        onChange={(e) => setUserMood(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleMoodSearch(userMood)}
+                      />
+                      <div className="absolute right-6 top-1/2 -translate-y-1/2 text-brand-red">
+                        <svg className="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => handleMoodSearch(userMood)} 
+                      className="px-10 bg-white text-black font-black uppercase tracking-widest text-xs rounded-full h-14 transition-all hover:bg-brand-red hover:text-white active:scale-95 shadow-xl"
+                    >
+                      SYNC AURA
+                    </button>
+                 </div>
+               </div>
+            </div>
+          </div>
+        </main>
+      )}
+
+      {selectedEvent && (
+        <BookingModal 
+          event={selectedEvent} 
+          onClose={() => setSelectedEvent(null)} 
+          onConfirm={async (slot, date, guestName, guestPhone) => {
+            if (!currentUser) {
+              setShowAuthModal(true);
+              return;
+            }
+            const booking: Booking = { 
+              id: Math.random().toString(36).slice(2, 11), 
+              eventId: selectedEvent.id, 
+              eventTitle: selectedEvent.title, 
+              category: selectedEvent.category, 
+              time: slot.time, 
+              eventDate: date, 
+              price: selectedEvent.price, 
+              bookedAt: new Date().toISOString(), 
+              userName: guestName, 
+              userPhone: guestPhone, 
+              hostPhone: selectedEvent.hostPhone, 
+              userUid: currentUser.uid 
+            };
+            await api.saveBooking(booking, currentUser.uid);
+            fetchData(currentUser.uid);
+          }} 
+        />
+      )}
       
-      {showAuthModal && <AuthModal onSuccess={() => setShowAuthModal(false)} onClose={handleCloseAuth} />}
-      {activePolicy && <LegalModal type={activePolicy} onClose={handleClosePolicy} />}
+      {showAuthModal && <AuthModal onSuccess={() => setShowAuthModal(false)} onClose={() => setShowAuthModal(false)} />}
+      {activePolicy && <LegalModal type={activePolicy} onClose={() => setActivePolicy(null)} />}
+      
+      {/* Cinematic Footer */}
+      <footer className="bg-brand-netflix py-20 border-t border-white/5 px-6 md:px-12">
+        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-12 text-slate-500 text-xs">
+          <div className="space-y-4">
+            <h4 className="text-white font-bold uppercase tracking-widest">Connect</h4>
+            <div className="flex flex-col gap-2">
+              <a href="#" className="hover:underline">Instagram</a>
+              <a href="#" className="hover:underline">WhatsApp</a>
+              <a href="#" className="hover:underline">Email Support</a>
+            </div>
+          </div>
+          <div className="space-y-4">
+            <h4 className="text-white font-bold uppercase tracking-widest">Governance</h4>
+            <div className="flex flex-col gap-2">
+              <button onClick={() => setActivePolicy('terms')} className="text-left hover:underline">Terms of Resonance</button>
+              <button onClick={() => setActivePolicy('privacy')} className="text-left hover:underline">Privacy Calibration</button>
+              <button onClick={() => setActivePolicy('refund')} className="text-left hover:underline">Refund Protocol</button>
+            </div>
+          </div>
+          <div className="space-y-4">
+             <h4 className="text-white font-bold uppercase tracking-widest">Global</h4>
+             <div className="flex flex-col gap-2">
+                <span>Vibe Centers</span>
+                <span>Experience Nodes</span>
+                <span>Host Portal</span>
+             </div>
+          </div>
+          <div className="space-y-6">
+            <span className="text-xl md:text-2xl font-display font-black text-brand-red tracking-tighter block">MAKEMYDAYS</span>
+            <p className="italic">Crafting memories beyond the digital veil.</p>
+          </div>
+        </div>
+        <div className="mt-20 text-center text-[10px] text-slate-700 font-bold uppercase tracking-[0.4em]">
+          &copy; {new Date().getFullYear()} Beneme Frequency Lab • All Rights Reserved
+        </div>
+      </footer>
+
       <ChatBot />
     </div>
   );
