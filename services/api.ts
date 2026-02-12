@@ -127,7 +127,7 @@ export const api = {
       const text = response.text;
       if (text === undefined) throw new Error("Empty AI response");
       return JSON.parse(text.trim());
-    } catch (error) {
+    } catch {
       return { reasoning: "✨ Calibrating local frequencies for you.", suggestedEventIds: events.slice(0, 3).map(e => e.id) };
     }
   },

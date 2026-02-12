@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Event, Category, Booking, AIRecommendation, User } from './types';
 import EventCard from './components/EventCard';
 import BookingModal from './components/BookingModal';
@@ -11,28 +11,26 @@ import { auth } from './services/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { INITIAL_EVENTS } from './constants';
 
-const FOREST_SOUNDS_URL = "https://assets.mixkit.co/music/preview/mixkit-forest-ambience-with-birds-chirping-1216.mp3";
-
 const CATEGORIES: Category[] = ['Activity', 'Shows', 'MMD Originals', 'Mindfulness', 'Workshop', 'Therapy'];
 
 const HeroSection = ({ trendingEvents, onBook }: { trendingEvents: Event[], onBook: (e: Event) => void }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      handleNext();
-    }, 8000);
-    return () => clearInterval(timer);
-  }, [currentIndex]);
-
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     setIsTransitioning(true);
     setTimeout(() => {
       setCurrentIndex((prev) => (prev + 1) % trendingEvents.length);
       setIsTransitioning(false);
     }, 500);
-  };
+  }, [trendingEvents.length]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      handleNext();
+    }, 8000);
+    return () => clearInterval(timer);
+  }, [handleNext]);
 
   const activeEvent = trendingEvents[currentIndex];
 
@@ -134,7 +132,7 @@ const App: React.FC = () => {
         const bks = await api.getBookings(userUid);
         setGlobalBookings(bks);
       }
-    } catch (e: any) { 
+    } catch { 
       setEvents(INITIAL_EVENTS);
     }
   }, []);
@@ -194,7 +192,7 @@ const App: React.FC = () => {
     try {
       const rec = await api.getRecommendations(mood, events);
       setAiRec(rec);
-    } catch (err) { 
+    } catch { 
       setAiRec(null);
     }
   };
@@ -277,9 +275,9 @@ const App: React.FC = () => {
                     <div className="h-0.5 flex-1 bg-white/5"></div>
                   </h2>
                   <div className="flex gap-4 overflow-x-auto pb-6 -mx-4 px-4 scrollbar-hide scroll-smooth">
-                    {rowEvents.map((e, i) => (
+                    {rowEvents.map((e) => (
                       <div key={e.id} className="min-w-[280px] md:min-w-[340px] transform transition-all duration-300 hover:scale-110 hover:z-20">
-                        <EventCard event={e} index={i} onClick={setSelectedEvent} />
+                        <EventCard event={e} onClick={setSelectedEvent} />
                       </div>
                     ))}
                   </div>

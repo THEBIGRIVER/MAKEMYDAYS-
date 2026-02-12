@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Event } from '../types';
 
 interface EventCardProps {
   event: Event;
-  index: number;
   onClick: (event: Event) => void;
   id?: string;
 }
