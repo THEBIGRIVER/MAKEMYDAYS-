@@ -3,7 +3,6 @@ import { Event, Category, Booking, AIRecommendation, User } from './types';
 import EventCard from './components/EventCard';
 import BookingModal from './components/BookingModal';
 import Dashboard from './components/Dashboard';
-import ChatBot from './components/ChatBot';
 import LegalModal, { PolicyType } from './components/LegalModal';
 import AuthModal from './components/AuthModal';
 import { api } from './services/api';
@@ -56,7 +55,7 @@ const HeroBillboard = ({ trendingEvents, onBook, favorites, onToggleFavorite }: 
       <div className={`absolute bottom-[10%] md:top-[22%] left-[6%] md:left-[6%] max-w-[90%] md:max-w-[45%] space-y-4 md:space-y-7 transition-all duration-700 z-10 ${isTransitioning ? 'translate-y-8 opacity-0' : 'translate-y-0 opacity-100'}`}>
         <div className="flex items-center gap-3">
           <span className="bg-brand-prime text-white px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-[0.15em] rounded-md shadow-lg shadow-brand-prime/20">Featured</span>
-          <span className="text-slate-300/80 text-sm font-bold tracking-wide uppercase">{activeEvent.category}</span>
+          <span className="text-slate-300/80 text-[10px] font-bold tracking-widest uppercase">{activeEvent.category}</span>
         </div>
         
         <h1 className="text-5xl md:text-8xl font-display font-extrabold leading-[1.05] text-white drop-shadow-2xl tracking-tighter">
@@ -129,6 +128,59 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // History management for Back Button support
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      // If we are at the root state, close everything
+      if (!event.state) {
+        setSelectedEvent(null);
+        setShowDashboard(false);
+        setShowFavoritesOnly(false);
+        setActivePolicy(null);
+        setShowAuthModal(false);
+      } else {
+        // Handle specific states if needed, but for now we just reset to home if state is missing
+        if (event.state.view === 'home') {
+          setSelectedEvent(null);
+          setShowDashboard(false);
+        }
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    // Initial state
+    window.history.replaceState({ view: 'home' }, '');
+
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Sync internal state with history when opening modals or sections
+  const navigateToHome = useCallback(() => {
+    if (selectedEvent || showDashboard || activePolicy || showAuthModal) {
+      window.history.back();
+    }
+  }, [selectedEvent, showDashboard, activePolicy, showAuthModal]);
+
+  const handleOpenEvent = (event: Event) => {
+    setSelectedEvent(event);
+    window.history.pushState({ view: 'event', id: event.id }, '');
+  };
+
+  const handleCloseEvent = () => {
+    if (window.history.state?.view === 'event') {
+      window.history.back();
+    } else {
+      setSelectedEvent(null);
+    }
+  };
+
+  const handleOpenDashboard = (tab: 'bookings' | 'hosting' | 'settings') => {
+    if (!currentUser) { setShowAuthModal(true); return; }
+    setDashboardTab(tab);
+    setShowDashboard(true);
+    window.history.pushState({ view: 'dashboard', tab }, '');
+  };
+
   useEffect(() => {
     const savedFavs = localStorage.getItem('mmd_wishlist');
     if (savedFavs) setFavorites(JSON.parse(savedFavs));
@@ -170,9 +222,7 @@ const App: React.FC = () => {
   };
 
   const openDashboardTab = (tab: 'bookings' | 'hosting' | 'settings') => {
-    if (!currentUser) { setShowAuthModal(true); return; }
-    setDashboardTab(tab);
-    setShowDashboard(true);
+    handleOpenDashboard(tab);
   };
 
   const getRowEvents = (category: Category) => {
@@ -190,13 +240,23 @@ const App: React.FC = () => {
     <div className="flex flex-col min-h-screen bg-brand-navy pb-[80px] md:pb-0 selection:bg-brand-prime/30">
       <nav className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 px-6 h-16 md:h-24 flex items-center justify-between ${isScrolled ? 'bg-brand-navy/90 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] border-b border-white/5' : 'bg-transparent'}`}>
         <div className="flex items-center gap-6 md:gap-14">
-          <span className="text-2xl md:text-3xl font-display font-black text-white tracking-tighter cursor-pointer flex items-center gap-2 group" onClick={() => { setShowDashboard(false); setShowFavoritesOnly(false); window.scrollTo({top:0, behavior:'smooth'}); }}>
+          <span className="text-2xl md:text-3xl font-display font-black text-white tracking-tighter cursor-pointer flex items-center gap-2 group" onClick={() => { 
+            if (showDashboard) window.history.back();
+            setShowFavoritesOnly(false); 
+            window.scrollTo({top:0, behavior:'smooth'}); 
+          }}>
             <div className="w-8 h-8 md:w-10 md:h-10 bg-brand-prime rounded-lg group-hover:rotate-12 transition-transform duration-500 flex items-center justify-center text-white text-lg font-black italic">M</div>
             MAKE<span className="text-brand-prime">MYDAYS</span>
           </span>
           <div className="hidden lg:flex items-center gap-10 text-[13px] font-bold text-slate-400 uppercase tracking-widest">
-            <button className={`${!showDashboard && !showFavoritesOnly ? 'text-white border-b-2 border-brand-prime' : 'hover:text-white'} h-24 flex items-center transition-all`} onClick={() => { setShowDashboard(false); setShowFavoritesOnly(false); }}>Home</button>
-            <button className={`${showFavoritesOnly ? 'text-white border-b-2 border-brand-prime' : 'hover:text-white'} h-24 flex items-center transition-all`} onClick={() => { setShowDashboard(false); setShowFavoritesOnly(true); }}>Watchlist</button>
+            <button className={`${!showDashboard && !showFavoritesOnly ? 'text-white border-b-2 border-brand-prime' : 'hover:text-white'} h-24 flex items-center transition-all`} onClick={() => { 
+              if (showDashboard) window.history.back();
+              setShowFavoritesOnly(false); 
+            }}>Home</button>
+            <button className={`${showFavoritesOnly ? 'text-white border-b-2 border-brand-prime' : 'hover:text-white'} h-24 flex items-center transition-all`} onClick={() => { 
+              if (showDashboard) window.history.back();
+              setShowFavoritesOnly(true); 
+            }}>Watchlist</button>
             <button className="hover:text-white h-24 flex items-center">Store</button>
             <button className="hover:text-white h-24 flex items-center">Categories</button>
           </div>
@@ -204,7 +264,9 @@ const App: React.FC = () => {
 
         <div className="flex items-center gap-6">
            <div className="hidden md:flex items-center gap-3 bg-white/5 border border-white/10 px-5 py-2.5 rounded-xl focus-within:bg-white/10 focus-within:border-brand-prime transition-all duration-300">
-              <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" strokeWidth="2.5"/></svg>
+              <div className="p-1">
+                <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" strokeWidth="2.5"/></svg>
+              </div>
               <input 
                 type="text" placeholder="Search frequencies..." 
                 className="bg-transparent border-none outline-none text-sm w-48 text-white placeholder:text-slate-600"
@@ -228,9 +290,9 @@ const App: React.FC = () => {
         </main>
       ) : (
         <main className="flex-1 animate-fade-in">
-          {!showFavoritesOnly && <HeroBillboard trendingEvents={events.slice(0,5)} onBook={setSelectedEvent} favorites={favorites} onToggleFavorite={toggleFavorite} />}
+          {!showFavoritesOnly && <HeroBillboard trendingEvents={events.slice(0,5)} onBook={handleOpenEvent} favorites={favorites} onToggleFavorite={toggleFavorite} />}
 
-          <div className={`relative z-10 px-6 md:px-12 space-y-16 md:space-y-24 ${showFavoritesOnly ? 'pt-32' : '-mt-16 md:mt-0'} pb-32`}>
+          <div className={`relative z-10 px-6 md:px-12 space-y-10 md:space-y-12 ${showFavoritesOnly ? 'pt-32' : 'mt-12 md:mt-20'} pb-32`}>
             {showFavoritesOnly && favorites.length === 0 && (
               <div className="py-32 text-center text-slate-500 space-y-6">
                 <div className="w-24 h-24 bg-white/5 border border-white/10 rounded-3xl mx-auto flex items-center justify-center">
@@ -264,7 +326,7 @@ const App: React.FC = () => {
                       <div key={e.id} className="min-w-[300px] md:min-w-[440px] snap-center">
                         <EventCard 
                           event={e} 
-                          onClick={setSelectedEvent} 
+                          onClick={handleOpenEvent} 
                           isFavorite={favorites.includes(e.id)} 
                           onToggleFavorite={toggleFavorite}
                         />
@@ -302,16 +364,22 @@ const App: React.FC = () => {
 
       {/* Modern Sticky Navigation (Mobile) */}
       <nav className="md:hidden fixed bottom-6 left-6 right-6 z-[200] bg-[#1A242E]/80 backdrop-blur-3xl border border-white/10 h-16 rounded-[2rem] flex items-center justify-around px-2 shadow-2xl shadow-black/50">
-        <button onClick={() => { setShowDashboard(false); setShowFavoritesOnly(false); }} className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all ${!showDashboard && !showFavoritesOnly ? 'bg-brand-prime text-white' : 'text-slate-500 hover:text-white'}`}>
+        <button onClick={() => { 
+          if (showDashboard) window.history.back();
+          setShowFavoritesOnly(false); 
+        }} className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all ${!showDashboard && !showFavoritesOnly ? 'bg-brand-prime text-white' : 'text-slate-500 hover:text-white'}`}>
           <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
         </button>
-        <button className="flex items-center justify-center w-12 h-12 rounded-2xl text-slate-500 hover:text-white transition-all">
+        <div className="flex items-center justify-center w-12 h-12 rounded-2xl text-slate-500">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" strokeWidth="2.5"/></svg>
-        </button>
+        </div>
         <button onClick={() => openDashboardTab('hosting')} className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all ${showDashboard && dashboardTab === 'hosting' ? 'bg-brand-prime text-white' : 'text-slate-500 hover:text-white'}`}>
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" strokeWidth="2.5"/></svg>
         </button>
-        <button onClick={() => { setShowDashboard(false); setShowFavoritesOnly(true); }} className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all ${showFavoritesOnly ? 'bg-brand-prime text-white' : 'text-slate-500 hover:text-white'}`}>
+        <button onClick={() => { 
+          if (showDashboard) window.history.back();
+          setShowFavoritesOnly(true); 
+        }} className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all ${showFavoritesOnly ? 'bg-brand-prime text-white' : 'text-slate-500 hover:text-white'}`}>
           <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
         </button>
         <button onClick={() => openDashboardTab('bookings')} className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all ${showDashboard && dashboardTab === 'bookings' ? 'bg-brand-prime text-white' : 'text-slate-500 hover:text-white'}`}>
@@ -322,7 +390,7 @@ const App: React.FC = () => {
       {selectedEvent && (
         <BookingModal 
           event={selectedEvent} 
-          onClose={() => setSelectedEvent(null)} 
+          onClose={handleCloseEvent} 
           onConfirm={async (slot, date, guestName, guestPhone) => {
             if (!currentUser) { setShowAuthModal(true); return; }
             const booking: Booking = { id: Math.random().toString(36).slice(2, 11), eventId: selectedEvent.id, eventTitle: selectedEvent.title, category: selectedEvent.category, time: slot.time, eventDate: date, price: selectedEvent.price, bookedAt: new Date().toISOString(), userName: guestName, userPhone: guestPhone, hostPhone: selectedEvent.hostPhone, userUid: currentUser.uid };
@@ -334,7 +402,6 @@ const App: React.FC = () => {
       
       {showAuthModal && <AuthModal onSuccess={() => setShowAuthModal(false)} onClose={() => setShowAuthModal(false)} />}
       {activePolicy && <LegalModal type={activePolicy} onClose={() => setActivePolicy(null)} />}
-      <ChatBot />
     </div>
   );
 };

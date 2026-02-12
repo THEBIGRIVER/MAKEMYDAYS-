@@ -1,8 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { chatService } from '../services/chatService.ts';
 
-const ChatBot: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
+interface ChatBotProps {
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
+}
+
+const ChatBot: React.FC<ChatBotProps> = ({ isOpen, setIsOpen }) => {
   const [messages, setMessages] = useState<{ role: 'user' | 'ai'; text: string }[]>([
     { role: 'ai', text: "How can I help you discover something new today?" }
   ]);
@@ -12,7 +16,7 @@ const ChatBot: React.FC = () => {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isTyping]);
+  }, [messages, isTyping, isOpen]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();

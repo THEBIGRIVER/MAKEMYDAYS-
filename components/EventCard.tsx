@@ -23,18 +23,18 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick, isFavorite, onTog
     <div 
       id={id}
       onClick={() => onClick(event)}
-      className="group cursor-pointer relative aspect-video w-full overflow-hidden rounded-xl transition-all duration-500 bg-brand-navy/50 hover:z-30 md:hover:scale-105 hover:shadow-[0_20px_50px_rgba(0,0,0,0.6)] hover:ring-2 hover:ring-brand-prime/50"
+      className="group cursor-pointer relative aspect-video w-full overflow-hidden rounded-xl transition-all duration-500 bg-white/5 backdrop-blur-2xl border border-white/10 hover:z-30 md:hover:scale-105 hover:shadow-[0_20px_50px_rgba(0,0,0,0.7)] hover:ring-2 hover:ring-brand-prime/50 hover:bg-white/10"
     >
       <img 
         src={imgSrc} 
         alt={event.title} 
         onError={() => setImgSrc(FALLBACK_IMAGE)}
-        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-80 group-hover:opacity-100" 
       />
       
       {/* Price Badge (Premium Tag) */}
       <div className="absolute top-3 left-3 z-40 transition-all duration-500 group-hover:scale-105 origin-top-left">
-        <div className="bg-[#0F171E]/80 backdrop-blur-xl border border-white/10 px-3 py-1 rounded-lg shadow-2xl flex items-center group-hover:bg-brand-prime group-hover:border-brand-prime transition-all duration-300">
+        <div className="bg-[#0F171E]/60 backdrop-blur-2xl border border-white/10 px-3 py-1 rounded-lg shadow-2xl flex items-center group-hover:bg-brand-prime group-hover:border-brand-prime transition-all duration-300">
           <span className="text-xs font-bold text-white tracking-tight">₹{event.price}</span>
         </div>
       </div>
@@ -55,7 +55,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick, isFavorite, onTog
             
             <button 
               onClick={handleToggle}
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${isFavorite ? 'bg-red-500 text-white' : 'bg-white/10 text-white hover:bg-white/30 backdrop-blur-md'}`}
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${isFavorite ? 'bg-red-500 text-white shadow-lg' : 'bg-white/10 text-white hover:bg-white/30 backdrop-blur-2xl'}`}
             >
               <svg className={`w-5 h-5 ${isFavorite ? 'fill-current' : 'fill-none'}`} stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
@@ -67,8 +67,8 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick, isFavorite, onTog
             {event.title}
           </h4>
           
-          <div className="flex items-center gap-3 text-[11px] font-semibold text-slate-300">
-             <span className="uppercase tracking-widest">{event.category}</span>
+          <div className="flex items-center gap-3 text-[9px] font-semibold text-slate-300">
+             <span className="uppercase tracking-[0.2em]">{event.category}</span>
              <span className="w-1 h-1 rounded-full bg-slate-500"></span>
              <span>Experience</span>
           </div>
@@ -78,13 +78,13 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick, isFavorite, onTog
       {/* Mobile Persistent Tags */}
       <div className="md:hidden absolute bottom-3 left-3 right-3 flex justify-between items-end z-40">
          <div className="space-y-1.5">
-           <span className="bg-black/40 backdrop-blur-xl text-white text-[11px] font-bold px-3 py-1.5 rounded-lg border border-white/10 block w-fit">
+           <span className="bg-black/40 backdrop-blur-2xl text-white text-[11px] font-bold px-3 py-1.5 rounded-lg border border-white/10 block w-fit">
              {event.title}
            </span>
          </div>
          <button 
           onClick={handleToggle}
-          className={`w-10 h-10 rounded-full flex items-center justify-center border border-white/10 ${isFavorite ? 'bg-red-500 text-white shadow-lg' : 'bg-black/40 text-white backdrop-blur-xl'}`}
+          className={`w-10 h-10 rounded-full flex items-center justify-center border border-white/10 ${isFavorite ? 'bg-red-500 text-white shadow-lg' : 'bg-black/40 text-white backdrop-blur-2xl'}`}
         >
           <svg className={`w-5 h-5 ${isFavorite ? 'fill-current' : 'fill-none'}`} stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />

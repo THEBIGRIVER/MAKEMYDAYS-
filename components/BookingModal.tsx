@@ -70,7 +70,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ event, onClose, onConfirm }
           <div className="absolute inset-0 bg-gradient-to-t from-brand-navy to-transparent" />
           <div className="absolute bottom-6 left-8 right-8 flex justify-between items-end">
             <div>
-              <span className="text-brand-prime text-xs font-black uppercase tracking-widest">{event.category}</span>
+              <span className="text-brand-prime text-[9px] font-black uppercase tracking-[0.2em]">{event.category}</span>
               <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight">{event.title}</h2>
             </div>
             <button onClick={onClose} className="text-white/50 hover:text-white transition-colors mb-2"><svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" /></svg></button>
