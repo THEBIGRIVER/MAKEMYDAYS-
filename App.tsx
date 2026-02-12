@@ -13,7 +13,12 @@ import { INITIAL_EVENTS } from './constants';
 
 const CATEGORIES: Category[] = ['Activity', 'Shows', 'MMD Originals', 'Mindfulness', 'Workshop', 'Therapy'];
 
-const HeroBillboard = ({ trendingEvents, onBook }: { trendingEvents: Event[], onBook: (e: Event) => void }) => {
+const HeroBillboard = ({ trendingEvents, onBook, favorites, onToggleFavorite }: { 
+  trendingEvents: Event[], 
+  onBook: (e: Event) => void,
+  favorites: string[],
+  onToggleFavorite: (id: string) => void
+}) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
@@ -33,9 +38,10 @@ const HeroBillboard = ({ trendingEvents, onBook }: { trendingEvents: Event[], on
   const activeEvent = trendingEvents[currentIndex];
   if (!activeEvent) return null;
 
+  const isFav = favorites.includes(activeEvent.id);
+
   return (
     <div className="relative w-full h-[60vh] md:h-[85vh] overflow-hidden bg-brand-navy">
-      {/* Cinematic Background */}
       <div className={`absolute inset-0 transition-opacity duration-1000 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
         <img 
           src={activeEvent.image} 
@@ -44,11 +50,9 @@ const HeroBillboard = ({ trendingEvents, onBook }: { trendingEvents: Event[], on
         />
       </div>
       
-      {/* Prime Gradients */}
       <div className="absolute inset-0 prime-hero-gradient hidden md:block" />
       <div className="absolute inset-0 bg-gradient-to-t from-brand-navy via-brand-navy/20 md:via-transparent to-transparent" />
       
-      {/* Billboard Content */}
       <div className={`absolute bottom-[15%] md:top-[20%] left-[5%] md:left-[6%] max-w-[90%] md:max-w-[40%] space-y-4 md:space-y-6 transition-all duration-700 z-10 ${isTransitioning ? 'translate-y-5 opacity-0' : 'translate-y-0 opacity-100'}`}>
         <div className="flex items-center gap-3">
           <span className="bg-brand-prime text-white px-2 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-sm">Included with MMD</span>
@@ -71,13 +75,21 @@ const HeroBillboard = ({ trendingEvents, onBook }: { trendingEvents: Event[], on
             <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M7 6v12l10-6z"/></svg>
             Book Now
           </button>
-          <button className="w-12 h-12 md:w-14 md:h-14 bg-white/10 backdrop-blur-md text-white rounded-md font-bold flex items-center justify-center hover:bg-white/20 transition-all">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4"/></svg>
+          
+          {/* Wish List Icon Button */}
+          <button 
+            onClick={() => onToggleFavorite(activeEvent.id)}
+            className={`w-12 h-12 md:w-14 md:h-14 backdrop-blur-md rounded-md font-bold flex items-center justify-center transition-all border-2 ${isFav ? 'bg-brand-prime border-brand-prime text-white' : 'bg-white/10 border-white/20 text-white hover:bg-white/20'}`}
+          >
+            {isFav ? (
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            ) : (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4"/></svg>
+            )}
           </button>
         </div>
       </div>
 
-      {/* Slide Indicators */}
       <div className="absolute bottom-10 right-[6%] flex items-center gap-1.5 z-20">
         {trendingEvents.map((_, idx) => (
           <button
@@ -104,6 +116,8 @@ const App: React.FC = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
   const fetchData = useCallback(async (userUid?: string) => {
     try {
@@ -119,6 +133,9 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    const savedFavs = localStorage.getItem('mmd_wishlist');
+    if (savedFavs) setFavorites(JSON.parse(savedFavs));
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         const user: User = { uid: firebaseUser.uid, name: firebaseUser.displayName || 'Explorer', email: firebaseUser.email || '', bookings: [], role: firebaseUser.email === 'admin@makemydays.com' ? 'admin' : 'user' };
@@ -138,6 +155,14 @@ const App: React.FC = () => {
       window.removeEventListener('scroll', handleScroll);
     };
   }, [fetchData]);
+
+  const toggleFavorite = (id: string) => {
+    const newFavs = favorites.includes(id) 
+      ? favorites.filter(f => f !== id) 
+      : [...favorites, id];
+    setFavorites(newFavs);
+    localStorage.setItem('mmd_wishlist', JSON.stringify(newFavs));
+  };
 
   const handleMoodSearch = async (mood: string) => {
     if (!mood.trim()) { setAiRec(null); return; }
@@ -159,21 +184,21 @@ const App: React.FC = () => {
       const matchSearch = searchQuery.toLowerCase() === '' || 
                          e.title.toLowerCase().includes(searchQuery.toLowerCase());
       const matchAi = aiRec ? aiRec.suggestedEventIds.includes(e.id) : true;
-      return matchCat && (aiRec ? matchAi : matchSearch);
+      const matchFav = showFavoritesOnly ? favorites.includes(e.id) : true;
+      return matchCat && (aiRec ? matchAi : matchSearch) && matchFav;
     });
   };
 
   return (
     <div className="flex flex-col min-h-screen bg-brand-navy pb-[72px] md:pb-0">
-      {/* Top Nav (Prime Video Style) */}
       <nav className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 px-6 h-14 md:h-20 flex items-center justify-between ${isScrolled ? 'bg-brand-navy shadow-xl' : 'bg-gradient-to-b from-brand-navy/90 to-transparent'}`}>
         <div className="flex items-center gap-4 md:gap-10">
-          <span className="text-xl md:text-3xl font-display font-black text-white tracking-tighter cursor-pointer" onClick={() => { setShowDashboard(false); window.scrollTo({top:0, behavior:'smooth'}); }}>
+          <span className="text-xl md:text-3xl font-display font-black text-white tracking-tighter cursor-pointer" onClick={() => { setShowDashboard(false); setShowFavoritesOnly(false); window.scrollTo({top:0, behavior:'smooth'}); }}>
             MAKE<span className="text-brand-prime">MYDAYS</span>
           </span>
           <div className="hidden lg:flex items-center gap-8 text-sm font-bold text-slate-300">
-            <button className={`${!showDashboard ? 'text-white border-b-2 border-brand-prime' : 'hover:text-white'} h-20 flex items-center transition-all`} onClick={() => setShowDashboard(false)}>Home</button>
-            <button className="hover:text-white h-20 flex items-center">Store</button>
+            <button className={`${!showDashboard && !showFavoritesOnly ? 'text-white border-b-2 border-brand-prime' : 'hover:text-white'} h-20 flex items-center transition-all`} onClick={() => { setShowDashboard(false); setShowFavoritesOnly(false); }}>Home</button>
+            <button className={`${showFavoritesOnly ? 'text-white border-b-2 border-brand-prime' : 'hover:text-white'} h-20 flex items-center transition-all`} onClick={() => { setShowDashboard(false); setShowFavoritesOnly(true); }}>Watchlist</button>
             <button className="hover:text-white h-20 flex items-center">Live TV</button>
             <button className="hover:text-white h-20 flex items-center">Categories</button>
           </div>
@@ -205,9 +230,18 @@ const App: React.FC = () => {
         </main>
       ) : (
         <main className="flex-1 animate-fade-in">
-          <HeroBillboard trendingEvents={events.slice(0,5)} onBook={setSelectedEvent} />
+          {!showFavoritesOnly && <HeroBillboard trendingEvents={events.slice(0,5)} onBook={setSelectedEvent} favorites={favorites} onToggleFavorite={toggleFavorite} />}
 
-          <div className="relative z-10 px-6 md:px-12 space-y-12 md:space-y-14 -mt-10 md:mt-0 pb-20">
+          <div className={`relative z-10 px-6 md:px-12 space-y-12 md:space-y-14 ${showFavoritesOnly ? 'pt-24' : '-mt-10 md:mt-0'} pb-20`}>
+            {showFavoritesOnly && favorites.length === 0 && (
+              <div className="py-20 text-center text-slate-400 space-y-4">
+                <svg className="w-20 h-20 mx-auto opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M12 4v16m8-8H4"/></svg>
+                <h2 className="text-2xl font-bold text-white">Your Watchlist is empty</h2>
+                <p>Find your next experience and add it to your Watchlist.</p>
+                <button onClick={() => setShowFavoritesOnly(false)} className="px-8 py-3 bg-brand-prime text-white rounded-md font-bold">Explore Now</button>
+              </div>
+            )}
+            
             {CATEGORIES.map(category => {
               const rowEvents = getRowEvents(category);
               if (rowEvents.length === 0) return null;
@@ -221,7 +255,12 @@ const App: React.FC = () => {
                   <div className="flex gap-4 overflow-x-auto pb-6 -mx-6 px-6 scrollbar-hide snap-x">
                     {rowEvents.map((e) => (
                       <div key={e.id} className="min-w-[280px] md:min-w-[400px] snap-center">
-                        <EventCard event={e} onClick={setSelectedEvent} />
+                        <EventCard 
+                          event={e} 
+                          onClick={setSelectedEvent} 
+                          isFavorite={favorites.includes(e.id)} 
+                          onToggleFavorite={toggleFavorite}
+                        />
                       </div>
                     ))}
                   </div>
@@ -230,28 +269,30 @@ const App: React.FC = () => {
             })}
 
             {/* AI Mood Footer */}
-            <div className="py-16 md:py-24 flex flex-col items-center justify-center bg-brand-slate/40 rounded-xl border border-white/5 px-6">
-               <div className="text-center max-w-2xl space-y-6">
-                 <h3 className="text-2xl md:text-5xl font-bold tracking-tight text-white">Not sure what to watch?</h3>
-                 <p className="text-slate-400 text-sm md:text-lg">Tell us your current mood and we'll curate the perfect experience.</p>
-                 <div className="flex flex-col md:flex-row gap-4 pt-4">
-                    <input 
-                      type="text" placeholder="I feel adventurous..." 
-                      className="bg-brand-navy border border-white/10 px-8 h-14 rounded-md text-lg w-full md:w-[400px] outline-none focus:border-brand-prime transition-all"
-                      value={userMood}
-                      onChange={(e) => setUserMood(e.target.value)}
-                    />
-                    <button onClick={() => handleMoodSearch(userMood)} className="h-14 bg-brand-prime text-white px-10 rounded-md font-bold text-lg active:scale-95 shadow-xl transition-all">SYNC</button>
-                 </div>
-               </div>
-            </div>
+            {!showFavoritesOnly && (
+              <div className="py-16 md:py-24 flex flex-col items-center justify-center bg-brand-slate/40 rounded-xl border border-white/5 px-6">
+                <div className="text-center max-w-2xl space-y-6">
+                  <h3 className="text-2xl md:text-5xl font-bold tracking-tight text-white">Not sure what to watch?</h3>
+                  <p className="text-slate-400 text-sm md:text-lg">Tell us your current mood and we'll curate the perfect experience.</p>
+                  <div className="flex flex-col md:flex-row gap-4 pt-4">
+                      <input 
+                        type="text" placeholder="I feel adventurous..." 
+                        className="bg-brand-navy border border-white/10 px-8 h-14 rounded-md text-lg w-full md:w-[400px] outline-none focus:border-brand-prime transition-all"
+                        value={userMood}
+                        onChange={(e) => setUserMood(e.target.value)}
+                      />
+                      <button onClick={() => handleMoodSearch(userMood)} className="h-14 bg-brand-prime text-white px-10 rounded-md font-bold text-lg active:scale-95 shadow-xl transition-all">SYNC</button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </main>
       )}
 
       {/* Mobile Sticky Footer */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[200] bg-brand-navy/95 backdrop-blur-xl border-t border-white/10 h-16 flex items-center justify-around px-4 pb-[env(safe-area-inset-bottom)]">
-        <button onClick={() => setShowDashboard(false)} className={`flex flex-col items-center gap-1 ${!showDashboard ? 'text-brand-prime' : 'text-slate-500'}`}>
+        <button onClick={() => { setShowDashboard(false); setShowFavoritesOnly(false); }} className={`flex flex-col items-center gap-1 ${!showDashboard && !showFavoritesOnly ? 'text-brand-prime' : 'text-slate-500'}`}>
           <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
           <span className="text-[10px] font-bold uppercase">Home</span>
         </button>
@@ -263,9 +304,13 @@ const App: React.FC = () => {
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" strokeWidth="2.5"/></svg>
           <span className="text-[10px] font-bold uppercase">Host</span>
         </button>
-        <button onClick={() => openDashboardTab('bookings')} className={`flex flex-col items-center gap-1 ${showDashboard && dashboardTab === 'bookings' ? 'text-brand-prime' : 'text-slate-500'}`}>
+        <button onClick={() => { setShowDashboard(false); setShowFavoritesOnly(true); }} className={`flex flex-col items-center gap-1 ${showFavoritesOnly ? 'text-brand-prime' : 'text-slate-500'}`}>
           <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-          <span className="text-[10px] font-bold uppercase">My Stuff</span>
+          <span className="text-[10px] font-bold uppercase">Watchlist</span>
+        </button>
+        <button onClick={() => openDashboardTab('bookings')} className={`flex flex-col items-center gap-1 ${showDashboard && dashboardTab === 'bookings' ? 'text-brand-prime' : 'text-slate-500'}`}>
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" strokeWidth="2.5"/></svg>
+          <span className="text-[10px] font-bold uppercase">Bookings</span>
         </button>
       </nav>
 
