@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#141414">
     <title>MAKEMYDAYS — Deep Forest Residency</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -51,42 +52,22 @@
                 sage: '#D1FAE5',
                 bark: '#451A03',
                 gold: '#FCD34D',
-                red: '#E50914', // Netflix Red
+                red: '#E50914',
                 netflix: '#141414'
               }
             },
             animation: {
               'float': 'float 8s ease-in-out infinite',
-              'drift': 'drift 45s ease-in-out infinite',
-              'shimmer': 'shimmer 6s linear infinite',
-              'music-visualizer': 'music-visualizer 0.8s infinite ease-in-out alternate',
-              'pulse-soft': 'pulse-soft 5s ease-in-out infinite',
-              'dapple': 'dapple 20s ease-in-out infinite',
+              'shimmer': 'shimmer 6s linear infinite'
             },
             keyframes: {
               float: {
                 '0%, 100%': { transform: 'translateY(0) scale(1)' },
                 '50%': { transform: 'translateY(-20px) scale(1.01)' },
               },
-              drift: {
-                '0%, 100%': { transform: 'translate(0, 0) rotate(0deg)' },
-                '50%': { transform: 'translate(10vw, 8vh) rotate(5deg)' },
-              },
               shimmer: {
                 '0%': { backgroundPosition: '-200% center' },
                 '100%': { backgroundPosition: '200% center' },
-              },
-              'music-visualizer': {
-                '0%': { height: '10%' },
-                '100%': { height: '100%' }
-              },
-              'pulse-soft': {
-                '0%, 100%': { opacity: '0.4' },
-                '50%': { opacity: '0.8' }
-              },
-              dapple: {
-                '0%, 100%': { opacity: '0.1', transform: 'scale(1) rotate(0deg)' },
-                '50%': { opacity: '0.3', transform: 'scale(1.3) rotate(15deg)' }
               }
             }
           }
@@ -104,36 +85,36 @@
         margin: 0;
         padding: 0;
         overflow-x: hidden;
-        overscroll-behavior-y: none;
+        overscroll-behavior: none;
+        background-color: #141414;
       }
       body {
         font-family: 'Inter', sans-serif;
-        background-color: #141414; 
         color: #F8FAFC;
         -webkit-font-smoothing: antialiased;
-        position: relative;
+        padding-top: var(--sat);
+        padding-bottom: var(--sab);
       }
-      
       .font-display { font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: -0.04em; }
-      
       .glass-card {
         background: rgba(20, 20, 20, 0.75);
         backdrop-filter: blur(25px) saturate(180%);
         -webkit-backdrop-filter: blur(25px) saturate(180%);
         border: 1px solid rgba(255, 255, 255, 0.1);
       }
-
-      .liquid-text {
-        background: linear-gradient(to right, #ffffff 0%, #E50914 50%, #ffffff 100%);
-        background-size: 200% auto;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        animation: shimmer 10s linear infinite;
-      }
-
       ::-webkit-scrollbar { width: 0; height: 0; }
       .scrollbar-hide::-webkit-scrollbar { display: none; }
       .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+      /* Mobile optimizations for scrolling rows */
+      .snap-x {
+        scroll-snap-type: x mandatory;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+      }
+      .snap-center {
+        scroll-snap-align: center;
+      }
     </style>
   </head>
   <body>

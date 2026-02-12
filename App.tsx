@@ -37,7 +37,7 @@ const HeroSection = ({ trendingEvents, onBook }: { trendingEvents: Event[], onBo
   if (!activeEvent) return null;
 
   return (
-    <div className="relative w-full h-[85vh] md:h-[95vh] overflow-hidden bg-brand-netflix">
+    <div className="relative w-full h-[75vh] md:h-[95vh] overflow-hidden bg-brand-netflix">
       {/* Slideshow background with crossfade */}
       <div className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
         <img 
@@ -52,42 +52,42 @@ const HeroSection = ({ trendingEvents, onBook }: { trendingEvents: Event[], onBo
       <div className="absolute inset-0 bg-gradient-to-t from-brand-netflix via-transparent to-transparent" />
       
       {/* Content Container */}
-      <div className={`absolute bottom-[15%] left-[5%] md:left-[8%] max-w-[90%] md:max-w-[45%] space-y-4 md:space-y-6 transition-all duration-700 ${isTransitioning ? 'translate-y-10 opacity-0' : 'translate-y-0 opacity-100'}`}>
+      <div className={`absolute bottom-[10%] md:bottom-[15%] left-[5%] md:left-[8%] max-w-[90%] md:max-w-[45%] space-y-4 md:space-y-6 transition-all duration-700 ${isTransitioning ? 'translate-y-10 opacity-0' : 'translate-y-0 opacity-100'}`}>
         <div className="flex items-center gap-3">
           <div className="w-1 h-6 bg-brand-red rounded-full animate-pulse"></div>
           <span className="text-brand-red font-black uppercase tracking-[0.4em] text-[10px] md:text-xs">Trending Now</span>
         </div>
         
-        <h1 className="text-4xl md:text-8xl font-display font-black leading-tight uppercase text-white drop-shadow-2xl">
+        <h1 className="text-3xl md:text-8xl font-display font-black leading-tight uppercase text-white drop-shadow-2xl">
           {activeEvent.title}
         </h1>
         
-        <p className="text-slate-200 text-sm md:text-lg font-medium leading-relaxed line-clamp-3 md:line-clamp-none max-w-xl">
+        <p className="text-slate-200 text-xs md:text-lg font-medium leading-relaxed line-clamp-3 md:line-clamp-none max-w-xl">
           {activeEvent.description}
         </p>
         
-        <div className="flex items-center gap-4 pt-4">
+        <div className="flex items-center gap-3 md:gap-4 pt-2 md:pt-4">
           <button 
             onClick={() => onBook(activeEvent)}
-            className="px-8 md:px-12 h-12 md:h-14 bg-white text-black rounded-md font-bold text-sm md:text-lg hover:bg-white/80 transition-all flex items-center gap-3 active:scale-95 group"
+            className="flex-1 md:flex-none px-6 md:px-12 h-12 md:h-14 bg-white text-black rounded-md font-bold text-sm md:text-lg hover:bg-white/80 transition-all flex items-center justify-center gap-2 md:gap-3 active:scale-95 group"
           >
-            <svg className="w-6 h-6 fill-current group-hover:scale-110 transition-transform" viewBox="0 0 24 24"><path d="M7 6v12l10-6z"/></svg>
-            Book Experience
+            <svg className="w-5 h-5 md:w-6 md:h-6 fill-current" viewBox="0 0 24 24"><path d="M7 6v12l10-6z"/></svg>
+            Book
           </button>
-          <button className="px-8 md:px-12 h-12 md:h-14 bg-white/20 backdrop-blur-md text-white rounded-md font-bold text-sm md:text-lg hover:bg-white/30 transition-all flex items-center gap-3">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            Learn More
+          <button className="flex-1 md:flex-none px-6 md:px-12 h-12 md:h-14 bg-white/20 backdrop-blur-md text-white rounded-md font-bold text-sm md:text-lg hover:bg-white/30 transition-all flex items-center justify-center gap-2 md:gap-3">
+            <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Details
           </button>
         </div>
       </div>
 
-      {/* Pagination Indicators */}
-      <div className="absolute bottom-10 right-10 flex items-center gap-3 z-20">
+      {/* Pagination Indicators - Smaller on mobile */}
+      <div className="absolute bottom-6 right-6 md:bottom-10 md:right-10 flex items-center gap-2 md:gap-3 z-20">
         {trendingEvents.map((_, idx) => (
           <button
             key={idx}
             onClick={() => setCurrentIndex(idx)}
-            className={`transition-all duration-300 h-1.5 rounded-full ${currentIndex === idx ? 'w-10 bg-brand-red' : 'w-4 bg-white/30 hover:bg-white/50'}`}
+            className={`transition-all duration-300 h-1 md:h-1.5 rounded-full ${currentIndex === idx ? 'w-6 md:w-10 bg-brand-red' : 'w-2 md:w-4 bg-white/30'}`}
           />
         ))}
       </div>
@@ -160,7 +160,7 @@ const App: React.FC = () => {
       setIsScrolled(window.scrollY > 50);
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
       unsubscribe();
       window.removeEventListener('scroll', handleScroll);
@@ -198,7 +198,6 @@ const App: React.FC = () => {
   };
 
   const trendingEvents = useMemo(() => {
-    // Take the first 5 events for the slideshow
     return events.slice(0, 5);
   }, [events]);
 
@@ -215,11 +214,11 @@ const App: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-brand-netflix text-white selection:bg-brand-red selection:text-white">
-      {/* Navigation */}
-      <nav className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 px-6 md:px-12 h-16 md:h-20 flex items-center justify-between ${isScrolled ? 'bg-brand-netflix shadow-2xl translate-y-0' : 'bg-gradient-to-b from-brand-netflix/80 to-transparent translate-y-0'}`}>
-        <div className="flex items-center gap-8 md:gap-12">
+      {/* Top Navigation */}
+      <nav className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 px-4 md:px-12 h-14 md:h-20 flex items-center justify-between ${isScrolled ? 'bg-brand-netflix shadow-2xl' : 'bg-gradient-to-b from-brand-netflix/80 to-transparent'}`}>
+        <div className="flex items-center gap-4 md:gap-12">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo({top:0, behavior:'smooth'})}>
-            <span className="text-xl md:text-3xl font-display font-black text-brand-red tracking-tighter">MAKEMYDAYS</span>
+            <span className="text-lg md:text-3xl font-display font-black text-brand-red tracking-tighter">MAKEMYDAYS</span>
           </div>
           <div className="hidden lg:flex items-center gap-6 text-[13px] font-bold text-slate-300">
             <button className="hover:text-white transition-colors" onClick={() => setShowDashboard(false)}>Home</button>
@@ -230,38 +229,42 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-6">
-           <div className={`flex items-center gap-3 bg-black/40 border border-white/10 px-4 py-2 rounded-full transition-all group ${isScrolled ? 'opacity-100' : 'opacity-0 md:opacity-100'}`}>
+        <div className="flex items-center gap-4">
+           {/* Desktop only search */}
+           <div className="hidden md:flex items-center gap-3 bg-black/40 border border-white/10 px-4 py-2 rounded-full group">
               <svg className="w-4 h-4 text-slate-400 group-focus-within:text-brand-red transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
               <input 
                 type="text" 
                 placeholder="Search experiences..." 
-                className="bg-transparent border-none outline-none text-xs w-24 md:w-48 placeholder:text-slate-600 focus:placeholder:text-slate-400"
+                className="bg-transparent border-none outline-none text-xs w-48 placeholder:text-slate-600 focus:placeholder:text-slate-400"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
            </div>
-           {currentUser ? (
-              <button onClick={() => setShowDashboard(true)} className="w-8 h-8 rounded-md bg-blue-500 flex items-center justify-center font-black text-xs hover:ring-2 ring-white transition-all">
-                {currentUser.name.charAt(0)}
-              </button>
-           ) : (
-              <button onClick={() => setShowAuthModal(true)} className="px-5 h-8 bg-brand-red text-white rounded text-[11px] font-bold uppercase tracking-wider hover:bg-brand-red/80 transition-all">Join</button>
-           )}
+           {/* Desktop Sanctuary Trigger */}
+           <div className="hidden md:block">
+              {currentUser ? (
+                <button onClick={() => setShowDashboard(true)} className="w-8 h-8 rounded-md bg-blue-500 flex items-center justify-center font-black text-xs hover:ring-2 ring-white transition-all">
+                  {currentUser.name.charAt(0)}
+                </button>
+              ) : (
+                <button onClick={() => setShowAuthModal(true)} className="px-5 h-8 bg-brand-red text-white rounded text-[11px] font-bold uppercase tracking-wider hover:bg-brand-red/80 transition-all">Join</button>
+              )}
+           </div>
         </div>
       </nav>
 
       {showDashboard ? (
-        <main className="pt-24 px-6 md:px-12">
+        <main className="pt-20 md:pt-24 px-4 md:px-12 pb-24">
           <Dashboard events={events} bookings={globalBookings} currentUser={currentUser} onRefreshEvents={() => fetchData(currentUser?.uid)} onOpenPolicy={setActivePolicy} />
         </main>
       ) : (
-        <main className="flex-1 pb-32">
-          {/* Hero Section - Slideshow */}
+        <main className="flex-1 pb-24 md:pb-32">
+          {/* Hero Section */}
           <HeroSection trendingEvents={trendingEvents} onBook={setSelectedEvent} />
 
           {/* Content Rows */}
-          <div className="relative z-10 -mt-16 md:-mt-32 px-6 md:px-12 space-y-12">
+          <div className="relative z-10 -mt-10 md:-mt-32 px-4 md:px-12 space-y-8 md:space-y-12">
             
             {/* Rows by Category */}
             {CATEGORIES.map(category => {
@@ -269,14 +272,14 @@ const App: React.FC = () => {
               if (rowEvents.length === 0) return null;
               
               return (
-                <div key={category} className="space-y-4">
-                  <h2 className="text-xl md:text-2xl font-bold tracking-tight text-slate-100 flex items-center gap-3">
+                <div key={category} className="space-y-3 md:space-y-4">
+                  <h2 className="text-lg md:text-2xl font-bold tracking-tight text-slate-100 flex items-center gap-3">
                     {category}
-                    <div className="h-0.5 flex-1 bg-white/5"></div>
+                    <div className="h-[1px] flex-1 bg-white/10"></div>
                   </h2>
-                  <div className="flex gap-4 overflow-x-auto pb-6 -mx-4 px-4 scrollbar-hide scroll-smooth">
+                  <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide snap-x">
                     {rowEvents.map((e) => (
-                      <div key={e.id} className="min-w-[280px] md:min-w-[340px] transform transition-all duration-300 hover:scale-110 hover:z-20">
+                      <div key={e.id} className="min-w-[240px] md:min-w-[340px] snap-center transform transition-all duration-300 md:hover:scale-110 md:hover:z-20">
                         <EventCard event={e} onClick={setSelectedEvent} />
                       </div>
                     ))}
@@ -286,27 +289,24 @@ const App: React.FC = () => {
             })}
 
             {/* AI Recommendation Section */}
-            <div className="py-20 flex flex-col items-center justify-center gap-10 bg-gradient-to-t from-brand-red/5 to-transparent rounded-[3rem] border border-white/5">
-               <div className="text-center max-w-2xl space-y-6 px-6">
-                 <h3 className="text-3xl md:text-5xl font-display font-black tracking-tight uppercase">Vibe-Check Your Journey</h3>
-                 <p className="text-slate-400 text-sm md:text-base leading-relaxed">Not feeling the frequency? Tell us your current mood and let the MMD Oracle curate a unique path for your soul.</p>
-                 <div className="flex flex-col md:flex-row gap-4 pt-4">
+            <div className="py-12 md:py-20 flex flex-col items-center justify-center gap-6 md:gap-10 bg-gradient-to-t from-brand-red/5 to-transparent rounded-3xl md:rounded-[3rem] border border-white/5">
+               <div className="text-center max-w-2xl space-y-4 md:space-y-6 px-6">
+                 <h3 className="text-2xl md:text-5xl font-display font-black tracking-tight uppercase">Vibe-Check Your Journey</h3>
+                 <p className="text-slate-400 text-xs md:text-base leading-relaxed">Not feeling the frequency? Tell us your current mood and let the MMD Oracle curate a unique path for your soul.</p>
+                 <div className="flex flex-col gap-4 pt-2">
                     <div className="relative flex-1">
                       <input 
                         type="text" 
-                        placeholder="Ex: 'I need a primal release' or 'Feeling zen'..." 
-                        className="bg-white/5 border border-white/20 px-8 h-14 rounded-full text-sm w-full outline-none focus:border-brand-red focus:ring-4 ring-brand-red/10 transition-all"
+                        placeholder="Ex: 'I need a primal release'..." 
+                        className="bg-white/5 border border-white/20 px-6 md:px-8 h-12 md:h-14 rounded-full text-sm w-full outline-none focus:border-brand-red transition-all"
                         value={userMood}
                         onChange={(e) => setUserMood(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleMoodSearch(userMood)}
                       />
-                      <div className="absolute right-6 top-1/2 -translate-y-1/2 text-brand-red">
-                        <svg className="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                      </div>
                     </div>
                     <button 
                       onClick={() => handleMoodSearch(userMood)} 
-                      className="px-10 bg-white text-black font-black uppercase tracking-widest text-xs rounded-full h-14 transition-all hover:bg-brand-red hover:text-white active:scale-95 shadow-xl"
+                      className="w-full bg-white text-black font-black uppercase tracking-widest text-[10px] md:text-xs rounded-full h-12 md:h-14 transition-all hover:bg-brand-red hover:text-white active:scale-95 shadow-xl"
                     >
                       SYNC AURA
                     </button>
@@ -316,6 +316,44 @@ const App: React.FC = () => {
           </div>
         </main>
       )}
+
+      {/* Mobile Bottom Navigation Bar */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[200] bg-brand-netflix/90 backdrop-blur-xl border-t border-white/5 h-16 flex items-center justify-around px-2 pb-[env(safe-area-inset-bottom)]">
+        <button 
+          onClick={() => setShowDashboard(false)}
+          className={`flex flex-col items-center gap-1 w-1/4 ${!showDashboard ? 'text-brand-red' : 'text-slate-500'}`}
+        >
+          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+          <span className="text-[10px] font-black uppercase tracking-tighter">Home</span>
+        </button>
+        <button className="flex flex-col items-center gap-1 w-1/4 text-slate-500">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <span className="text-[10px] font-black uppercase tracking-tighter">Find</span>
+        </button>
+        <button className="flex flex-col items-center gap-1 w-1/4 text-slate-500">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4"/></svg>
+          <span className="text-[10px] font-black uppercase tracking-tighter">Host</span>
+        </button>
+        <button 
+          onClick={() => {
+            if (currentUser) {
+              setShowDashboard(true);
+            } else {
+              setShowAuthModal(true);
+            }
+          }}
+          className={`flex flex-col items-center gap-1 w-1/4 ${showDashboard ? 'text-brand-red' : 'text-slate-500'}`}
+        >
+          {currentUser ? (
+            <div className="w-6 h-6 rounded bg-blue-500 flex items-center justify-center text-white text-[10px] font-black">
+              {currentUser.name.charAt(0)}
+            </div>
+          ) : (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+          )}
+          <span className="text-[10px] font-black uppercase tracking-tighter">Profile</span>
+        </button>
+      </nav>
 
       {selectedEvent && (
         <BookingModal 
@@ -349,8 +387,8 @@ const App: React.FC = () => {
       {showAuthModal && <AuthModal onSuccess={() => setShowAuthModal(false)} onClose={() => setShowAuthModal(false)} />}
       {activePolicy && <LegalModal type={activePolicy} onClose={() => setActivePolicy(null)} />}
       
-      {/* Cinematic Footer */}
-      <footer className="bg-brand-netflix py-20 border-t border-white/5 px-6 md:px-12">
+      {/* Desktop Footer Only */}
+      <footer className="hidden md:block bg-brand-netflix py-20 border-t border-white/5 px-6 md:px-12">
         <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-12 text-slate-500 text-xs">
           <div className="space-y-4">
             <h4 className="text-white font-bold uppercase tracking-widest">Connect</h4>
@@ -384,6 +422,17 @@ const App: React.FC = () => {
         <div className="mt-20 text-center text-[10px] text-slate-700 font-bold uppercase tracking-[0.4em]">
           &copy; {new Date().getFullYear()} Beneme Frequency Lab • All Rights Reserved
         </div>
+      </footer>
+
+      {/* Mobile Footer Minimal */}
+      <footer className="md:hidden bg-brand-netflix py-12 px-6 text-center border-t border-white/5">
+        <span className="text-xl font-display font-black text-brand-red tracking-tighter mb-4 block">MAKEMYDAYS</span>
+        <div className="flex justify-center gap-6 text-[10px] font-black uppercase tracking-widest text-slate-500 mb-8">
+          <button onClick={() => setActivePolicy('terms')}>Terms</button>
+          <button onClick={() => setActivePolicy('privacy')}>Privacy</button>
+          <button onClick={() => setActivePolicy('refund')}>Refunds</button>
+        </div>
+        <p className="text-[10px] text-slate-700 uppercase tracking-widest">&copy; 2025 Beneme Lab</p>
       </footer>
 
       <ChatBot />

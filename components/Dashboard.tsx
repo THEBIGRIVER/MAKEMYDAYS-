@@ -3,7 +3,7 @@ import { Booking, Event, Category, User, Slot } from '../types.ts';
 import { PolicyType } from './LegalModal.tsx';
 import { api } from '../services/api.ts';
 import { auth } from '../services/firebase.ts';
-import { signOut } from '@firebase/auth';
+import { signOut } from 'firebase/auth';
 
 const compressImage = (base64Str: string): Promise<string> => {
   return new Promise((resolve) => {
@@ -115,20 +115,11 @@ const CreateEventModal: React.FC<{ userUid: string, onClose: () => void, onSucce
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanPhone = normalizeHostPhone(formData.hostPhone || '');
-    const isPriceValid = formData.price !== undefined && !isNaN(Number(formData.price));
-    const isCapacityValid = formData.capacity !== undefined && !isNaN(Number(formData.capacity)) && Number(formData.capacity) > 0;
     
-    if (!formData.title) { alert("Experience Title required."); return; }
-    if (dates.length === 0) { alert("Add at least one available Date (Single or Multiple)."); return; }
-    if (slots.length === 0) { alert("Choose at least one Time Slot & Capacity."); return; }
-    if (!isPriceValid) { alert("Enter a valid price."); return; }
-    if (!isCapacityValid) { alert("Enter a valid total capacity (at least 1)."); return; }
-    
-    if (cleanPhone.length !== 10) { 
-      alert("Please enter a valid 10-digit mobile number."); 
-      return; 
-    }
-    
+    if (!formData.title) { alert("Title required."); return; }
+    if (dates.length === 0) { alert("Add at least one Date."); return; }
+    if (slots.length === 0) { alert("Add at least one Time Slot."); return; }
+    if (cleanPhone.length !== 10) { alert("10-digit mobile required."); return; }
     if (!formData.image) { alert("Image Aura required."); return; }
 
     setIsSubmitting(true);
@@ -173,40 +164,34 @@ const CreateEventModal: React.FC<{ userUid: string, onClose: () => void, onSucce
   return (
     <div className="fixed inset-0 z-[500] flex items-end md:items-center justify-center">
       <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-xl" onClick={onClose}></div>
-      <div className="relative w-full max-w-2xl bg-slate-900 h-[92vh] md:h-auto rounded-t-[2.5rem] md:rounded-[3.5rem] shadow-3xl border border-white/10 overflow-hidden animate-in slide-in-from-bottom duration-500 md:zoom-in-95">
-        <div className="p-6 md:p-10 flex justify-between items-center bg-slate-900 border-b border-white/5 sticky top-0 z-10">
+      <div className="relative w-full max-w-2xl bg-slate-900 h-[95vh] md:h-auto rounded-t-[2.5rem] md:rounded-[3.5rem] shadow-3xl border border-white/10 overflow-hidden animate-in slide-in-from-bottom duration-500 pb-[env(safe-area-inset-bottom)]">
+        <div className="p-6 flex justify-between items-center border-b border-white/5 bg-slate-900 sticky top-0 z-10">
           <div>
-            <h2 className="text-xl md:text-2xl font-black italic uppercase text-slate-200">Launch Frequency</h2>
-            <p className="text-[8px] text-brand-moss font-black uppercase tracking-widest mt-1">Single or Multi-day Broadcast</p>
+            <h2 className="text-xl font-black italic uppercase text-slate-200 leading-tight">Launch Node</h2>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-white p-2 transition-colors"><svg className="w-6 h-6 md:w-7 md:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+          <button onClick={onClose} className="text-slate-400 p-2"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
         </div>
-        <form onSubmit={handleSubmit} className="p-6 md:p-10 space-y-8 overflow-y-auto h-[calc(92vh-80px)] md:max-h-[75vh] scrollbar-hide">
+        <form onSubmit={handleSubmit} className="p-6 space-y-8 overflow-y-auto h-[calc(95vh-80px)] md:max-h-[75vh] scrollbar-hide">
           <div className="space-y-4">
-            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Core Frequency</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input required placeholder="Experience Title" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-base outline-none focus:border-brand-moss transition-all" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
-              <select className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-base outline-none focus:border-brand-moss transition-all appearance-none" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value as Category})}>
-                <option value="Activity">Activity</option><option value="Shows">Shows</option><option value="Mindfulness">Mindfulness</option><option value="Workshop">Workshop</option><option value="MMD Originals">MMD Originals</option>
-              </select>
-            </div>
+            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Core Frequency</p>
+            <input required placeholder="Title" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-base" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
+            <select className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-base" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value as Category})}>
+              <option value="Activity">Activity</option><option value="Shows">Shows</option><option value="Mindfulness">Mindfulness</option><option value="Workshop">Workshop</option><option value="MMD Originals">MMD Originals</option>
+            </select>
           </div>
 
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Temporal Alignment (Choose Dates)</p>
-              {dates.length > 1 && <span className="text-[8px] bg-brand-moss/10 text-brand-moss px-2 py-1 rounded font-black uppercase">Multi-Day Configured</span>}
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <input type="date" className="flex-1 bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-base outline-none focus:border-brand-moss transition-all" value={newDate} onChange={e => setNewDate(e.target.value)} />
-              <button type="button" onClick={handleAddDate} className="px-6 py-4 sm:py-0 bg-slate-800 text-white rounded-2xl font-black uppercase text-[10px] hover:bg-brand-moss active:scale-95 transition-all">Add Date</button>
+            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Dates</p>
+            <div className="flex gap-3">
+              <input type="date" className="flex-1 bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-base" value={newDate} onChange={e => setNewDate(e.target.value)} />
+              <button type="button" onClick={handleAddDate} className="px-6 bg-slate-800 text-white rounded-2xl font-black uppercase text-[10px]">Add</button>
             </div>
             {dates.length > 0 && (
-              <div className="flex flex-wrap gap-2 pt-1">
+              <div className="flex flex-wrap gap-2">
                 {dates.map(d => (
-                  <div key={d} className="bg-white/10 border border-white/10 rounded-full px-4 py-2 flex items-center gap-2 transition-all hover:border-brand-moss group">
+                  <div key={d} className="bg-white/10 px-4 py-2 rounded-full flex items-center gap-2">
                     <span className="text-[9px] font-bold text-slate-300">{d}</span>
-                    <button type="button" onClick={() => removeDate(d)} className="text-slate-500 hover:text-brand-moss p-1"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+                    <button type="button" onClick={() => removeDate(d)} className="text-slate-500"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
                   </div>
                 ))}
               </div>
@@ -214,63 +199,42 @@ const CreateEventModal: React.FC<{ userUid: string, onClose: () => void, onSucce
           </div>
 
           <div className="space-y-4">
-            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Capacity Channels (Choose Slots & Seats)</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <input type="time" className="bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-base outline-none focus:border-brand-moss transition-all" value={newSlotTime} onChange={e => setNewSlotTime(e.target.value)} />
-              <input 
-                type="number" 
-                placeholder="Spots Available" 
-                className="bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-base outline-none focus:border-brand-moss transition-all" 
-                value={newSlotCapacity} 
-                onChange={e => setNewSlotCapacity(e.target.value === '' ? '' : Number(e.target.value))} 
-              />
-              <button type="button" onClick={handleAddSlot} className="bg-slate-800 text-white rounded-2xl font-black uppercase text-[10px] py-4 sm:py-0 hover:bg-brand-moss active:scale-95 transition-all">Add Slot</button>
+            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Slots</p>
+            <div className="grid grid-cols-3 gap-2">
+              <input type="time" className="bg-white/5 border border-white/10 rounded-2xl p-3 text-white text-sm" value={newSlotTime} onChange={e => setNewSlotTime(e.target.value)} />
+              <input type="number" placeholder="Cap" className="bg-white/5 border border-white/10 rounded-2xl p-3 text-white text-sm" value={newSlotCapacity} onChange={e => setNewSlotCapacity(e.target.value === '' ? '' : Number(e.target.value))} />
+              <button type="button" onClick={handleAddSlot} className="bg-slate-800 text-white rounded-2xl font-black uppercase text-[9px]">Add</button>
             </div>
-            {slots.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                {slots.map((s, i) => (
-                  <div key={i} className="bg-white/10 border border-white/10 rounded-2xl p-4 flex items-center justify-between transition-all hover:border-brand-accent">
-                    <div>
-                      <p className="text-[10px] font-black text-slate-100 italic uppercase">{s.time}</p>
-                      <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">{s.availableSeats} Total Spots</p>
-                    </div>
-                    <button type="button" onClick={() => removeSlot(i)} className="text-slate-500 hover:text-brand-moss p-2"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
-                  </div>
-                ))}
+            {slots.map((s, i) => (
+              <div key={i} className="bg-white/5 border border-white/10 rounded-2xl p-4 flex justify-between items-center">
+                <span className="text-xs font-black text-slate-100 italic">{s.time} ({s.availableSeats})</span>
+                <button type="button" onClick={() => removeSlot(i)} className="text-slate-500"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
               </div>
-            )}
+            ))}
           </div>
 
           <div className="space-y-4">
-            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Contact & Exchange</p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <input required type="number" placeholder="Price (₹)" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-base outline-none focus:border-brand-moss transition-all" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value === '' ? 0 : Number(e.target.value)})} />
-              <input required type="number" placeholder="Total Capacity" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-base outline-none focus:border-brand-moss transition-all" value={formData.capacity === 0 ? '' : formData.capacity} onChange={e => setFormData({...formData, capacity: e.target.value === '' ? 0 : Number(e.target.value)})} />
-              <input required type="tel" placeholder="10-digit WhatsApp Number" className="w-full bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 text-emerald-400 font-bold text-base outline-none focus:border-emerald-400 transition-all" value={formData.hostPhone} onChange={e => setFormData({...formData, hostPhone: e.target.value})} />
+            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Contact & Exchange</p>
+            <div className="grid grid-cols-2 gap-3">
+              <input required type="number" placeholder="₹ Price" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-base" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value === '' ? 0 : Number(e.target.value)})} />
+              <input required type="number" placeholder="Capacity" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-base" value={formData.capacity === 0 ? '' : formData.capacity} onChange={e => setFormData({...formData, capacity: e.target.value === '' ? 0 : Number(e.target.value)})} />
             </div>
+            <input required type="tel" placeholder="WhatsApp (10 digits)" className="w-full bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 text-emerald-400 font-bold text-base" value={formData.hostPhone} onChange={e => setFormData({...formData, hostPhone: e.target.value})} />
           </div>
 
-          <div className="space-y-4 pb-10">
-            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Aura & Narrative</p>
-            <div onClick={() => !isSubmitting && fileInputRef.current?.click()} className="w-full h-44 bg-white/5 border-2 border-dashed border-white/10 rounded-2xl flex items-center justify-center cursor-pointer hover:border-brand-moss transition-all relative overflow-hidden group">
+          <div className="space-y-4 pb-12">
+            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Aura</p>
+            <div onClick={() => !isSubmitting && fileInputRef.current?.click()} className="w-full h-32 bg-white/5 border-2 border-dashed border-white/10 rounded-2xl flex items-center justify-center relative overflow-hidden group">
               <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
               {imagePreview ? (
-                <div className="w-full h-full relative">
-                  <img src={imagePreview} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <span className="text-white text-[10px] font-black uppercase tracking-widest">Swap Aura</span>
-                  </div>
-                </div>
+                <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
               ) : (
-                <div className="text-center p-6">
-                  <p className="text-slate-500 font-black uppercase text-[10px]">Upload Visual Aura</p>
-                  <p className="text-slate-600 text-[8px] mt-1 font-bold italic tracking-wider">TAP TO SELECT</p>
-                </div>
+                <p className="text-slate-500 font-black uppercase text-[9px]">Tap to upload Visual Aura</p>
               )}
             </div>
-            <textarea required placeholder="Narrative... What happens here?" rows={3} className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-base resize-none outline-none focus:border-brand-moss transition-all" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
-            <button type="submit" disabled={isSubmitting} className="w-full py-5 md:py-6 bg-slate-200 text-slate-900 rounded-2xl md:rounded-3xl font-black uppercase text-xs tracking-[0.2em] hover:bg-brand-moss hover:text-white active:scale-[0.98] transition-all disabled:opacity-50 shadow-2xl">
-              {isSubmitting ? "Broadcasting..." : "Launch Experience"}
+            <textarea required placeholder="Experience Narrative..." rows={3} className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-base resize-none" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
+            <button type="submit" disabled={isSubmitting} className="w-full py-5 bg-white text-slate-900 rounded-2xl font-black uppercase text-xs tracking-widest active:scale-[0.98] transition-all disabled:opacity-50">
+              {isSubmitting ? "Launching..." : "Broadcast Node"}
             </button>
           </div>
         </form>
@@ -291,14 +255,9 @@ const RatingStars: React.FC<{ rating?: number, onRate: (rating: number) => void,
           onClick={() => onRate(star)}
           onMouseEnter={() => !disabled && setHover(star)}
           onMouseLeave={() => !disabled && setHover(0)}
-          className={`transition-all ${disabled ? 'cursor-default' : 'cursor-pointer hover:scale-110 active:scale-90'}`}
+          className={`transition-all ${disabled ? 'cursor-default' : 'cursor-pointer active:scale-90'}`}
         >
-          <svg
-            className={`w-5 h-5 ${
-              (hover || rating) >= star ? 'text-brand-gold fill-current' : 'text-slate-600'
-            }`}
-            viewBox="0 0 24 24"
-          >
+          <svg className={`w-5 h-5 ${(hover || rating) >= star ? 'text-brand-gold fill-current' : 'text-slate-600'}`} viewBox="0 0 24 24">
             <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
           </svg>
         </button>
@@ -333,9 +292,9 @@ const Dashboard: React.FC<DashboardProps> = ({ events, bookings, currentUser, in
     setIsRatingLoading(booking.id);
     try {
       await api.submitRating(booking.id, booking.eventId, rating);
-      onRefreshEvents?.(); // Refresh to update booking status
-    } catch (err) {
-      alert("Recalibration failed. Try again.");
+      onRefreshEvents?.();
+    } catch {
+      alert("Calibration failed.");
     } finally {
       setIsRatingLoading(null);
     }
@@ -347,86 +306,62 @@ const Dashboard: React.FC<DashboardProps> = ({ events, bookings, currentUser, in
   };
 
   const connectToHost = (booking: Booking) => {
-    if (!booking.hostPhone) {
-      alert("Host contact details are not available.");
-      return;
-    }
+    if (!booking.hostPhone) { alert("Host contact missing."); return; }
     let phone = booking.hostPhone.toString().replace(/\D/g, '');
     if (phone.length === 10) phone = '91' + phone;
-    
     const message = `Hi, I booked '${booking.eventTitle}' on ${booking.eventDate}.`;
-    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-    window.open(url, '_blank');
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
   };
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 pb-10">
-      <div className="glass-card rounded-[2.5rem] md:rounded-[3.5rem] overflow-hidden shadow-2xl border border-white/10 bg-slate-900/40 backdrop-blur-3xl min-h-[70vh]">
-        <div className="p-8 md:p-14 border-b border-white/5 flex flex-col md:flex-row gap-6 justify-between items-center text-center md:text-left">
-           <div>
-             <span className="text-brand-moss text-[10px] font-black uppercase tracking-[0.4em] mb-2 block">Personal Sanctuary</span>
-             <h2 className="text-3xl md:text-6xl font-black italic uppercase tracking-tighter text-slate-100 leading-none">Namaste, <br className="sm:hidden" />{userName.split(' ')[0]}</h2>
+    <div className="pb-10">
+      <div className="glass-card rounded-[2rem] md:rounded-[3.5rem] overflow-hidden border border-white/10 bg-slate-900/40 min-h-[70vh] pb-[env(safe-area-inset-bottom)]">
+        <div className="p-6 md:p-14 border-b border-white/5 flex flex-col md:flex-row gap-6 justify-between items-center">
+           <div className="text-center md:text-left">
+             <span className="text-brand-moss text-[9px] font-black uppercase tracking-[0.3em] mb-1 block">Sanctuary</span>
+             <h2 className="text-2xl md:text-6xl font-black italic uppercase text-slate-100 leading-tight">Namaste, {userName.split(' ')[0]}</h2>
            </div>
-           <button 
-             onClick={handleLogout}
-             className="w-full md:w-auto bg-white/5 border border-white/10 px-8 py-3.5 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-400 hover:bg-brand-moss hover:text-white transition-all shadow-xl"
-           >
-             Disconnect Node
-           </button>
+           <button onClick={handleLogout} className="px-6 py-3 border border-white/10 rounded-xl text-[9px] font-black uppercase text-slate-400 active:scale-95 transition-all">Disconnect</button>
         </div>
-        <div className="p-6 md:p-14">
-          <div className="flex gap-6 md:gap-8 mb-10 md:mb-12 border-b border-white/5 overflow-x-auto scrollbar-hide -mx-4 px-4">
+        <div className="p-4 md:p-14">
+          <div className="flex gap-6 mb-8 border-b border-white/5 overflow-x-auto scrollbar-hide">
             {['bookings', 'hosting', 'settings'].map(tab => (
-              <button key={tab} onClick={() => setActiveTab(tab as any)} className={`pb-5 text-[11px] md:text-[12px] font-black uppercase tracking-[0.2em] transition-all relative whitespace-nowrap ${activeTab === tab ? 'text-slate-100' : 'text-slate-500 hover:text-slate-200'}`}>
+              <button key={tab} onClick={() => setActiveTab(tab as any)} className={`pb-4 text-[10px] md:text-[12px] font-black uppercase tracking-widest relative whitespace-nowrap ${activeTab === tab ? 'text-slate-100' : 'text-slate-500'}`}>
                 {tab} {activeTab === tab && <div className="absolute bottom-0 left-0 right-0 h-1 bg-brand-moss rounded-full"></div>}
               </button>
             ))}
           </div>
 
           {activeTab === 'bookings' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {bookings.length === 0 ? (
-                <div className="col-span-2 py-20 text-center space-y-3">
-                  <p className="text-slate-600 font-black italic uppercase text-xs tracking-widest leading-loose">No anchored frequencies found.</p>
-                  <button onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})} className="text-brand-moss text-[10px] font-black uppercase underline tracking-widest">Explore Discovery Feed</button>
+                <div className="col-span-full py-20 text-center opacity-50">
+                  <p className="font-black italic uppercase text-[10px] tracking-widest">No active frequencies.</p>
                 </div>
               ) :
                 bookings.map((b) => {
                   const completed = isCompleted(b.eventDate);
                   return (
-                    <div key={b.id} className="glass-card p-5 md:p-6 rounded-[2rem] border border-white/10 group hover:border-brand-moss/30 transition-all flex flex-col justify-between h-full min-h-[220px]">
-                      <div className="flex justify-between items-start gap-4">
-                        <div className="flex-1">
-                          <span className="text-brand-moss text-[8px] font-black uppercase tracking-widest">{b.category}</span>
-                          <h4 className="text-slate-100 font-black italic text-base md:text-lg leading-tight mt-1 group-hover:text-brand-moss transition-colors line-clamp-2">{b.eventTitle}</h4>
-                          <p className="text-slate-500 text-[9px] uppercase font-bold mt-2 tracking-wider">{b.eventDate} <span className="text-white/20 px-1">•</span> {b.time}</p>
+                    <div key={b.id} className="glass-card p-4 rounded-2xl border border-white/10 flex flex-col justify-between h-full min-h-[160px]">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1 pr-4">
+                          <span className="text-brand-moss text-[7px] font-black uppercase">{b.category}</span>
+                          <h4 className="text-slate-100 font-black italic text-sm mt-0.5 line-clamp-1">{b.eventTitle}</h4>
+                          <p className="text-slate-500 text-[8px] uppercase font-bold mt-1">{b.eventDate} @ {b.time}</p>
                         </div>
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${completed ? 'bg-brand-moss/20 text-brand-moss' : 'bg-slate-800 text-slate-500'}`}>
-                           {completed ? (
-                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
-                           ) : (
-                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                           )}
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${completed ? 'bg-brand-moss/20 text-brand-moss' : 'bg-slate-800 text-slate-500'}`}>
+                           {completed ? <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" /></svg> : <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" strokeWidth="2.5"/></svg>}
                         </div>
                       </div>
                       
-                      <div className="mt-6 flex flex-col gap-3">
+                      <div className="mt-4">
                         {completed ? (
-                          <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
-                            <span className="text-[8px] font-black uppercase tracking-widest text-slate-500">Rate Resonance</span>
-                            {isRatingLoading === b.id ? (
-                              <div className="w-4 h-4 border-2 border-brand-moss border-t-transparent rounded-full animate-spin"></div>
-                            ) : (
-                              <RatingStars rating={b.rating} onRate={(r) => handleRate(b, r)} disabled={!!b.rating} />
-                            )}
+                          <div className="flex items-center justify-between p-2 rounded-xl bg-white/5">
+                            <span className="text-[7px] font-black uppercase text-slate-500">Rate Resonance</span>
+                            {isRatingLoading === b.id ? <div className="w-3 h-3 border-2 border-brand-moss border-t-transparent rounded-full animate-spin"></div> : <RatingStars rating={b.rating} onRate={(r) => handleRate(b, r)} disabled={!!b.rating} />}
                           </div>
                         ) : (
-                          <button 
-                            onClick={() => connectToHost(b)}
-                            className="w-full py-4 bg-emerald-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10"
-                          >
-                            Connect via WhatsApp
-                          </button>
+                          <button onClick={() => connectToHost(b)} className="w-full py-3 bg-emerald-500 text-white rounded-xl text-[9px] font-black uppercase tracking-widest active:scale-95 transition-all">WhatsApp Host</button>
                         )}
                       </div>
                     </div>
@@ -437,52 +372,33 @@ const Dashboard: React.FC<DashboardProps> = ({ events, bookings, currentUser, in
           )}
 
           {activeTab === 'hosting' && (
-            <div className="space-y-6 md:space-y-8">
-              <div className="flex flex-col md:flex-row justify-between items-center gap-6 glass-card p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border border-brand-accent/20 bg-brand-accent/[0.03]">
-                <div className="max-w-md text-center md:text-left">
-                  <h3 className="text-lg md:text-xl font-black italic text-slate-100 uppercase tracking-tight leading-none">Broadcast Node</h3>
-                  <p className="text-slate-500 text-[9px] uppercase tracking-[0.2em] mt-2 font-bold leading-relaxed">Add your frequency to the global discovery stream.</p>
+            <div className="space-y-6">
+              <div className="p-5 md:p-8 rounded-2xl border border-brand-moss/20 bg-brand-moss/5 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                  <h3 className="text-sm md:text-xl font-black italic text-slate-100 uppercase leading-none">Broadcast Node</h3>
+                  <p className="text-slate-500 text-[8px] uppercase mt-1 font-bold">Add your frequency to the global discovery stream.</p>
                 </div>
-                <button onClick={() => setShowCreateModal(true)} className="w-full md:w-auto bg-slate-100 text-slate-900 px-8 py-4 rounded-xl md:rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-brand-moss hover:text-white active:scale-95 transition-all shadow-xl">Launch Frequency</button>
+                <button onClick={() => setShowCreateModal(true)} className="w-full md:w-auto bg-white text-slate-900 px-6 py-3 rounded-xl font-black uppercase text-[10px] active:scale-95 transition-all">Launch</button>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                {myEvents.length === 0 ? (
-                  <div className="col-span-2 py-10 text-center">
-                    <p className="text-slate-600 font-bold italic uppercase tracking-widest text-[9px]">Node currently silent.</p>
-                  </div>
-                ) : (
-                  myEvents.map(e => (
-                    <div key={e.id} className="glass-card rounded-[2rem] overflow-hidden border border-white/10 group flex flex-col h-full">
-                      <div className="h-32 bg-slate-800 overflow-hidden relative">
-                        <img src={e.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent"></div>
-                      </div>
-                      <div className="p-5 flex-1 flex flex-col">
-                        <h4 className="text-slate-200 font-black italic uppercase text-sm md:text-base leading-tight mb-2">{e.title}</h4>
-                        <div className="flex items-center gap-2 mb-4">
-                          <p className="text-[8px] text-slate-500 font-black uppercase tracking-widest">
-                            {e.dates.length} Days Scheduled
-                          </p>
-                          <span className="text-[8px] bg-brand-moss/10 text-brand-moss px-2 py-0.5 rounded-full font-black uppercase border border-brand-moss/20">
-                            Cap: {e.capacity}
-                          </span>
-                        </div>
-                        <div className="mt-auto flex gap-2">
-                          <button className="flex-1 py-2.5 bg-slate-800 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-400 hover:bg-brand-moss hover:text-white transition-all active:scale-95" onClick={async () => { if(confirm("Terminate broadcast?")){ await api.deleteEvent(e.id, currentUser?.uid || ''); onRefreshEvents?.(); } }}>Terminate</button>
-                          <button className="flex-1 py-2.5 bg-white/5 border border-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-white">Edit</button>
-                        </div>
-                      </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {myEvents.map(e => (
+                  <div key={e.id} className="glass-card rounded-2xl overflow-hidden border border-white/10 flex items-center p-3 gap-3">
+                    <img src={e.image} className="w-16 h-16 rounded-lg object-cover" alt={e.title} />
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-slate-100 font-bold italic text-xs truncate uppercase">{e.title}</h4>
+                      <p className="text-[7px] text-slate-500 uppercase font-black">{e.dates.length} Days Scheduled</p>
                     </div>
-                  ))
-                )}
+                    <button className="text-red-500 p-2" onClick={async () => { if(confirm("Terminate broadcast?")){ await api.deleteEvent(e.id, currentUser?.uid || ''); onRefreshEvents?.(); } }}><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" strokeWidth="2.5"/></svg></button>
+                  </div>
+                ))}
               </div>
             </div>
           )}
 
           {activeTab === 'settings' && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            <div className="grid grid-cols-2 gap-3">
               {['Terms', 'Privacy', 'Refund'].map(p => (
-                <button key={p} className="glass-card p-4 md:p-5 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 hover:text-brand-moss active:scale-95 transition-all" onClick={() => onOpenPolicy?.(p.toLowerCase() as any)}>
+                <button key={p} className="glass-card p-4 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-500 active:scale-95 transition-all" onClick={() => onOpenPolicy?.(p.toLowerCase() as any)}>
                   {p}
                 </button>
               ))}
