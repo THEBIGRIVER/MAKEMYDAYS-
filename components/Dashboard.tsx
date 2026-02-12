@@ -115,12 +115,19 @@ const CreateEventModal: React.FC<{ userUid: string, onClose: () => void, onSucce
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanPhone = normalizeHostPhone(formData.hostPhone || '');
+    const capacityVal = Number(formData.capacity);
     
     if (!formData.title) { alert("Title required."); return; }
     if (dates.length === 0) { alert("Add at least one Date."); return; }
     if (slots.length === 0) { alert("Add at least one Time Slot."); return; }
     if (cleanPhone.length !== 10) { alert("10-digit mobile required."); return; }
     if (!formData.image) { alert("Image Aura required."); return; }
+    
+    // Capacity Validation
+    if (!Number.isInteger(capacityVal) || capacityVal <= 0) {
+      alert("Event Capacity must be a positive whole number (at least 1).");
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -129,7 +136,7 @@ const CreateEventModal: React.FC<{ userUid: string, onClose: () => void, onSucce
         title: formData.title || '',
         category: formData.category as Category || 'Activity',
         price: Number(formData.price),
-        capacity: Number(formData.capacity),
+        capacity: capacityVal,
         description: formData.description || '',
         image: formData.image || '',
         dates: dates,
@@ -202,7 +209,7 @@ const CreateEventModal: React.FC<{ userUid: string, onClose: () => void, onSucce
             <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Slots</p>
             <div className="grid grid-cols-3 gap-2">
               <input type="time" className="bg-white/5 border border-white/10 rounded-2xl p-3 text-white text-sm" value={newSlotTime} onChange={e => setNewSlotTime(e.target.value)} />
-              <input type="number" placeholder="Cap" className="bg-white/5 border border-white/10 rounded-2xl p-3 text-white text-sm" value={newSlotCapacity} onChange={e => setNewSlotCapacity(e.target.value === '' ? '' : Number(e.target.value))} />
+              <input type="number" min="1" step="1" placeholder="Cap" className="bg-white/5 border border-white/10 rounded-2xl p-3 text-white text-sm" value={newSlotCapacity} onChange={e => setNewSlotCapacity(e.target.value === '' ? '' : Number(e.target.value))} />
               <button type="button" onClick={handleAddSlot} className="bg-slate-800 text-white rounded-2xl font-black uppercase text-[9px]">Add</button>
             </div>
             {slots.map((s, i) => (
@@ -217,7 +224,7 @@ const CreateEventModal: React.FC<{ userUid: string, onClose: () => void, onSucce
             <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Contact & Exchange</p>
             <div className="grid grid-cols-2 gap-3">
               <input required type="number" placeholder="₹ Price" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-base" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value === '' ? 0 : Number(e.target.value)})} />
-              <input required type="number" placeholder="Capacity" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-base" value={formData.capacity === 0 ? '' : formData.capacity} onChange={e => setFormData({...formData, capacity: e.target.value === '' ? 0 : Number(e.target.value)})} />
+              <input required type="number" min="1" step="1" placeholder="Capacity" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-base" value={formData.capacity === 0 ? '' : formData.capacity} onChange={e => setFormData({...formData, capacity: e.target.value === '' ? 0 : Number(e.target.value)})} />
             </div>
             <input required type="tel" placeholder="WhatsApp (10 digits)" className="w-full bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 text-emerald-400 font-bold text-base" value={formData.hostPhone} onChange={e => setFormData({...formData, hostPhone: e.target.value})} />
           </div>
