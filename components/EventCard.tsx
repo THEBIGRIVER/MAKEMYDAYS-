@@ -23,73 +23,73 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick, isFavorite, onTog
     <div 
       id={id}
       onClick={() => onClick(event)}
-      className="group cursor-pointer relative aspect-video w-full overflow-hidden rounded-md transition-all duration-300 bg-brand-slate hover:z-30 md:hover:scale-105 hover:shadow-2xl hover:ring-2 hover:ring-brand-prime/40"
+      className="group cursor-pointer relative aspect-video w-full overflow-hidden rounded-xl transition-all duration-500 bg-brand-navy/50 hover:z-30 md:hover:scale-105 hover:shadow-[0_20px_50px_rgba(0,0,0,0.6)] hover:ring-2 hover:ring-brand-prime/50"
     >
       <img 
         src={imgSrc} 
         alt={event.title} 
         onError={() => setImgSrc(FALLBACK_IMAGE)}
-        className="w-full h-full object-cover transition-transform duration-500" 
+        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
       />
       
-      {/* Permanent Price Box Badge (Top Left) */}
-      <div className="absolute top-2 left-2 z-40 transition-all duration-300 group-hover:scale-110 origin-top-left">
-        <div className="bg-black/70 backdrop-blur-md border border-white/10 px-2.5 py-1 rounded-sm shadow-xl flex items-center gap-1 group-hover:bg-brand-prime group-hover:border-brand-prime transition-colors duration-300">
-          <span className="text-[11px] font-black text-white tracking-tight">₹{event.price}</span>
+      {/* Price Badge (Premium Tag) */}
+      <div className="absolute top-3 left-3 z-40 transition-all duration-500 group-hover:scale-105 origin-top-left">
+        <div className="bg-[#0F171E]/80 backdrop-blur-xl border border-white/10 px-3 py-1 rounded-lg shadow-2xl flex items-center group-hover:bg-brand-prime group-hover:border-brand-prime transition-all duration-300">
+          <span className="text-xs font-bold text-white tracking-tight">₹{event.price}</span>
         </div>
       </div>
 
-      {/* Prime-style Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-brand-navy via-brand-navy/30 to-transparent opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 p-4 flex flex-col justify-end">
-        <div className="translate-y-4 md:group-hover:translate-y-0 transition-transform duration-300 space-y-2">
+      {/* Modern Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-brand-navy via-brand-navy/20 to-transparent opacity-0 md:group-hover:opacity-100 transition-all duration-500 p-5 flex flex-col justify-end">
+        <div className="translate-y-6 md:group-hover:translate-y-0 transition-transform duration-500 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-               <span className="bg-brand-prime text-white text-[9px] font-black uppercase px-1.5 py-0.5 rounded-sm">Prime</span>
+               <span className="bg-brand-prime text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded-md tracking-wider">Prime</span>
                {event.averageRating && (
-                 <span className="text-white text-[11px] font-bold">{event.averageRating.toFixed(1)} ★</span>
+                 <span className="text-white text-[11px] font-bold flex items-center gap-1">
+                   <svg className="w-3 h-3 text-brand-prime fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
+                   {event.averageRating.toFixed(1)}
+                 </span>
                )}
             </div>
             
-            {/* Wish List Heart Icon */}
             <button 
               onClick={handleToggle}
-              className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${isFavorite ? 'bg-red-500 text-white' : 'bg-white/20 text-white hover:bg-white/40'}`}
-              title="Add to Wish List"
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${isFavorite ? 'bg-red-500 text-white' : 'bg-white/10 text-white hover:bg-white/30 backdrop-blur-md'}`}
             >
               <svg className={`w-5 h-5 ${isFavorite ? 'fill-current' : 'fill-none'}`} stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
             </button>
           </div>
           
-          <h4 className="text-white text-sm font-bold truncate">
+          <h4 className="text-white text-base font-bold leading-tight group-hover:text-brand-prime transition-colors">
             {event.title}
           </h4>
           
-          <div className="flex items-center justify-between">
-            <span className="text-brand-prime text-[10px] font-black uppercase tracking-wider">
-              {event.category}
-            </span>
-            <span className="text-slate-400 text-[10px] font-bold">Limited Slots</span>
+          <div className="flex items-center gap-3 text-[11px] font-semibold text-slate-300">
+             <span className="uppercase tracking-widest">{event.category}</span>
+             <span className="w-1 h-1 rounded-full bg-slate-500"></span>
+             <span>Experience</span>
           </div>
         </div>
       </div>
 
-      {/* Mobile persistent Watchlist button */}
-      <button 
-        onClick={handleToggle}
-        className={`md:hidden absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center border border-white/10 z-40 ${isFavorite ? 'bg-red-500 text-white shadow-lg' : 'bg-black/40 text-white backdrop-blur-md'}`}
-      >
-        <svg className={`w-4 h-4 ${isFavorite ? 'fill-current' : 'fill-none'}`} stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-        </svg>
-      </button>
-
-      {/* Mobile Label Only (Price is now top-left) */}
-      <div className="md:hidden absolute bottom-2 left-2 right-2">
-         <span className="bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-sm line-clamp-1 border border-white/5 w-fit">
-           {event.title}
-         </span>
+      {/* Mobile Persistent Tags */}
+      <div className="md:hidden absolute bottom-3 left-3 right-3 flex justify-between items-end z-40">
+         <div className="space-y-1.5">
+           <span className="bg-black/40 backdrop-blur-xl text-white text-[11px] font-bold px-3 py-1.5 rounded-lg border border-white/10 block w-fit">
+             {event.title}
+           </span>
+         </div>
+         <button 
+          onClick={handleToggle}
+          className={`w-10 h-10 rounded-full flex items-center justify-center border border-white/10 ${isFavorite ? 'bg-red-500 text-white shadow-lg' : 'bg-black/40 text-white backdrop-blur-xl'}`}
+        >
+          <svg className={`w-5 h-5 ${isFavorite ? 'fill-current' : 'fill-none'}`} stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+          </svg>
+        </button>
       </div>
     </div>
   );

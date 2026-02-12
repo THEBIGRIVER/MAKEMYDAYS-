@@ -27,11 +27,11 @@ const HeroBillboard = ({ trendingEvents, onBook, favorites, onToggleFavorite }: 
     setTimeout(() => {
       setCurrentIndex((prev) => (prev + 1) % trendingEvents.length);
       setIsTransitioning(false);
-    }, 500);
+    }, 600);
   }, [trendingEvents.length]);
 
   useEffect(() => {
-    const timer = setInterval(handleNext, 10000);
+    const timer = setInterval(handleNext, 8000);
     return () => clearInterval(timer);
   }, [handleNext]);
 
@@ -41,8 +41,8 @@ const HeroBillboard = ({ trendingEvents, onBook, favorites, onToggleFavorite }: 
   const isFav = favorites.includes(activeEvent.id);
 
   return (
-    <div className="relative w-full h-[60vh] md:h-[85vh] overflow-hidden bg-brand-navy">
-      <div className={`absolute inset-0 transition-opacity duration-1000 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+    <div className="relative w-full h-[65vh] md:h-[90vh] overflow-hidden bg-brand-navy">
+      <div className={`absolute inset-0 transition-all duration-1000 transform ${isTransitioning ? 'opacity-0 scale-105' : 'opacity-100 scale-100'}`}>
         <img 
           src={activeEvent.image} 
           className="w-full h-full object-cover object-center" 
@@ -51,51 +51,48 @@ const HeroBillboard = ({ trendingEvents, onBook, favorites, onToggleFavorite }: 
       </div>
       
       <div className="absolute inset-0 prime-hero-gradient hidden md:block" />
-      <div className="absolute inset-0 bg-gradient-to-t from-brand-navy via-brand-navy/20 md:via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-brand-navy via-brand-navy/30 md:via-transparent to-transparent" />
       
-      <div className={`absolute bottom-[15%] md:top-[20%] left-[5%] md:left-[6%] max-w-[90%] md:max-w-[40%] space-y-4 md:space-y-6 transition-all duration-700 z-10 ${isTransitioning ? 'translate-y-5 opacity-0' : 'translate-y-0 opacity-100'}`}>
+      <div className={`absolute bottom-[10%] md:top-[22%] left-[6%] md:left-[6%] max-w-[90%] md:max-w-[45%] space-y-4 md:space-y-7 transition-all duration-700 z-10 ${isTransitioning ? 'translate-y-8 opacity-0' : 'translate-y-0 opacity-100'}`}>
         <div className="flex items-center gap-3">
-          <span className="bg-brand-prime text-white px-2 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-sm">Included with MMD</span>
-          <span className="text-slate-400 text-xs font-bold">{activeEvent.category}</span>
+          <span className="bg-brand-prime text-white px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-[0.15em] rounded-md shadow-lg shadow-brand-prime/20">Featured</span>
+          <span className="text-slate-300/80 text-sm font-bold tracking-wide uppercase">{activeEvent.category}</span>
         </div>
         
-        <h1 className="text-4xl md:text-7xl font-bold leading-tight text-white drop-shadow-xl">
+        <h1 className="text-5xl md:text-8xl font-display font-extrabold leading-[1.05] text-white drop-shadow-2xl tracking-tighter">
           {activeEvent.title}
         </h1>
         
-        <p className="text-slate-200 text-sm md:text-lg font-medium leading-relaxed line-clamp-3">
+        <p className="text-slate-200/90 text-sm md:text-xl font-medium leading-relaxed line-clamp-2 md:line-clamp-3 max-w-xl">
           {activeEvent.description}
         </p>
         
         <div className="flex items-center gap-4 pt-4">
           <button 
             onClick={() => onBook(activeEvent)}
-            className="px-8 md:px-12 h-12 md:h-14 bg-brand-prime text-white rounded-md font-bold text-base md:text-xl hover:brightness-110 transition-all flex items-center justify-center gap-3 active:scale-95"
+            className="px-8 md:px-14 h-12 md:h-16 bg-brand-prime text-white rounded-xl font-bold text-base md:text-xl hover:brightness-110 hover:scale-[1.02] transition-all flex items-center justify-center gap-3 active:scale-95 shadow-xl shadow-brand-prime/20"
           >
             <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M7 6v12l10-6z"/></svg>
             Book Now
           </button>
           
-          {/* Wish List Icon Button */}
           <button 
             onClick={() => onToggleFavorite(activeEvent.id)}
-            className={`w-12 h-12 md:w-14 md:h-14 backdrop-blur-md rounded-md font-bold flex items-center justify-center transition-all border-2 ${isFav ? 'bg-brand-prime border-brand-prime text-white' : 'bg-white/10 border-white/20 text-white hover:bg-white/20'}`}
+            className={`w-12 h-12 md:w-16 md:h-16 backdrop-blur-2xl rounded-xl font-bold flex items-center justify-center transition-all border-2 shadow-2xl ${isFav ? 'bg-red-500 border-red-500 text-white' : 'bg-white/10 border-white/10 text-white hover:bg-white/20'}`}
           >
-            {isFav ? (
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-            ) : (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4"/></svg>
-            )}
+            <svg className={`w-7 h-7 ${isFav ? 'fill-current' : 'fill-none'}`} stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
           </button>
         </div>
       </div>
 
-      <div className="absolute bottom-10 right-[6%] flex items-center gap-1.5 z-20">
+      <div className="absolute bottom-12 right-[6%] flex items-center gap-2 z-20">
         {trendingEvents.map((_, idx) => (
           <button
             key={idx}
             onClick={() => setCurrentIndex(idx)}
-            className={`h-1 transition-all rounded-full ${currentIndex === idx ? 'w-8 bg-brand-prime' : 'w-4 bg-white/20'}`}
+            className={`h-1.5 transition-all duration-500 rounded-full ${currentIndex === idx ? 'w-10 bg-brand-prime shadow-[0_0_15px_rgba(0,168,225,0.6)]' : 'w-5 bg-white/20'}`}
           />
         ))}
       </div>
@@ -148,7 +145,7 @@ const App: React.FC = () => {
       }
     });
 
-    const handleScroll = () => setIsScrolled(window.scrollY > 20);
+    const handleScroll = () => setIsScrolled(window.scrollY > 40);
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
       unsubscribe();
@@ -190,36 +187,37 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-brand-navy pb-[72px] md:pb-0">
-      <nav className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 px-6 h-14 md:h-20 flex items-center justify-between ${isScrolled ? 'bg-brand-navy shadow-xl' : 'bg-gradient-to-b from-brand-navy/90 to-transparent'}`}>
-        <div className="flex items-center gap-4 md:gap-10">
-          <span className="text-xl md:text-3xl font-display font-black text-white tracking-tighter cursor-pointer" onClick={() => { setShowDashboard(false); setShowFavoritesOnly(false); window.scrollTo({top:0, behavior:'smooth'}); }}>
+    <div className="flex flex-col min-h-screen bg-brand-navy pb-[80px] md:pb-0 selection:bg-brand-prime/30">
+      <nav className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 px-6 h-16 md:h-24 flex items-center justify-between ${isScrolled ? 'bg-brand-navy/90 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] border-b border-white/5' : 'bg-transparent'}`}>
+        <div className="flex items-center gap-6 md:gap-14">
+          <span className="text-2xl md:text-3xl font-display font-black text-white tracking-tighter cursor-pointer flex items-center gap-2 group" onClick={() => { setShowDashboard(false); setShowFavoritesOnly(false); window.scrollTo({top:0, behavior:'smooth'}); }}>
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-brand-prime rounded-lg group-hover:rotate-12 transition-transform duration-500 flex items-center justify-center text-white text-lg font-black italic">M</div>
             MAKE<span className="text-brand-prime">MYDAYS</span>
           </span>
-          <div className="hidden lg:flex items-center gap-8 text-sm font-bold text-slate-300">
-            <button className={`${!showDashboard && !showFavoritesOnly ? 'text-white border-b-2 border-brand-prime' : 'hover:text-white'} h-20 flex items-center transition-all`} onClick={() => { setShowDashboard(false); setShowFavoritesOnly(false); }}>Home</button>
-            <button className={`${showFavoritesOnly ? 'text-white border-b-2 border-brand-prime' : 'hover:text-white'} h-20 flex items-center transition-all`} onClick={() => { setShowDashboard(false); setShowFavoritesOnly(true); }}>Watchlist</button>
-            <button className="hover:text-white h-20 flex items-center">Live TV</button>
-            <button className="hover:text-white h-20 flex items-center">Categories</button>
+          <div className="hidden lg:flex items-center gap-10 text-[13px] font-bold text-slate-400 uppercase tracking-widest">
+            <button className={`${!showDashboard && !showFavoritesOnly ? 'text-white border-b-2 border-brand-prime' : 'hover:text-white'} h-24 flex items-center transition-all`} onClick={() => { setShowDashboard(false); setShowFavoritesOnly(false); }}>Home</button>
+            <button className={`${showFavoritesOnly ? 'text-white border-b-2 border-brand-prime' : 'hover:text-white'} h-24 flex items-center transition-all`} onClick={() => { setShowDashboard(false); setShowFavoritesOnly(true); }}>Watchlist</button>
+            <button className="hover:text-white h-24 flex items-center">Store</button>
+            <button className="hover:text-white h-24 flex items-center">Categories</button>
           </div>
         </div>
 
         <div className="flex items-center gap-6">
-           <div className="hidden md:flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-2 rounded-md focus-within:bg-white/10 transition-all">
-              <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+           <div className="hidden md:flex items-center gap-3 bg-white/5 border border-white/10 px-5 py-2.5 rounded-xl focus-within:bg-white/10 focus-within:border-brand-prime transition-all duration-300">
+              <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" strokeWidth="2.5"/></svg>
               <input 
-                type="text" placeholder="Search..." 
-                className="bg-transparent border-none outline-none text-sm w-48 text-white"
+                type="text" placeholder="Search frequencies..." 
+                className="bg-transparent border-none outline-none text-sm w-48 text-white placeholder:text-slate-600"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
            </div>
            {currentUser ? (
-              <button onClick={() => openDashboardTab('settings')} className="w-10 h-10 rounded-full border-2 border-white/20 flex items-center justify-center font-black text-xs hover:border-brand-prime transition-all">
+              <button onClick={() => openDashboardTab('settings')} className="w-11 h-11 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center font-black text-sm hover:border-brand-prime hover:bg-brand-prime/10 transition-all">
                 {currentUser.name.charAt(0)}
               </button>
            ) : (
-              <button onClick={() => setShowAuthModal(true)} className="px-6 h-10 bg-brand-prime text-white rounded-md text-sm font-bold active:scale-95 transition-all">Join</button>
+              <button onClick={() => setShowAuthModal(true)} className="px-7 h-11 bg-brand-prime text-white rounded-xl text-sm font-bold uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-brand-prime/20">Sign In</button>
            )}
         </div>
       </nav>
@@ -232,13 +230,17 @@ const App: React.FC = () => {
         <main className="flex-1 animate-fade-in">
           {!showFavoritesOnly && <HeroBillboard trendingEvents={events.slice(0,5)} onBook={setSelectedEvent} favorites={favorites} onToggleFavorite={toggleFavorite} />}
 
-          <div className={`relative z-10 px-6 md:px-12 space-y-12 md:space-y-14 ${showFavoritesOnly ? 'pt-24' : '-mt-10 md:mt-0'} pb-20`}>
+          <div className={`relative z-10 px-6 md:px-12 space-y-16 md:space-y-24 ${showFavoritesOnly ? 'pt-32' : '-mt-16 md:mt-0'} pb-32`}>
             {showFavoritesOnly && favorites.length === 0 && (
-              <div className="py-20 text-center text-slate-400 space-y-4">
-                <svg className="w-20 h-20 mx-auto opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M12 4v16m8-8H4"/></svg>
-                <h2 className="text-2xl font-bold text-white">Your Watchlist is empty</h2>
-                <p>Find your next experience and add it to your Watchlist.</p>
-                <button onClick={() => setShowFavoritesOnly(false)} className="px-8 py-3 bg-brand-prime text-white rounded-md font-bold">Explore Now</button>
+              <div className="py-32 text-center text-slate-500 space-y-6">
+                <div className="w-24 h-24 bg-white/5 border border-white/10 rounded-3xl mx-auto flex items-center justify-center">
+                  <svg className="w-10 h-10 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                </div>
+                <div className="space-y-2">
+                  <h2 className="text-3xl font-display font-extrabold text-white">Your list is quiet</h2>
+                  <p className="max-w-md mx-auto">Calibrate your future self by adding the experiences that move you to your watchlist.</p>
+                </div>
+                <button onClick={() => setShowFavoritesOnly(false)} className="px-10 py-4 bg-brand-prime text-white rounded-xl font-bold uppercase tracking-widest shadow-xl shadow-brand-prime/20 active:scale-95 transition-all">Explore Experience</button>
               </div>
             )}
             
@@ -247,14 +249,19 @@ const App: React.FC = () => {
               if (rowEvents.length === 0) return null;
               
               return (
-                <div key={category} className="space-y-4">
-                  <h2 className="text-xl md:text-2xl font-bold tracking-tight text-white flex items-center gap-4">
-                    {category}
-                    <span className="text-brand-prime text-sm font-black uppercase tracking-widest ml-auto cursor-pointer hover:underline">See more</span>
-                  </h2>
-                  <div className="flex gap-4 overflow-x-auto pb-6 -mx-6 px-6 scrollbar-hide snap-x">
+                <div key={category} className="space-y-6 md:space-y-8 animate-slide-up">
+                  <div className="flex items-end justify-between px-2">
+                    <div className="space-y-1">
+                      <h2 className="text-2xl md:text-4xl font-display font-black tracking-tight text-white">
+                        {category}
+                      </h2>
+                      <div className="h-1 w-12 bg-brand-prime rounded-full"></div>
+                    </div>
+                    <button className="text-brand-prime text-xs font-black uppercase tracking-[0.2em] hover:opacity-80 transition-opacity">View All</button>
+                  </div>
+                  <div className="flex gap-6 overflow-x-auto pb-8 -mx-6 px-6 scrollbar-hide snap-x">
                     {rowEvents.map((e) => (
-                      <div key={e.id} className="min-w-[280px] md:min-w-[400px] snap-center">
+                      <div key={e.id} className="min-w-[300px] md:min-w-[440px] snap-center">
                         <EventCard 
                           event={e} 
                           onClick={setSelectedEvent} 
@@ -268,20 +275,23 @@ const App: React.FC = () => {
               );
             })}
 
-            {/* AI Mood Footer */}
             {!showFavoritesOnly && (
-              <div className="py-16 md:py-24 flex flex-col items-center justify-center bg-brand-slate/40 rounded-xl border border-white/5 px-6">
-                <div className="text-center max-w-2xl space-y-6">
-                  <h3 className="text-2xl md:text-5xl font-bold tracking-tight text-white">Not sure what to watch?</h3>
-                  <p className="text-slate-400 text-sm md:text-lg">Tell us your current mood and we'll curate the perfect experience.</p>
-                  <div className="flex flex-col md:flex-row gap-4 pt-4">
+              <div className="py-24 flex flex-col items-center justify-center bg-white/5 rounded-[3rem] border border-white/10 px-8 text-center relative overflow-hidden group">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-brand-prime/5 blur-[120px] pointer-events-none rounded-full" />
+                <div className="relative z-10 max-w-3xl space-y-8">
+                  <div className="space-y-4">
+                    <span className="text-brand-prime text-xs font-black uppercase tracking-[0.3em] inline-block mb-2">Personalized Discovery</span>
+                    <h3 className="text-4xl md:text-6xl font-display font-black tracking-tighter text-white leading-tight">What's your energy today?</h3>
+                    <p className="text-slate-400 text-base md:text-xl font-medium leading-relaxed max-w-2xl mx-auto">Our Gemini AI curator will sync your current emotional state with the perfect physical frequency.</p>
+                  </div>
+                  <div className="flex flex-col md:flex-row gap-4 justify-center items-stretch pt-6">
                       <input 
-                        type="text" placeholder="I feel adventurous..." 
-                        className="bg-brand-navy border border-white/10 px-8 h-14 rounded-md text-lg w-full md:w-[400px] outline-none focus:border-brand-prime transition-all"
+                        type="text" placeholder="I feel energetic and want to create something..." 
+                        className="bg-brand-navy/60 border border-white/10 px-8 h-16 rounded-2xl text-lg w-full md:w-[500px] outline-none focus:border-brand-prime transition-all backdrop-blur-md placeholder:text-slate-600 shadow-2xl"
                         value={userMood}
                         onChange={(e) => setUserMood(e.target.value)}
                       />
-                      <button onClick={() => handleMoodSearch(userMood)} className="h-14 bg-brand-prime text-white px-10 rounded-md font-bold text-lg active:scale-95 shadow-xl transition-all">SYNC</button>
+                      <button onClick={() => handleMoodSearch(userMood)} className="h-16 bg-brand-prime text-white px-12 rounded-2xl font-bold text-lg uppercase tracking-widest active:scale-95 shadow-2xl shadow-brand-prime/20 transition-all hover:brightness-110">Sync AI</button>
                   </div>
                 </div>
               </div>
@@ -290,27 +300,22 @@ const App: React.FC = () => {
         </main>
       )}
 
-      {/* Mobile Sticky Footer */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[200] bg-brand-navy/95 backdrop-blur-xl border-t border-white/10 h-16 flex items-center justify-around px-4 pb-[env(safe-area-inset-bottom)]">
-        <button onClick={() => { setShowDashboard(false); setShowFavoritesOnly(false); }} className={`flex flex-col items-center gap-1 ${!showDashboard && !showFavoritesOnly ? 'text-brand-prime' : 'text-slate-500'}`}>
+      {/* Modern Sticky Navigation (Mobile) */}
+      <nav className="md:hidden fixed bottom-6 left-6 right-6 z-[200] bg-[#1A242E]/80 backdrop-blur-3xl border border-white/10 h-16 rounded-[2rem] flex items-center justify-around px-2 shadow-2xl shadow-black/50">
+        <button onClick={() => { setShowDashboard(false); setShowFavoritesOnly(false); }} className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all ${!showDashboard && !showFavoritesOnly ? 'bg-brand-prime text-white' : 'text-slate-500 hover:text-white'}`}>
           <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-          <span className="text-[10px] font-bold uppercase">Home</span>
         </button>
-        <button className="flex flex-col items-center gap-1 text-slate-500">
+        <button className="flex items-center justify-center w-12 h-12 rounded-2xl text-slate-500 hover:text-white transition-all">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" strokeWidth="2.5"/></svg>
-          <span className="text-[10px] font-bold uppercase">Search</span>
         </button>
-        <button onClick={() => openDashboardTab('hosting')} className={`flex flex-col items-center gap-1 ${showDashboard && dashboardTab === 'hosting' ? 'text-brand-prime' : 'text-slate-500'}`}>
+        <button onClick={() => openDashboardTab('hosting')} className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all ${showDashboard && dashboardTab === 'hosting' ? 'bg-brand-prime text-white' : 'text-slate-500 hover:text-white'}`}>
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" strokeWidth="2.5"/></svg>
-          <span className="text-[10px] font-bold uppercase">Host</span>
         </button>
-        <button onClick={() => { setShowDashboard(false); setShowFavoritesOnly(true); }} className={`flex flex-col items-center gap-1 ${showFavoritesOnly ? 'text-brand-prime' : 'text-slate-500'}`}>
-          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-          <span className="text-[10px] font-bold uppercase">Watchlist</span>
+        <button onClick={() => { setShowDashboard(false); setShowFavoritesOnly(true); }} className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all ${showFavoritesOnly ? 'bg-brand-prime text-white' : 'text-slate-500 hover:text-white'}`}>
+          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
         </button>
-        <button onClick={() => openDashboardTab('bookings')} className={`flex flex-col items-center gap-1 ${showDashboard && dashboardTab === 'bookings' ? 'text-brand-prime' : 'text-slate-500'}`}>
+        <button onClick={() => openDashboardTab('bookings')} className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all ${showDashboard && dashboardTab === 'bookings' ? 'bg-brand-prime text-white' : 'text-slate-500 hover:text-white'}`}>
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" strokeWidth="2.5"/></svg>
-          <span className="text-[10px] font-bold uppercase">Bookings</span>
         </button>
       </nav>
 
