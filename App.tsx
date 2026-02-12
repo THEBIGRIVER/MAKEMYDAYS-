@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Event, Category, Booking, AIRecommendation, User } from './types';
 import EventCard from './components/EventCard';
 import BookingModal from './components/BookingModal';
