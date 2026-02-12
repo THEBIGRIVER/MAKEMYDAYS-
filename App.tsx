@@ -13,7 +13,7 @@ import { INITIAL_EVENTS } from './constants';
 
 const CATEGORIES: Category[] = ['Activity', 'Shows', 'MMD Originals', 'Mindfulness', 'Workshop', 'Therapy'];
 
-const HeroSection = ({ trendingEvents, onBook }: { trendingEvents: Event[], onBook: (e: Event) => void }) => {
+const HeroBillboard = ({ trendingEvents, onBook }: { trendingEvents: Event[], onBook: (e: Event) => void }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
@@ -26,87 +26,67 @@ const HeroSection = ({ trendingEvents, onBook }: { trendingEvents: Event[], onBo
   }, [trendingEvents.length]);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      handleNext();
-    }, 8000);
+    const timer = setInterval(handleNext, 10000);
     return () => clearInterval(timer);
   }, [handleNext]);
 
   const activeEvent = trendingEvents[currentIndex];
-
   if (!activeEvent) return null;
 
   return (
-    <div className="relative w-full h-[75vh] md:h-[95vh] overflow-hidden bg-brand-netflix">
-      {/* Slideshow background with crossfade */}
-      <div className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+    <div className="relative w-full h-[60vh] md:h-[85vh] overflow-hidden bg-brand-navy">
+      {/* Cinematic Background */}
+      <div className={`absolute inset-0 transition-opacity duration-1000 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
         <img 
           src={activeEvent.image} 
-          className="w-full h-full object-cover" 
+          className="w-full h-full object-cover object-center" 
           alt={activeEvent.title}
         />
       </div>
       
-      {/* Overlays */}
-      <div className="absolute inset-0 bg-gradient-to-r from-brand-netflix via-brand-netflix/60 to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-t from-brand-netflix via-transparent to-transparent" />
+      {/* Prime Gradients */}
+      <div className="absolute inset-0 prime-hero-gradient hidden md:block" />
+      <div className="absolute inset-0 bg-gradient-to-t from-brand-navy via-brand-navy/20 md:via-transparent to-transparent" />
       
-      {/* Content Container */}
-      <div className={`absolute bottom-[10%] md:bottom-[15%] left-[5%] md:left-[8%] max-w-[90%] md:max-w-[45%] space-y-4 md:space-y-6 transition-all duration-700 ${isTransitioning ? 'translate-y-10 opacity-0' : 'translate-y-0 opacity-100'}`}>
+      {/* Billboard Content */}
+      <div className={`absolute bottom-[15%] md:top-[20%] left-[5%] md:left-[6%] max-w-[90%] md:max-w-[40%] space-y-4 md:space-y-6 transition-all duration-700 z-10 ${isTransitioning ? 'translate-y-5 opacity-0' : 'translate-y-0 opacity-100'}`}>
         <div className="flex items-center gap-3">
-          <div className="w-1 h-6 bg-brand-red rounded-full animate-pulse"></div>
-          <span className="text-brand-red font-black uppercase tracking-[0.4em] text-[10px] md:text-xs">Trending Now</span>
+          <span className="bg-brand-prime text-white px-2 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-sm">Included with MMD</span>
+          <span className="text-slate-400 text-xs font-bold">{activeEvent.category}</span>
         </div>
         
-        <h1 className="text-3xl md:text-8xl font-display font-black leading-tight uppercase text-white drop-shadow-2xl">
+        <h1 className="text-4xl md:text-7xl font-bold leading-tight text-white drop-shadow-xl">
           {activeEvent.title}
         </h1>
         
-        <p className="text-slate-200 text-xs md:text-lg font-medium leading-relaxed line-clamp-3 md:line-clamp-none max-w-xl">
+        <p className="text-slate-200 text-sm md:text-lg font-medium leading-relaxed line-clamp-3">
           {activeEvent.description}
         </p>
         
-        <div className="flex items-center gap-3 md:gap-4 pt-2 md:pt-4">
+        <div className="flex items-center gap-4 pt-4">
           <button 
             onClick={() => onBook(activeEvent)}
-            className="flex-1 md:flex-none px-6 md:px-12 h-12 md:h-14 bg-white text-black rounded-md font-bold text-sm md:text-lg hover:bg-white/80 transition-all flex items-center justify-center gap-2 md:gap-3 active:scale-95 group"
+            className="px-8 md:px-12 h-12 md:h-14 bg-brand-prime text-white rounded-md font-bold text-base md:text-xl hover:brightness-110 transition-all flex items-center justify-center gap-3 active:scale-95"
           >
-            <svg className="w-5 h-5 md:w-6 md:h-6 fill-current" viewBox="0 0 24 24"><path d="M7 6v12l10-6z"/></svg>
-            Book
+            <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M7 6v12l10-6z"/></svg>
+            Book Now
           </button>
-          <button className="flex-1 md:flex-none px-6 md:px-12 h-12 md:h-14 bg-white/20 backdrop-blur-md text-white rounded-md font-bold text-sm md:text-lg hover:bg-white/30 transition-all flex items-center justify-center gap-2 md:gap-3">
-            <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            Details
+          <button className="w-12 h-12 md:w-14 md:h-14 bg-white/10 backdrop-blur-md text-white rounded-md font-bold flex items-center justify-center hover:bg-white/20 transition-all">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4"/></svg>
           </button>
         </div>
       </div>
 
-      {/* Pagination Indicators - Smaller on mobile */}
-      <div className="absolute bottom-6 right-6 md:bottom-10 md:right-10 flex items-center gap-2 md:gap-3 z-20">
+      {/* Slide Indicators */}
+      <div className="absolute bottom-10 right-[6%] flex items-center gap-1.5 z-20">
         {trendingEvents.map((_, idx) => (
           <button
             key={idx}
             onClick={() => setCurrentIndex(idx)}
-            className={`transition-all duration-300 h-1 md:h-1.5 rounded-full ${currentIndex === idx ? 'w-6 md:w-10 bg-brand-red' : 'w-2 md:w-4 bg-white/30'}`}
+            className={`h-1 transition-all rounded-full ${currentIndex === idx ? 'w-8 bg-brand-prime' : 'w-4 bg-white/20'}`}
           />
         ))}
       </div>
-
-      {/* Slide Progress bar (bottom thin line) */}
-      <div className="absolute bottom-0 left-0 h-1 bg-brand-red/30 w-full z-10">
-        <div 
-          key={currentIndex}
-          className="h-full bg-brand-red animate-[progress_8s_linear_forwards]" 
-          style={{ transformOrigin: 'left' }}
-        />
-      </div>
-      
-      <style>{`
-        @keyframes progress {
-          from { transform: scaleX(0); }
-          to { transform: scaleX(1); }
-        }
-      `}</style>
     </div>
   );
 };
@@ -119,6 +99,7 @@ const App: React.FC = () => {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [userMood, setUserMood] = useState('');
   const [showDashboard, setShowDashboard] = useState(false);
+  const [dashboardTab, setDashboardTab] = useState<'bookings' | 'hosting' | 'settings'>('bookings');
   const [activePolicy, setActivePolicy] = useState<PolicyType | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -140,13 +121,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        const user: User = {
-          uid: firebaseUser.uid,
-          name: firebaseUser.displayName || 'Explorer',
-          email: firebaseUser.email || '',
-          bookings: [], 
-          role: firebaseUser.email === 'admin@makemydays.com' ? 'admin' : 'user'
-        };
+        const user: User = { uid: firebaseUser.uid, name: firebaseUser.displayName || 'Explorer', email: firebaseUser.email || '', bookings: [], role: firebaseUser.email === 'admin@makemydays.com' ? 'admin' : 'user' };
         setCurrentUser(user);
         await api.syncUserProfile(user);
         fetchData(firebaseUser.uid);
@@ -156,10 +131,7 @@ const App: React.FC = () => {
       }
     });
 
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
       unsubscribe();
@@ -167,119 +139,88 @@ const App: React.FC = () => {
     };
   }, [fetchData]);
 
-  // Handle Back Button
-  useEffect(() => {
-    const handlePopState = () => {
-      setSelectedEvent(null);
-      setShowDashboard(false);
-      setActivePolicy(null);
-      setShowAuthModal(false);
-    };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
-  useEffect(() => {
-    if (selectedEvent || showDashboard || activePolicy || showAuthModal) {
-      if (!window.history.state || window.history.state.overlay !== true) {
-        window.history.pushState({ overlay: true }, '');
-      }
-    }
-  }, [selectedEvent, showDashboard, activePolicy, showAuthModal]);
-
   const handleMoodSearch = async (mood: string) => {
     if (!mood.trim()) { setAiRec(null); return; }
     try {
       const rec = await api.getRecommendations(mood, events);
       setAiRec(rec);
-    } catch { 
-      setAiRec(null);
-    }
+    } catch { setAiRec(null); }
   };
 
-  const trendingEvents = useMemo(() => {
-    return events.slice(0, 5);
-  }, [events]);
+  const openDashboardTab = (tab: 'bookings' | 'hosting' | 'settings') => {
+    if (!currentUser) { setShowAuthModal(true); return; }
+    setDashboardTab(tab);
+    setShowDashboard(true);
+  };
 
   const getRowEvents = (category: Category) => {
     return events.filter(e => {
       const matchCat = e.category === category;
       const matchSearch = searchQuery.toLowerCase() === '' || 
-                         e.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         e.description.toLowerCase().includes(searchQuery.toLowerCase());
+                         e.title.toLowerCase().includes(searchQuery.toLowerCase());
       const matchAi = aiRec ? aiRec.suggestedEventIds.includes(e.id) : true;
       return matchCat && (aiRec ? matchAi : matchSearch);
     });
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-brand-netflix text-white selection:bg-brand-red selection:text-white">
-      {/* Top Navigation */}
-      <nav className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 px-4 md:px-12 h-14 md:h-20 flex items-center justify-between ${isScrolled ? 'bg-brand-netflix shadow-2xl' : 'bg-gradient-to-b from-brand-netflix/80 to-transparent'}`}>
-        <div className="flex items-center gap-4 md:gap-12">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo({top:0, behavior:'smooth'})}>
-            <span className="text-lg md:text-3xl font-display font-black text-brand-red tracking-tighter">MAKEMYDAYS</span>
-          </div>
-          <div className="hidden lg:flex items-center gap-6 text-[13px] font-bold text-slate-300">
-            <button className="hover:text-white transition-colors" onClick={() => setShowDashboard(false)}>Home</button>
-            <button className="hover:text-white transition-colors">TV Shows</button>
-            <button className="hover:text-white transition-colors">Experiences</button>
-            <button className="hover:text-white transition-colors">New & Popular</button>
-            <button className="hover:text-white transition-colors">My List</button>
+    <div className="flex flex-col min-h-screen bg-brand-navy pb-[72px] md:pb-0">
+      {/* Top Nav (Prime Video Style) */}
+      <nav className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 px-6 h-14 md:h-20 flex items-center justify-between ${isScrolled ? 'bg-brand-navy shadow-xl' : 'bg-gradient-to-b from-brand-navy/90 to-transparent'}`}>
+        <div className="flex items-center gap-4 md:gap-10">
+          <span className="text-xl md:text-3xl font-display font-black text-white tracking-tighter cursor-pointer" onClick={() => { setShowDashboard(false); window.scrollTo({top:0, behavior:'smooth'}); }}>
+            MAKE<span className="text-brand-prime">MYDAYS</span>
+          </span>
+          <div className="hidden lg:flex items-center gap-8 text-sm font-bold text-slate-300">
+            <button className={`${!showDashboard ? 'text-white border-b-2 border-brand-prime' : 'hover:text-white'} h-20 flex items-center transition-all`} onClick={() => setShowDashboard(false)}>Home</button>
+            <button className="hover:text-white h-20 flex items-center">Store</button>
+            <button className="hover:text-white h-20 flex items-center">Live TV</button>
+            <button className="hover:text-white h-20 flex items-center">Categories</button>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-           {/* Desktop only search */}
-           <div className="hidden md:flex items-center gap-3 bg-black/40 border border-white/10 px-4 py-2 rounded-full group">
-              <svg className="w-4 h-4 text-slate-400 group-focus-within:text-brand-red transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <div className="flex items-center gap-6">
+           <div className="hidden md:flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-2 rounded-md focus-within:bg-white/10 transition-all">
+              <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
               <input 
-                type="text" 
-                placeholder="Search experiences..." 
-                className="bg-transparent border-none outline-none text-xs w-48 placeholder:text-slate-600 focus:placeholder:text-slate-400"
+                type="text" placeholder="Search..." 
+                className="bg-transparent border-none outline-none text-sm w-48 text-white"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
            </div>
-           {/* Desktop Sanctuary Trigger */}
-           <div className="hidden md:block">
-              {currentUser ? (
-                <button onClick={() => setShowDashboard(true)} className="w-8 h-8 rounded-md bg-blue-500 flex items-center justify-center font-black text-xs hover:ring-2 ring-white transition-all">
-                  {currentUser.name.charAt(0)}
-                </button>
-              ) : (
-                <button onClick={() => setShowAuthModal(true)} className="px-5 h-8 bg-brand-red text-white rounded text-[11px] font-bold uppercase tracking-wider hover:bg-brand-red/80 transition-all">Join</button>
-              )}
-           </div>
+           {currentUser ? (
+              <button onClick={() => openDashboardTab('settings')} className="w-10 h-10 rounded-full border-2 border-white/20 flex items-center justify-center font-black text-xs hover:border-brand-prime transition-all">
+                {currentUser.name.charAt(0)}
+              </button>
+           ) : (
+              <button onClick={() => setShowAuthModal(true)} className="px-6 h-10 bg-brand-prime text-white rounded-md text-sm font-bold active:scale-95 transition-all">Join</button>
+           )}
         </div>
       </nav>
 
       {showDashboard ? (
-        <main className="pt-20 md:pt-24 px-4 md:px-12 pb-24">
-          <Dashboard events={events} bookings={globalBookings} currentUser={currentUser} onRefreshEvents={() => fetchData(currentUser?.uid)} onOpenPolicy={setActivePolicy} />
+        <main className="pt-24 px-6 md:px-12 animate-fade-in">
+          <Dashboard initialTab={dashboardTab} events={events} bookings={globalBookings} currentUser={currentUser} onRefreshEvents={() => fetchData(currentUser?.uid)} onOpenPolicy={setActivePolicy} />
         </main>
       ) : (
-        <main className="flex-1 pb-24 md:pb-32">
-          {/* Hero Section */}
-          <HeroSection trendingEvents={trendingEvents} onBook={setSelectedEvent} />
+        <main className="flex-1 animate-fade-in">
+          <HeroBillboard trendingEvents={events.slice(0,5)} onBook={setSelectedEvent} />
 
-          {/* Content Rows */}
-          <div className="relative z-10 -mt-10 md:-mt-32 px-4 md:px-12 space-y-8 md:space-y-12">
-            
-            {/* Rows by Category */}
+          <div className="relative z-10 px-6 md:px-12 space-y-12 md:space-y-14 -mt-10 md:mt-0 pb-20">
             {CATEGORIES.map(category => {
               const rowEvents = getRowEvents(category);
               if (rowEvents.length === 0) return null;
               
               return (
-                <div key={category} className="space-y-3 md:space-y-4">
-                  <h2 className="text-lg md:text-2xl font-bold tracking-tight text-slate-100 flex items-center gap-3">
+                <div key={category} className="space-y-4">
+                  <h2 className="text-xl md:text-2xl font-bold tracking-tight text-white flex items-center gap-4">
                     {category}
-                    <div className="h-[1px] flex-1 bg-white/10"></div>
+                    <span className="text-brand-prime text-sm font-black uppercase tracking-widest ml-auto cursor-pointer hover:underline">See more</span>
                   </h2>
-                  <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide snap-x">
+                  <div className="flex gap-4 overflow-x-auto pb-6 -mx-6 px-6 scrollbar-hide snap-x">
                     {rowEvents.map((e) => (
-                      <div key={e.id} className="min-w-[240px] md:min-w-[340px] snap-center transform transition-all duration-300 md:hover:scale-110 md:hover:z-20">
+                      <div key={e.id} className="min-w-[280px] md:min-w-[400px] snap-center">
                         <EventCard event={e} onClick={setSelectedEvent} />
                       </div>
                     ))}
@@ -288,28 +229,19 @@ const App: React.FC = () => {
               );
             })}
 
-            {/* AI Recommendation Section */}
-            <div className="py-12 md:py-20 flex flex-col items-center justify-center gap-6 md:gap-10 bg-gradient-to-t from-brand-red/5 to-transparent rounded-3xl md:rounded-[3rem] border border-white/5">
-               <div className="text-center max-w-2xl space-y-4 md:space-y-6 px-6">
-                 <h3 className="text-2xl md:text-5xl font-display font-black tracking-tight uppercase">Vibe-Check Your Journey</h3>
-                 <p className="text-slate-400 text-xs md:text-base leading-relaxed">Not feeling the frequency? Tell us your current mood and let the MMD Oracle curate a unique path for your soul.</p>
-                 <div className="flex flex-col gap-4 pt-2">
-                    <div className="relative flex-1">
-                      <input 
-                        type="text" 
-                        placeholder="Ex: 'I need a primal release'..." 
-                        className="bg-white/5 border border-white/20 px-6 md:px-8 h-12 md:h-14 rounded-full text-sm w-full outline-none focus:border-brand-red transition-all"
-                        value={userMood}
-                        onChange={(e) => setUserMood(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleMoodSearch(userMood)}
-                      />
-                    </div>
-                    <button 
-                      onClick={() => handleMoodSearch(userMood)} 
-                      className="w-full bg-white text-black font-black uppercase tracking-widest text-[10px] md:text-xs rounded-full h-12 md:h-14 transition-all hover:bg-brand-red hover:text-white active:scale-95 shadow-xl"
-                    >
-                      SYNC AURA
-                    </button>
+            {/* AI Mood Footer */}
+            <div className="py-16 md:py-24 flex flex-col items-center justify-center bg-brand-slate/40 rounded-xl border border-white/5 px-6">
+               <div className="text-center max-w-2xl space-y-6">
+                 <h3 className="text-2xl md:text-5xl font-bold tracking-tight text-white">Not sure what to watch?</h3>
+                 <p className="text-slate-400 text-sm md:text-lg">Tell us your current mood and we'll curate the perfect experience.</p>
+                 <div className="flex flex-col md:flex-row gap-4 pt-4">
+                    <input 
+                      type="text" placeholder="I feel adventurous..." 
+                      className="bg-brand-navy border border-white/10 px-8 h-14 rounded-md text-lg w-full md:w-[400px] outline-none focus:border-brand-prime transition-all"
+                      value={userMood}
+                      onChange={(e) => setUserMood(e.target.value)}
+                    />
+                    <button onClick={() => handleMoodSearch(userMood)} className="h-14 bg-brand-prime text-white px-10 rounded-md font-bold text-lg active:scale-95 shadow-xl transition-all">SYNC</button>
                  </div>
                </div>
             </div>
@@ -317,41 +249,23 @@ const App: React.FC = () => {
         </main>
       )}
 
-      {/* Mobile Bottom Navigation Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[200] bg-brand-netflix/90 backdrop-blur-xl border-t border-white/5 h-16 flex items-center justify-around px-2 pb-[env(safe-area-inset-bottom)]">
-        <button 
-          onClick={() => setShowDashboard(false)}
-          className={`flex flex-col items-center gap-1 w-1/4 ${!showDashboard ? 'text-brand-red' : 'text-slate-500'}`}
-        >
+      {/* Mobile Sticky Footer */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[200] bg-brand-navy/95 backdrop-blur-xl border-t border-white/10 h-16 flex items-center justify-around px-4 pb-[env(safe-area-inset-bottom)]">
+        <button onClick={() => setShowDashboard(false)} className={`flex flex-col items-center gap-1 ${!showDashboard ? 'text-brand-prime' : 'text-slate-500'}`}>
           <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-          <span className="text-[10px] font-black uppercase tracking-tighter">Home</span>
+          <span className="text-[10px] font-bold uppercase">Home</span>
         </button>
-        <button className="flex flex-col items-center gap-1 w-1/4 text-slate-500">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-          <span className="text-[10px] font-black uppercase tracking-tighter">Find</span>
+        <button className="flex flex-col items-center gap-1 text-slate-500">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" strokeWidth="2.5"/></svg>
+          <span className="text-[10px] font-bold uppercase">Search</span>
         </button>
-        <button className="flex flex-col items-center gap-1 w-1/4 text-slate-500">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4"/></svg>
-          <span className="text-[10px] font-black uppercase tracking-tighter">Host</span>
+        <button onClick={() => openDashboardTab('hosting')} className={`flex flex-col items-center gap-1 ${showDashboard && dashboardTab === 'hosting' ? 'text-brand-prime' : 'text-slate-500'}`}>
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" strokeWidth="2.5"/></svg>
+          <span className="text-[10px] font-bold uppercase">Host</span>
         </button>
-        <button 
-          onClick={() => {
-            if (currentUser) {
-              setShowDashboard(true);
-            } else {
-              setShowAuthModal(true);
-            }
-          }}
-          className={`flex flex-col items-center gap-1 w-1/4 ${showDashboard ? 'text-brand-red' : 'text-slate-500'}`}
-        >
-          {currentUser ? (
-            <div className="w-6 h-6 rounded bg-blue-500 flex items-center justify-center text-white text-[10px] font-black">
-              {currentUser.name.charAt(0)}
-            </div>
-          ) : (
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-          )}
-          <span className="text-[10px] font-black uppercase tracking-tighter">Profile</span>
+        <button onClick={() => openDashboardTab('bookings')} className={`flex flex-col items-center gap-1 ${showDashboard && dashboardTab === 'bookings' ? 'text-brand-prime' : 'text-slate-500'}`}>
+          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+          <span className="text-[10px] font-bold uppercase">My Stuff</span>
         </button>
       </nav>
 
@@ -360,24 +274,8 @@ const App: React.FC = () => {
           event={selectedEvent} 
           onClose={() => setSelectedEvent(null)} 
           onConfirm={async (slot, date, guestName, guestPhone) => {
-            if (!currentUser) {
-              setShowAuthModal(true);
-              return;
-            }
-            const booking: Booking = { 
-              id: Math.random().toString(36).slice(2, 11), 
-              eventId: selectedEvent.id, 
-              eventTitle: selectedEvent.title, 
-              category: selectedEvent.category, 
-              time: slot.time, 
-              eventDate: date, 
-              price: selectedEvent.price, 
-              bookedAt: new Date().toISOString(), 
-              userName: guestName, 
-              userPhone: guestPhone, 
-              hostPhone: selectedEvent.hostPhone, 
-              userUid: currentUser.uid 
-            };
+            if (!currentUser) { setShowAuthModal(true); return; }
+            const booking: Booking = { id: Math.random().toString(36).slice(2, 11), eventId: selectedEvent.id, eventTitle: selectedEvent.title, category: selectedEvent.category, time: slot.time, eventDate: date, price: selectedEvent.price, bookedAt: new Date().toISOString(), userName: guestName, userPhone: guestPhone, hostPhone: selectedEvent.hostPhone, userUid: currentUser.uid };
             await api.saveBooking(booking, currentUser.uid);
             fetchData(currentUser.uid);
           }} 
@@ -386,55 +284,6 @@ const App: React.FC = () => {
       
       {showAuthModal && <AuthModal onSuccess={() => setShowAuthModal(false)} onClose={() => setShowAuthModal(false)} />}
       {activePolicy && <LegalModal type={activePolicy} onClose={() => setActivePolicy(null)} />}
-      
-      {/* Desktop Footer Only */}
-      <footer className="hidden md:block bg-brand-netflix py-20 border-t border-white/5 px-6 md:px-12">
-        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-12 text-slate-500 text-xs">
-          <div className="space-y-4">
-            <h4 className="text-white font-bold uppercase tracking-widest">Connect</h4>
-            <div className="flex flex-col gap-2">
-              <a href="#" className="hover:underline">Instagram</a>
-              <a href="#" className="hover:underline">WhatsApp</a>
-              <a href="#" className="hover:underline">Email Support</a>
-            </div>
-          </div>
-          <div className="space-y-4">
-            <h4 className="text-white font-bold uppercase tracking-widest">Governance</h4>
-            <div className="flex flex-col gap-2">
-              <button onClick={() => setActivePolicy('terms')} className="text-left hover:underline">Terms of Resonance</button>
-              <button onClick={() => setActivePolicy('privacy')} className="text-left hover:underline">Privacy Calibration</button>
-              <button onClick={() => setActivePolicy('refund')} className="text-left hover:underline">Refund Protocol</button>
-            </div>
-          </div>
-          <div className="space-y-4">
-             <h4 className="text-white font-bold uppercase tracking-widest">Global</h4>
-             <div className="flex flex-col gap-2">
-                <span>Vibe Centers</span>
-                <span>Experience Nodes</span>
-                <span>Host Portal</span>
-             </div>
-          </div>
-          <div className="space-y-6">
-            <span className="text-xl md:text-2xl font-display font-black text-brand-red tracking-tighter block">MAKEMYDAYS</span>
-            <p className="italic">Crafting memories beyond the digital veil.</p>
-          </div>
-        </div>
-        <div className="mt-20 text-center text-[10px] text-slate-700 font-bold uppercase tracking-[0.4em]">
-          &copy; {new Date().getFullYear()} Beneme Frequency Lab • All Rights Reserved
-        </div>
-      </footer>
-
-      {/* Mobile Footer Minimal */}
-      <footer className="md:hidden bg-brand-netflix py-12 px-6 text-center border-t border-white/5">
-        <span className="text-xl font-display font-black text-brand-red tracking-tighter mb-4 block">MAKEMYDAYS</span>
-        <div className="flex justify-center gap-6 text-[10px] font-black uppercase tracking-widest text-slate-500 mb-8">
-          <button onClick={() => setActivePolicy('terms')}>Terms</button>
-          <button onClick={() => setActivePolicy('privacy')}>Privacy</button>
-          <button onClick={() => setActivePolicy('refund')}>Refunds</button>
-        </div>
-        <p className="text-[10px] text-slate-700 uppercase tracking-widest">&copy; 2025 Beneme Lab</p>
-      </footer>
-
       <ChatBot />
     </div>
   );

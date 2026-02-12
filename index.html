@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#141414">
-    <title>MAKEMYDAYS — Deep Forest Residency</title>
+    <meta name="theme-color" content="#0F171E">
+    <title>MAKEMYDAYS — Prime Experiences</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -29,10 +29,10 @@
     "firebase/app": "https://esm.sh/firebase@11.3.1/app",
     "firebase/auth": "https://esm.sh/firebase@11.3.1/auth",
     "firebase/firestore": "https://esm.sh/firebase@11.3.1/firestore",
-    "firebase/": "https://esm.sh/firebase@11.3.1/",
-    "vite": "https://esm.sh/vite@7.0.0",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@4.3.4",
-    "@vercel/node": "https://esm.sh/@vercel/node@3.0.0",
+    "firebase/": "https://esm.sh/firebase@^12.9.0/",
+    "vite": "https://esm.sh/vite@^7.3.1",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4",
+    "@vercel/node": "https://esm.sh/@vercel/node@^5.6.2",
     "@firebase/auth": "https://esm.sh/@firebase/auth@^1.12.0",
     "@firebase/app": "https://esm.sh/@firebase/app@^0.14.8",
     "@firebase/firestore": "https://esm.sh/@firebase/firestore@^4.11.0"
@@ -47,28 +47,19 @@
           extend: {
             colors: {
               brand: {
-                forest: '#064E3B',
-                moss: '#10B981',
-                sage: '#D1FAE5',
-                bark: '#451A03',
-                gold: '#FCD34D',
-                red: '#E50914',
-                netflix: '#141414'
+                prime: '#00A8E1', // Amazon Prime Blue
+                navy: '#0F171E',  // Amazon Navy Background
+                slate: '#1A242E', // Slightly lighter slate
+                accent: '#F2F4F6'
               }
             },
             animation: {
-              'float': 'float 8s ease-in-out infinite',
-              'shimmer': 'shimmer 6s linear infinite'
+              'fade-in': 'fadeIn 0.5s ease-out forwards',
+              'slide-up': 'slideUp 0.4s ease-out forwards'
             },
             keyframes: {
-              float: {
-                '0%, 100%': { transform: 'translateY(0) scale(1)' },
-                '50%': { transform: 'translateY(-20px) scale(1.01)' },
-              },
-              shimmer: {
-                '0%': { backgroundPosition: '-200% center' },
-                '100%': { backgroundPosition: '200% center' },
-              }
+              fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+              slideUp: { '0%': { transform: 'translateY(20px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } }
             }
           }
         }
@@ -84,29 +75,21 @@
         height: 100%;
         margin: 0;
         padding: 0;
+        background-color: #0F171E;
+        color: #F2F4F6;
+        font-family: 'Inter', sans-serif;
+        -webkit-tap-highlight-color: transparent;
         overflow-x: hidden;
-        overscroll-behavior: none;
-        background-color: #141414;
       }
       body {
-        font-family: 'Inter', sans-serif;
-        color: #F8FAFC;
-        -webkit-font-smoothing: antialiased;
         padding-top: var(--sat);
         padding-bottom: var(--sab);
       }
-      .font-display { font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: -0.04em; }
-      .glass-card {
-        background: rgba(20, 20, 20, 0.75);
-        backdrop-filter: blur(25px) saturate(180%);
-        -webkit-backdrop-filter: blur(25px) saturate(180%);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-      }
-      ::-webkit-scrollbar { width: 0; height: 0; }
+      .font-display { font-family: 'Space Grotesk', sans-serif; font-weight: 700; }
+      
       .scrollbar-hide::-webkit-scrollbar { display: none; }
       .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
-      /* Mobile optimizations for scrolling rows */
       .snap-x {
         scroll-snap-type: x mandatory;
         scroll-behavior: smooth;
@@ -114,6 +97,14 @@
       }
       .snap-center {
         scroll-snap-align: center;
+      }
+      
+      .prime-gradient {
+        background: linear-gradient(180deg, rgba(15,23,30,0) 0%, rgba(15,23,30,0.8) 50%, rgba(15,23,30,1) 100%);
+      }
+      
+      .prime-hero-gradient {
+        background: linear-gradient(90deg, rgba(15,23,30,1) 0%, rgba(15,23,30,0.8) 40%, rgba(15,23,30,0) 100%);
       }
     </style>
   </head>
