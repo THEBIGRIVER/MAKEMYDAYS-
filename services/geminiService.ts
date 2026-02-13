@@ -1,11 +1,13 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { Event, AIRecommendation } from "../types.ts";
 
+// Fix: obtain API key exclusively from process.env.API_KEY
 export const getAIRecommendations = async (userMood: string, allEvents: Event[]): Promise<AIRecommendation | null> => {
-  const apiKey = process.env.API_KEY;
-  if (!apiKey) return null;
+  if (!process.env.API_KEY) return null;
 
-  const ai = new GoogleGenAI({ apiKey });
+  // Fix: Use process.env.API_KEY directly when initializing GoogleGenAI
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const eventContext = allEvents.map((e: Event) => ({
     id: e.id,
@@ -49,6 +51,7 @@ export const getAIRecommendations = async (userMood: string, allEvents: Event[])
       }
     });
 
+    // Fix: Access .text property instead of method
     const text = response.text;
     if (!text) return null;
 

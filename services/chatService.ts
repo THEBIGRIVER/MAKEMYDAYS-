@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Chat } from "@google/genai";
 import { INITIAL_EVENTS } from "../constants.ts";
 
@@ -6,8 +7,8 @@ export class ChatService {
 
   private initChat() {
     const eventContext = INITIAL_EVENTS.map(e => `${e.title} (${e.category}): ${e.description}`).join('\n');
-    const apiKey = process.env.API_KEY || "";
-    const ai = new GoogleGenAI({ apiKey });
+    // Fix: Use process.env.API_KEY directly in GoogleGenAI constructor
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     
     this.chat = ai.chats.create({
       model: 'gemini-3-flash-preview',
@@ -36,6 +37,7 @@ export class ChatService {
     try {
       if (!this.chat) throw new Error("Chat not initialized");
       const result = await this.chat.sendMessage({ message });
+      // Fix: Access .text property instead of method call
       const text = result.text;
       return text || "I'm having trouble processing that right now.";
     } catch (error) {

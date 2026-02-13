@@ -137,20 +137,6 @@ export const INITIAL_EVENTS: Event[] = [
 
   // --- MINDFULNESS ---
   {
-    id: 'mn1',
-    title: 'Glow-in-the-Dark Yoga Flow',
-    category: 'Mindfulness',
-    image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&q=80&w=1200',
-    description: 'A vinyasa flow session illuminated by neon body paint and UV lights. Feel the energy in every move.',
-    price: 300,
-    capacity: 20,
-    dates: ['28 Dec 2024'],
-    hostPhone: EXPLORER_5,
-    slots: [{ time: '07:30 PM', availableSeats: 20 }],
-    averageRating: 4.6,
-    totalRatings: 82
-  },
-  {
     id: 'mn2',
     title: 'Zen & The Art of Archery',
     category: 'Mindfulness',
@@ -182,80 +168,14 @@ export const INITIAL_EVENTS: Event[] = [
     id: 'w1',
     title: 'Clay & Consciousness Pottery',
     category: 'Workshop',
-    image: 'https://images.unsplash.com/photo-1565191999001-551c187427bb?auto=format&fit=crop&q=80&w=1200',
-    description: 'A sensory pottery workshop focusing on mindfulness and tactile creation. Perfect for grounding your energy.',
-    price: 1200,
-    capacity: 20,
-    dates: ['28 Dec 2024', '29 Dec 2024'],
+    image: 'https://images.unsplash.com/photo-1520406580141-949f12377b2f?auto=format&fit=crop&q=80&w=1200',
+    description: 'A meditative pottery session where we focus on the tactile sensation of clay to ground the wandering mind.',
+    price: 1800,
+    capacity: 10,
+    dates: ['28 Dec 2024'],
     hostPhone: DEFAULT_HOST,
-    slots: [{ time: '11:00 AM', availableSeats: 10 }, { time: '03:00 PM', availableSeats: 10 }],
+    slots: [{ time: '11:00 AM', availableSeats: 10 }],
     averageRating: 4.8,
     totalRatings: 12
-  },
-  {
-    id: 'w2',
-    title: 'Urban Foraging & Tea Ceremony',
-    category: 'Workshop',
-    image: 'https://images.unsplash.com/photo-1545231027-63b3f162ad00?auto=format&fit=crop&q=80&w=1200',
-    description: 'Discover the edible wild side of the city followed by a traditional matcha ceremony in a hidden garden.',
-    price: 750,
-    capacity: 8,
-    dates: ['27 Dec 2024'],
-    hostPhone: EXPLORER_3,
-    slots: [{ time: '04:00 PM', availableSeats: 8 }]
-  },
-  {
-    id: 'w3',
-    title: 'Experimental Mixology: Elixirs',
-    category: 'Workshop',
-    image: 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&q=80&w=1200',
-    description: 'Learn to craft potent non-alcoholic elixirs using adaptogens, botanicals, and high-frequency infusions.',
-    price: 2500,
-    capacity: 12,
-    dates: ['30 Dec 2024'],
-    hostPhone: DEFAULT_HOST,
-    slots: [{ time: '07:00 PM', availableSeats: 12 }]
-  },
-
-  // --- THERAPY ---
-  {
-    id: 't1',
-    title: 'Equine Resonance: Horse Therapy',
-    category: 'Therapy',
-    image: 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?auto=format&fit=crop&q=80&w=1200',
-    description: 'Non-riding interaction with horses to mirror your internal state and regulate your nervous system.',
-    price: 5500,
-    capacity: 2,
-    dates: ['25 Dec 2024', '26 Dec 2024'],
-    hostPhone: DEFAULT_HOST,
-    slots: [{ time: '10:00 AM', availableSeats: 1 }, { time: '04:00 PM', availableSeats: 1 }],
-    averageRating: 5.0,
-    totalRatings: 7
-  },
-  {
-    id: 't2',
-    title: 'Art Therapy Expressionism',
-    category: 'Therapy',
-    image: 'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?auto=format&fit=crop&q=80&w=1200',
-    description: 'Guided therapeutic painting session to manifest and visualize internal blocks. No skill required.',
-    price: 900,
-    capacity: 10,
-    dates: ['27 Dec 2024'],
-    hostPhone: EXPLORER_3,
-    slots: [{ time: '02:00 PM', availableSeats: 10 }]
-  },
-  {
-    id: 't3',
-    title: 'Floating Stillness: Water Therapy',
-    category: 'Therapy',
-    image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&q=80&w=1200',
-    description: 'Aquatic bodywork where you are held and moved in warm water to release deep-seated trauma.',
-    price: 3800,
-    capacity: 1,
-    dates: ['28 Dec 2024', '29 Dec 2024'],
-    hostPhone: DEFAULT_HOST,
-    slots: [{ time: '12:00 PM', availableSeats: 1 }],
-    averageRating: 4.9,
-    totalRatings: 15
   }
 ];

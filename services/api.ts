@@ -97,11 +97,11 @@ export const api = {
 
   // AI Recommendations
   async getRecommendations(mood: string, events: Event[]): Promise<AIRecommendation> {
-    const apiKey = process.env.API_KEY;
-    if (!apiKey) {
+    // Fix: Use process.env.API_KEY exclusively and directly when initializing GoogleGenAI
+    if (!process.env.API_KEY) {
       return { reasoning: "✨ Recalibrating local frequencies.", suggestedEventIds: events.slice(0, 3).map(e => e.id) };
     }
-    const ai = new GoogleGenAI({ apiKey });
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const eventContext = events.map((e: Event) => ({ id: e.id, title: e.title, category: e.category }));
 
     try {
@@ -125,6 +125,7 @@ export const api = {
         throw new Error("No response from AI");
       }
       
+      // Fix: Access .text property directly
       const text = response.text;
       if (text === undefined) throw new Error("Empty AI response");
       return JSON.parse(text.trim());
