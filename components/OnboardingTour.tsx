@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 
 interface OnboardingTourProps {
@@ -97,15 +96,15 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete }) => {
           left: coords.left + coords.width / 2 - 192, 
         } : {}}
       >
-        <div className="glass-card rounded-[2.5rem] p-8 shadow-3xl border border-white/20 animate-in zoom-in-95 duration-500">
+        <div className="glass-card bg-slate-900 rounded-[2.5rem] p-8 shadow-3xl border border-white/20 animate-in zoom-in-95 duration-500">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-[8px] font-black uppercase tracking-[0.4em] text-brand-red">Step {currentStep + 1} of {steps.length}</span>
-            <button onClick={onComplete} className="text-slate-400 hover:text-slate-100 transition-colors">
+            <span className="text-[8px] font-black uppercase tracking-[0.4em] text-brand-prime">Step {currentStep + 1} of {steps.length}</span>
+            <button onClick={onComplete} className="text-slate-400 hover:text-brand-beige transition-colors">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
           </div>
           
-          <h3 className="text-2xl font-black italic tracking-tighter uppercase text-slate-100 mb-3">{step.title}</h3>
+          <h3 className="text-2xl font-black italic tracking-tighter uppercase text-brand-beige mb-3">{step.title}</h3>
           <p className="text-slate-400 text-xs font-medium italic leading-relaxed mb-8">
             {step.description}
           </p>
@@ -113,14 +112,14 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete }) => {
           <div className="flex items-center gap-3">
             <button 
               onClick={handleNext}
-              className="flex-1 py-4 bg-slate-100 text-slate-800 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition-all"
+              className="flex-1 py-4 bg-brand-prime text-brand-navy rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition-all"
             >
               {currentStep === steps.length - 1 ? "Initiate" : "Synchronize"}
             </button>
             {currentStep < steps.length - 1 && (
               <button 
                 onClick={onComplete}
-                className="px-6 py-4 text-slate-400 hover:text-slate-100 text-[10px] font-black uppercase tracking-widest transition-all"
+                className="px-6 py-4 text-slate-500 hover:text-brand-beige text-[10px] font-black uppercase tracking-widest transition-all"
               >
                 Skip
               </button>
@@ -131,7 +130,7 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete }) => {
       
       {step.targetId && (
         <div 
-          className="absolute z-[1001] w-4 h-4 bg-brand-red rounded-full animate-ping opacity-75 transition-all duration-700"
+          className="absolute z-[1001] w-4 h-4 bg-brand-prime rounded-full animate-ping opacity-75 transition-all duration-700"
           style={{
             top: coords.top + coords.height / 2 - window.scrollY - 8,
             left: coords.left + coords.width / 2 - 8

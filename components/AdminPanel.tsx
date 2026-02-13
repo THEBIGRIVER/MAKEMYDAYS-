@@ -43,10 +43,14 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, bookings, onClose, onRe
     <div className="fixed inset-0 z-[600] bg-slate-950 flex flex-col font-sans">
       <header className="bg-slate-900 border-b border-white/5 px-6 md:px-8 py-4 md:py-6 flex items-center justify-between sticky top-0 z-20">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-brand-red rounded-lg flex items-center justify-center text-white font-black">M</div>
-          <h2 className="text-slate-100 font-black italic uppercase tracking-tighter text-lg md:text-xl">Admin Console</h2>
+          <div className="w-8 h-8 bg-brand-prime rounded-lg flex items-center justify-center text-brand-navy shadow-lg shadow-brand-prime/20">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M2 9V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a3 3 0 0 0 0 6v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-4a3 3 0 0 0 0-6Z" />
+            </svg>
+          </div>
+          <h2 className="text-brand-beige font-black italic uppercase tracking-tighter text-lg md:text-xl">Admin Console</h2>
         </div>
-        <button onClick={onClose} className="text-slate-100 text-[9px] md:text-[10px] font-black uppercase tracking-widest bg-white/5 border border-white/10 px-4 py-2 rounded-xl hover:bg-brand-red transition-all">Exit</button>
+        <button onClick={onClose} className="text-brand-beige text-[9px] md:text-[10px] font-black uppercase tracking-widest bg-white/5 border border-white/10 px-4 py-2 rounded-xl hover:bg-brand-prime hover:text-brand-navy transition-all">Exit</button>
       </header>
 
       <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
@@ -56,7 +60,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, bookings, onClose, onRe
             <button 
               key={tab}
               onClick={() => setActiveTab(tab as any)} 
-              className={`flex-1 md:flex-none text-center md:text-left px-4 py-3 rounded-xl transition-all text-[10px] md:text-sm font-black uppercase tracking-widest ${activeTab === tab ? 'bg-brand-red text-white shadow-[0_0_20px_rgba(248,68,100,0.3)]' : 'text-slate-500 hover:text-slate-300'}`}
+              className={`flex-1 md:flex-none text-center md:text-left px-4 py-3 rounded-xl transition-all text-[10px] md:text-sm font-black uppercase tracking-widest ${activeTab === tab ? 'bg-brand-prime text-brand-navy shadow-[0_0_20px_rgba(255,153,51,0.3)]' : 'text-slate-500 hover:text-brand-beige'}`}
             >
               {tab}
             </button>
@@ -68,16 +72,16 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, bookings, onClose, onRe
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
               <div className="bg-slate-900 p-6 md:p-8 rounded-[2rem] border border-white/5 shadow-xl">
                 <p className="text-slate-500 text-[9px] font-black uppercase tracking-widest mb-2">Total Yield</p>
-                <div className="text-slate-100 text-3xl md:text-4xl font-black italic leading-none">₹{totalRevenue.toLocaleString()}</div>
+                <div className="text-brand-beige text-3xl md:text-4xl font-black italic leading-none">₹{totalRevenue.toLocaleString()}</div>
                 <div className="w-full bg-slate-800 h-1 mt-6 rounded-full overflow-hidden">
-                  <div className="bg-brand-red h-full w-[65%]" />
+                  <div className="bg-brand-prime h-full w-[65%]" />
                 </div>
               </div>
               <div className="bg-slate-900 p-6 md:p-8 rounded-[2rem] border border-white/5 shadow-xl">
                 <p className="text-slate-500 text-[9px] font-black uppercase tracking-widest mb-2">Total Anchors</p>
-                <div className="text-slate-100 text-3xl md:text-4xl font-black italic leading-none">{bookings.length}</div>
+                <div className="text-brand-beige text-3xl md:text-4xl font-black italic leading-none">{bookings.length}</div>
                 <div className="w-full bg-slate-800 h-1 mt-6 rounded-full overflow-hidden">
-                  <div className="bg-brand-accent h-full w-[40%]" />
+                  <div className="bg-brand-prime h-full w-[40%]" />
                 </div>
               </div>
             </div>
@@ -86,22 +90,22 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, bookings, onClose, onRe
           {activeTab === 'events' && (
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <h3 className="text-slate-100 font-black italic uppercase tracking-widest text-xs">Catalog Protocol</h3>
-                <button onClick={() => { setEditingEvent({}); setError(''); }} className="w-full sm:w-auto bg-brand-red text-white px-6 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition-all">Launch New</button>
+                <h3 className="text-brand-beige font-black italic uppercase tracking-widest text-xs">Catalog Protocol</h3>
+                <button onClick={() => { setEditingEvent({}); setError(''); }} className="w-full sm:w-auto bg-brand-prime text-brand-navy px-6 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition-all">Launch New</button>
               </div>
               <div className="grid grid-cols-1 gap-3">
                 {events.map(event => (
-                  <div key={event.id} className="bg-slate-900/80 p-5 rounded-2xl border border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 group hover:border-brand-red/30 transition-all">
+                  <div key={event.id} className="bg-slate-900/80 p-5 rounded-2xl border border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 group hover:border-brand-prime/30 transition-all">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-lg bg-slate-800 overflow-hidden shrink-0">
                         <img src={event.image} className="w-full h-full object-cover" />
                       </div>
                       <div>
-                        <span className="text-brand-red text-[7px] font-black uppercase tracking-widest">{event.category}</span>
-                        <h4 className="text-slate-100 font-bold text-sm italic uppercase leading-none mt-1">{event.title}</h4>
+                        <span className="text-brand-prime text-[7px] font-black uppercase tracking-widest">{event.category}</span>
+                        <h4 className="text-brand-beige font-bold text-sm italic uppercase leading-none mt-1">{event.title}</h4>
                       </div>
                     </div>
-                    <button onClick={() => setEditingEvent(event)} className="w-full sm:w-auto bg-slate-800 text-slate-300 px-5 py-2 rounded-xl text-[9px] font-black uppercase hover:bg-brand-red hover:text-white transition-all">Edit Node</button>
+                    <button onClick={() => setEditingEvent(event)} className="w-full sm:w-auto bg-slate-800 text-slate-300 px-5 py-2 rounded-xl text-[9px] font-black uppercase hover:bg-brand-prime hover:text-brand-navy transition-all">Edit Node</button>
                   </div>
                 ))}
               </div>
@@ -110,7 +114,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, bookings, onClose, onRe
           
           {activeTab === 'bookings' && (
              <div className="space-y-4">
-               <h3 className="text-slate-100 font-black italic uppercase tracking-widest text-xs md:hidden">Anchor Logs</h3>
+               <h3 className="text-brand-beige font-black italic uppercase tracking-widest text-xs md:hidden">Anchor Logs</h3>
                <div className="md:bg-slate-900 md:rounded-[2rem] md:border md:border-white/5 md:overflow-hidden">
                  {/* Desktop Table View */}
                  <table className="hidden md:table w-full text-left">
@@ -126,7 +130,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, bookings, onClose, onRe
                        <tr key={b.id} className="hover:bg-white/[0.02] transition-colors">
                          <td className="px-8 py-5 font-bold">{b.userName}</td>
                          <td className="px-8 py-5">{b.eventTitle}</td>
-                         <td className="px-8 py-5 text-right font-black text-slate-100">₹{b.price}</td>
+                         <td className="px-8 py-5 text-right font-black text-brand-beige">₹{b.price}</td>
                        </tr>
                      ))}
                    </tbody>
@@ -137,8 +141,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, bookings, onClose, onRe
                    {bookings.map(b => (
                      <div key={b.id} className="bg-slate-900 p-5 rounded-2xl border border-white/5 flex flex-col gap-2">
                        <div className="flex justify-between items-start">
-                         <span className="text-slate-100 font-black italic text-sm">{b.userName}</span>
-                         <span className="text-brand-red font-black text-[10px]">₹{b.price}</span>
+                         <span className="text-brand-beige font-black italic text-sm">{b.userName}</span>
+                         <span className="text-brand-prime font-black text-[10px]">₹{b.price}</span>
                        </div>
                        <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest leading-none">{b.eventTitle}</p>
                      </div>
@@ -154,25 +158,25 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ events, bookings, onClose, onRe
         <div className="fixed inset-0 z-[700] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md" onClick={() => setEditingEvent(null)}></div>
           <form onSubmit={handleSaveEvent} className="relative bg-slate-900 p-8 md:p-10 rounded-[2.5rem] md:rounded-[3rem] w-full max-w-lg space-y-6 border border-white/10 shadow-3xl animate-in zoom-in-95">
-            <h3 className="text-xl md:text-2xl font-black italic text-slate-100 uppercase tracking-tighter">Event Protocol</h3>
+            <h3 className="text-xl md:text-2xl font-black italic text-brand-beige uppercase tracking-tighter">Event Protocol</h3>
             <div className="space-y-4">
-              <input type="text" placeholder="Title" value={editingEvent.title || ''} onChange={e => setEditingEvent({...editingEvent, title: e.target.value})} className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-white text-base outline-none focus:border-brand-red" required />
-              <select value={editingEvent.category || ''} onChange={e => setEditingEvent({...editingEvent, category: e.target.value as Category})} className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-white text-base outline-none focus:border-brand-red" required>
+              <input type="text" placeholder="Title" value={editingEvent.title || ''} onChange={e => setEditingEvent({...editingEvent, title: e.target.value})} className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-brand-beige text-base outline-none focus:border-brand-prime" required />
+              <select value={editingEvent.category || ''} onChange={e => setEditingEvent({...editingEvent, category: e.target.value as Category})} className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-brand-beige text-base outline-none focus:border-brand-prime" required>
                 <option value="">Select Category</option>
                 <option value="Shows">Shows</option><option value="Activity">Activity</option><option value="MMD Originals">MMD Originals</option><option value="Mindfulness">Mindfulness</option><option value="Workshop">Workshop</option>
               </select>
               <div className="grid grid-cols-2 gap-4">
-                <input type="number" placeholder="Price (₹)" value={editingEvent.price || ''} onChange={e => setEditingEvent({...editingEvent, price: Number(e.target.value)})} className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-white text-base outline-none focus:border-brand-red" required />
-                <input type="number" placeholder="Capacity" value={editingEvent.capacity || ''} onChange={e => setEditingEvent({...editingEvent, capacity: Number(e.target.value)})} className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-white text-base outline-none focus:border-brand-red" required />
+                <input type="number" placeholder="Price (₹)" value={editingEvent.price || ''} onChange={e => setEditingEvent({...editingEvent, price: Number(e.target.value)})} className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-brand-beige text-base outline-none focus:border-brand-prime" required />
+                <input type="number" placeholder="Capacity" value={editingEvent.capacity || ''} onChange={e => setEditingEvent({...editingEvent, capacity: Number(e.target.value)})} className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-brand-beige text-base outline-none focus:border-brand-prime" required />
               </div>
               <div className="pt-4 border-t border-white/5">
-                <input type="password" placeholder="Admin Passkey" value={adminPasskey} onChange={e => setAdminPasskey(e.target.value)} className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-white text-base outline-none focus:border-brand-red" required />
-                {error && <p className="text-brand-red text-[10px] font-black uppercase mt-2 tracking-widest">{error}</p>}
+                <input type="password" placeholder="Admin Passkey" value={adminPasskey} onChange={e => setAdminPasskey(e.target.value)} className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-brand-beige text-base outline-none focus:border-brand-prime" required />
+                {error && <p className="text-brand-prime text-[10px] font-black uppercase mt-2 tracking-widest">{error}</p>}
               </div>
             </div>
             <div className="flex gap-3">
               <button type="button" onClick={() => setEditingEvent(null)} className="flex-1 py-4 bg-slate-800 text-slate-300 rounded-2xl font-black uppercase text-[10px] tracking-widest">Discard</button>
-              <button type="submit" className="flex-1 py-4 bg-brand-red text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition-all">Save Node</button>
+              <button type="submit" className="flex-1 py-4 bg-brand-prime text-brand-navy rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition-all">Save Node</button>
             </div>
           </form>
         </div>

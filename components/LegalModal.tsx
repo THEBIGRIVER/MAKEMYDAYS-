@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 export type PolicyType = 'terms' | 'privacy' | 'refund' | 'shipping';
@@ -48,32 +47,32 @@ const LegalModal: React.FC<LegalModalProps> = ({ type, onClose }) => {
   return (
     <div className="fixed inset-0 z-[500] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-500" onClick={onClose}></div>
-      <div className="relative w-full max-w-2xl bg-white rounded-[2.5rem] shadow-3xl overflow-hidden animate-in zoom-in-95 duration-300">
-        <div className="p-8 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
+      <div className="relative w-full max-w-2xl bg-slate-900 rounded-[2.5rem] shadow-3xl overflow-hidden animate-in zoom-in-95 duration-300 border border-white/10">
+        <div className="p-8 border-b border-white/5 flex items-center justify-between bg-black/40">
           <div>
-            <span className="text-brand-red text-[8px] font-black uppercase tracking-[0.3em] block mb-1">Legal Protocol</span>
-            <h2 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900">{active.title}</h2>
+            <span className="text-brand-prime text-[8px] font-black uppercase tracking-[0.3em] block mb-1">Legal Protocol</span>
+            <h2 className="text-2xl font-black italic uppercase tracking-tighter text-brand-beige">{active.title}</h2>
           </div>
           <button 
             onClick={onClose}
-            className="w-10 h-10 rounded-full bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all"
+            className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-brand-beige transition-all"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
-        <div className="p-10 max-h-[60vh] overflow-y-auto">
-          <div className="prose prose-slate max-w-none">
+        <div className="p-10 max-h-[60vh] overflow-y-auto scrollbar-hide">
+          <div className="prose prose-invert max-w-none">
             {active.text.split('\n').map((para, i) => (
-              <p key={i} className="text-slate-600 text-sm leading-relaxed italic mb-4 last:mb-0 whitespace-pre-line">
+              <p key={i} className="text-slate-400 text-sm leading-relaxed italic mb-4 last:mb-0 whitespace-pre-line">
                 {para.trim()}
               </p>
             ))}
           </div>
         </div>
-        <div className="p-8 bg-slate-900 text-center">
-          <p className="text-slate-400 text-[9px] font-bold uppercase tracking-widest">
+        <div className="p-8 bg-black/60 text-center border-t border-white/5">
+          <p className="text-slate-500 text-[9px] font-bold uppercase tracking-widest">
             Last Calibrated: October 2024 • Version 2.1.0
           </p>
         </div>

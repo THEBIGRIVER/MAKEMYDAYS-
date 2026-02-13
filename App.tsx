@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Event, Category, Booking, User } from './types';
 import EventCard from './components/EventCard';
@@ -56,7 +57,7 @@ const RhythmTuner = ({ events, onSelect }: { events: Event[], onSelect: (e: Even
         if (calculatedBpm > 110) filtered = events.filter(e => ['Activity', 'Shows'].includes(e.category));
         else if (calculatedBpm < 90) filtered = events.filter(e => ['Mindfulness', 'Therapy'].includes(e.category));
         
-        setSuggestedEvent(filtered[Math.floor(Math.random() * filtered.length)]);
+        setSuggestedEvent(filtered[Math.floor(Math.random() * filtered.length)] || events[0]);
       }
     }
   };
@@ -72,7 +73,7 @@ const RhythmTuner = ({ events, onSelect }: { events: Event[], onSelect: (e: Even
     <div className="w-full max-w-2xl mx-auto p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/5 flex flex-col items-center gap-8 relative overflow-hidden mt-8">
       <div className="text-center space-y-2">
         <span className="text-brand-prime text-[9px] font-black uppercase tracking-[0.4em]">Somatic Pulse</span>
-        <h4 className="text-2xl font-display font-black text-white italic">Rhythm Tuner</h4>
+        <h4 className="text-2xl font-display font-black text-brand-beige italic">Rhythm Tuner</h4>
       </div>
 
       {!isCalibrated ? (
@@ -103,14 +104,14 @@ const RhythmTuner = ({ events, onSelect }: { events: Event[], onSelect: (e: Even
               <img src={suggestedEvent.image} className="w-16 h-16 rounded-xl object-cover" alt="" />
               <div className="flex-1 min-w-0">
                 <span className="text-[8px] font-black uppercase text-brand-prime">{suggestedEvent.category}</span>
-                <p className="text-white font-bold truncate">{suggestedEvent.title}</p>
+                <p className="text-brand-beige font-bold truncate">{suggestedEvent.title}</p>
               </div>
-              <button onClick={() => onSelect(suggestedEvent)} className="p-3 bg-brand-prime text-white rounded-xl active:scale-90 transition-transform">
+              <button onClick={() => onSelect(suggestedEvent)} className="p-3 bg-brand-prime text-brand-beige rounded-xl active:scale-90 transition-transform">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
               </button>
             </div>
           )}
-          <button onClick={reset} className="w-full text-[9px] font-black text-slate-600 uppercase tracking-[0.3em] hover:text-white transition-colors">Reset Pulse</button>
+          <button onClick={reset} className="w-full text-[9px] font-black text-slate-600 uppercase tracking-[0.3em] hover:text-brand-beige transition-colors">Reset Pulse</button>
         </div>
       )}
     </div>
@@ -147,7 +148,7 @@ const AuraScanner = ({ events, onSelect }: { events: Event[], onSelect: (e: Even
     if (timerRef.current) clearInterval(timerRef.current);
     const auraProfiles = [
       { aura: 'NEON VELOCITY', color: 'text-brand-prime' },
-      { aura: 'OBSIDIAN SILENCE', color: 'text-white' },
+      { aura: 'OBSIDIAN SILENCE', color: 'text-brand-beige' },
       { aura: 'SOLAR FLARE', color: 'text-orange-500' },
       { aura: 'CHRONO STATIC', color: 'text-purple-500' }
     ];
@@ -165,7 +166,7 @@ const AuraScanner = ({ events, onSelect }: { events: Event[], onSelect: (e: Even
     <div className="w-full max-w-2xl mx-auto p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/5 flex flex-col items-center gap-8 relative overflow-hidden mt-8">
       <div className="text-center space-y-2">
         <span className="text-brand-prime text-[9px] font-black uppercase tracking-[0.4em]">Biometric Sync</span>
-        <h4 className="text-2xl font-display font-black text-white italic">Calibrate your Aura</h4>
+        <h4 className="text-2xl font-display font-black text-brand-beige italic">Calibrate your Aura</h4>
       </div>
 
       {!result ? (
@@ -176,7 +177,7 @@ const AuraScanner = ({ events, onSelect }: { events: Event[], onSelect: (e: Even
             onMouseLeave={stopScan}
             onTouchStart={startScan}
             onTouchEnd={stopScan}
-            className={`relative w-32 h-32 rounded-full border-4 flex items-center justify-center cursor-pointer transition-all duration-500 ${isHolding ? 'border-brand-prime scale-110 shadow-[0_0_40px_rgba(0,168,225,0.4)]' : 'border-white/10 hover:border-white/30'}`}
+            className={`relative w-32 h-32 rounded-full border-4 flex items-center justify-center cursor-pointer transition-all duration-500 ${isHolding ? 'border-brand-prime scale-110 shadow-[0_0_40px_rgba(255,153,51,0.4)]' : 'border-white/10 hover:border-white/30'}`}
           >
             <div className="absolute inset-2 rounded-full border border-white/5 animate-spin-slow" />
             <svg className="w-12 h-12 text-white/20" fill="currentColor" viewBox="0 0 24 24">
@@ -204,96 +205,14 @@ const AuraScanner = ({ events, onSelect }: { events: Event[], onSelect: (e: Even
             <img src={result.event.image} className="w-16 h-16 rounded-xl object-cover" alt="" />
             <div className="flex-1 min-w-0">
               <span className="text-[8px] font-black uppercase text-brand-prime">{result.event.category}</span>
-              <p className="text-white font-bold truncate">{result.event.title}</p>
+              <p className="text-brand-beige font-bold truncate">{result.event.title}</p>
             </div>
-            <button onClick={() => onSelect(result.event)} className="p-3 bg-brand-prime text-white rounded-xl active:scale-90 transition-transform">
+            <button onClick={() => onSelect(result.event)} className="p-3 bg-brand-prime text-brand-beige rounded-xl active:scale-90 transition-transform">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
             </button>
           </div>
-          <button onClick={reset} className="w-full text-[9px] font-black text-slate-600 uppercase tracking-[0.3em] hover:text-white transition-colors">Recalibrate System</button>
+          <button onClick={reset} className="w-full text-[9px] font-black text-slate-600 uppercase tracking-[0.3em] hover:text-brand-beige transition-colors">Recalibrate System</button>
         </div>
-      )}
-    </div>
-  );
-};
-
-const ExperienceRoulette = ({ events, onSelect }: { events: Event[], onSelect: (e: Event) => void }) => {
-  const [isSpinning, setIsSpinning] = useState(false);
-  const [result, setResult] = useState<Event | null>(null);
-  const [tickerIndex, setTickerIndex] = useState(0);
-  const tickerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const spin = () => {
-    if (isSpinning) return;
-    setIsSpinning(true);
-    setResult(null);
-    
-    let iterations = 0;
-    const maxIterations = 20;
-    
-    tickerRef.current = setInterval(() => {
-      setTickerIndex(Math.floor(Math.random() * events.length));
-      iterations++;
-      
-      if (iterations >= maxIterations) {
-        if (tickerRef.current) clearInterval(tickerRef.current);
-        const finalEvent = events[Math.floor(Math.random() * events.length)];
-        setResult(finalEvent);
-        setIsSpinning(false);
-      }
-    }, 100);
-  };
-
-  return (
-    <div className="mt-16 w-full max-w-2xl mx-auto p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/5 flex flex-col items-center gap-6 relative overflow-hidden group">
-      <div className="absolute inset-0 bg-gradient-to-br from-brand-prime/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-      
-      <div className="text-center space-y-2">
-        <span className="text-brand-prime text-[9px] font-black uppercase tracking-[0.4em]">Chaos Mode</span>
-        <h4 className="text-2xl font-display font-black text-white italic">Indecisive? Let fate decide.</h4>
-      </div>
-
-      <div className="w-full h-32 relative flex items-center justify-center overflow-hidden rounded-2xl bg-black/40 border border-white/10">
-        {!isSpinning && !result ? (
-          <div className="text-slate-600 font-bold uppercase tracking-widest text-[10px] animate-pulse">Ready for bypass...</div>
-        ) : (
-          <div className={`flex items-center gap-4 transition-all duration-300 ${isSpinning ? 'blur-sm scale-95 opacity-50' : 'blur-0 scale-100 opacity-100'}`}>
-            <img 
-              src={events[tickerIndex]?.image} 
-              className="w-20 h-20 rounded-xl object-cover border border-white/20 shadow-2xl" 
-              alt="Preview" 
-            />
-            <div className="space-y-1">
-              <span className="text-brand-prime text-[8px] font-black uppercase">{events[tickerIndex]?.category}</span>
-              <div className="text-white font-bold text-lg leading-tight max-w-[200px] truncate">{events[tickerIndex]?.title}</div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {result ? (
-        <div className="flex gap-3 w-full animate-in slide-in-from-bottom-2 duration-500">
-          <button 
-            onClick={() => onSelect(result)}
-            className="flex-1 h-14 bg-brand-prime text-white rounded-xl font-bold uppercase text-[11px] tracking-widest shadow-xl shadow-brand-prime/20 active:scale-95 transition-all"
-          >
-            Direct Connect
-          </button>
-          <button 
-            onClick={spin}
-            className="w-14 h-14 bg-white/5 border border-white/10 text-white rounded-xl flex items-center justify-center active:scale-95 transition-all"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357-2H15" /></svg>
-          </button>
-        </div>
-      ) : (
-        <button 
-          onClick={spin}
-          disabled={isSpinning}
-          className="w-full h-14 bg-white text-brand-navy rounded-xl font-black uppercase text-[11px] tracking-widest active:scale-95 transition-all shadow-2xl disabled:opacity-50"
-        >
-          {isSpinning ? 'Calibrating Chaos...' : 'Spin for Chaos'}
-        </button>
       )}
     </div>
   );
@@ -341,11 +260,11 @@ const HeroBillboard = ({ trendingEvents, onBook, favorites, onToggleFavorite }: 
       
       <div className={`absolute bottom-[10%] md:top-[22%] left-[6%] md:left-[6%] max-w-[90%] md:max-w-[45%] space-y-4 md:space-y-7 transition-all duration-700 z-10 ${isTransitioning ? 'translate-y-8 opacity-0' : 'translate-y-0 opacity-100'}`}>
         <div className="flex items-center gap-3">
-          <span className="bg-brand-prime text-white px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-[0.15em] rounded-md shadow-lg shadow-brand-prime/20">Featured</span>
+          <span className="bg-brand-prime text-brand-beige px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-[0.15em] rounded-md shadow-lg shadow-brand-prime/20">Featured</span>
           <span className="text-slate-300/80 text-[10px] font-bold tracking-widest uppercase">{activeEvent.category}</span>
         </div>
         
-        <h1 className="text-5xl md:text-8xl font-display font-extrabold leading-[1.05] text-white drop-shadow-2xl tracking-tighter">
+        <h1 className="text-5xl md:text-8xl font-display font-extrabold leading-[1.05] text-brand-beige drop-shadow-2xl tracking-tighter">
           {activeEvent.title}
         </h1>
         
@@ -356,7 +275,7 @@ const HeroBillboard = ({ trendingEvents, onBook, favorites, onToggleFavorite }: 
         <div className="flex items-center gap-4 pt-4">
           <button 
             onClick={() => onBook(activeEvent)}
-            className="px-8 md:px-14 h-12 md:h-16 bg-brand-prime text-white rounded-xl font-bold text-base md:text-xl hover:brightness-110 hover:scale-[1.02] transition-all flex items-center justify-center gap-3 active:scale-95 shadow-xl shadow-brand-prime/20"
+            className="px-8 md:px-14 h-12 md:h-16 bg-brand-prime text-brand-beige rounded-xl font-bold text-base md:text-xl hover:brightness-110 hover:scale-[1.02] transition-all flex items-center justify-center gap-3 active:scale-95 shadow-xl shadow-brand-prime/20"
           >
             <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M7 6v12l10-6z"/></svg>
             Book Now
@@ -364,7 +283,7 @@ const HeroBillboard = ({ trendingEvents, onBook, favorites, onToggleFavorite }: 
           
           <button 
             onClick={() => onToggleFavorite(activeEvent.id)}
-            className={`w-12 h-12 md:w-16 md:h-16 backdrop-blur-2xl rounded-xl font-bold flex items-center justify-center transition-all border-2 shadow-2xl ${isFav ? 'bg-red-500 border-red-500 text-white' : 'bg-white/10 border-white/10 text-white hover:bg-white/20'}`}
+            className={`w-12 h-12 md:w-16 md:h-16 backdrop-blur-2xl rounded-xl font-bold flex items-center justify-center transition-all border-2 shadow-2xl ${isFav ? 'bg-red-500 border-red-500 text-brand-beige' : 'bg-white/10 border-white/10 text-brand-beige hover:bg-white/20'}`}
           >
             <svg className={`w-7 h-7 ${isFav ? 'fill-current' : 'fill-none'}`} stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
@@ -378,7 +297,7 @@ const HeroBillboard = ({ trendingEvents, onBook, favorites, onToggleFavorite }: 
           <button
             key={idx}
             onClick={() => setCurrentIndex(idx)}
-            className={`h-1.5 transition-all duration-500 rounded-full ${currentIndex === idx ? 'w-10 bg-brand-prime shadow-[0_0_15px_rgba(0,168,225,0.6)]' : 'w-5 bg-white/20'}`}
+            className={`h-1.5 transition-all duration-500 rounded-full ${currentIndex === idx ? 'w-10 bg-brand-prime shadow-[0_0_15px_rgba(255,153,51,0.6)]' : 'w-5 bg-white/20'}`}
           />
         ))}
       </div>
@@ -501,10 +420,6 @@ const App: React.FC = () => {
     setIsChatOpen(true);
   };
 
-  const handleOpenDashboardTab = (tab: 'bookings' | 'hosting' | 'settings') => {
-    handleOpenDashboard(tab);
-  };
-
   const getRowEvents = (category: Category) => {
     return events.filter(e => {
       const matchCat = e.category === category;
@@ -515,51 +430,68 @@ const App: React.FC = () => {
     });
   };
 
+  const topRatedEvents = events
+    .filter(e => (e.averageRating || 0) > 0)
+    .sort((a, b) => (b.averageRating || 0) - (a.averageRating || 0))
+    .slice(0, 8)
+    .filter(e => {
+      const matchSearch = searchQuery.toLowerCase() === '' || 
+                         e.title.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchFav = showFavoritesOnly ? favorites.includes(e.id) : true;
+      return matchSearch && matchFav;
+    });
+
   return (
     <div className="flex flex-col min-h-screen bg-brand-navy pb-[80px] md:pb-0 selection:bg-brand-prime/30">
-      <nav className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 px-6 h-16 md:h-24 flex items-center justify-between ${isScrolled ? 'bg-brand-navy/90 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] border-b border-white/5' : 'bg-transparent'}`}>
+      <nav className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-700 px-6 h-16 md:h-24 flex items-center justify-between ${isScrolled ? 'bg-brand-navy/80 backdrop-blur-3xl shadow-[0_15px_40px_-15px_rgba(0,0,0,0.5)] border-b border-white/10' : 'bg-transparent backdrop-blur-sm'}`}>
         <div className="flex items-center gap-6 md:gap-14">
-          <span className="text-2xl md:text-3xl font-display font-black text-white tracking-tighter cursor-pointer flex items-center gap-2 group" onClick={() => { 
+          <div className="bg-black/20 backdrop-blur-xl border border-white/5 px-4 py-2 rounded-2xl flex items-center gap-2 group transition-all hover:bg-black/40 cursor-pointer shadow-xl" onClick={() => { 
             if (showDashboard) window.history.back();
             setShowFavoritesOnly(false); 
             window.scrollTo({top:0, behavior:'smooth'}); 
           }}>
-            <div className="w-8 h-8 md:w-10 md:h-10 bg-brand-prime rounded-lg group-hover:rotate-12 transition-transform duration-500 flex items-center justify-center text-white text-lg font-black italic">M</div>
-            MAKE<span className="text-brand-prime">MYDAYS</span>
-          </span>
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-brand-prime rounded-lg group-hover:rotate-12 transition-transform duration-500 flex items-center justify-center text-brand-beige shadow-lg shadow-brand-prime/30">
+              <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M2 9V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a3 3 0 0 0 0 6v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-4a3 3 0 0 0 0-6Z" />
+              </svg>
+            </div>
+            <span className="text-2xl md:text-3xl font-display font-black text-brand-beige tracking-tighter">
+              MAKE<span className="text-brand-prime">MYDAYS</span>
+            </span>
+          </div>
           <div className="hidden lg:flex items-center gap-10 text-[13px] font-bold text-slate-400 uppercase tracking-widest">
-            <button className={`${!showDashboard && !showFavoritesOnly ? 'text-white border-b-2 border-brand-prime' : 'hover:text-white'} h-24 flex items-center transition-all`} onClick={() => { 
+            <button className={`${!showDashboard && !showFavoritesOnly ? 'text-brand-beige border-b-2 border-brand-prime' : 'hover:text-brand-beige'} h-24 flex items-center transition-all`} onClick={() => { 
               if (showDashboard) window.history.back();
               setShowFavoritesOnly(false); 
             }}>Home</button>
-            <button className={`${showFavoritesOnly ? 'text-white border-b-2 border-brand-prime' : 'hover:text-white'} h-24 flex items-center transition-all`} onClick={() => { 
+            <button className={`${showFavoritesOnly ? 'text-brand-beige border-b-2 border-brand-prime' : 'hover:text-brand-beige'} h-24 flex items-center transition-all`} onClick={() => { 
               if (showDashboard) window.history.back();
               setShowFavoritesOnly(true); 
             }}>Watchlist</button>
-            <button className="hover:text-white h-24 flex items-center">Store</button>
-            <button className="hover:text-white h-24 flex items-center">Categories</button>
+            <button className="hover:text-brand-beige h-24 flex items-center">Store</button>
+            <button className="hover:text-brand-beige h-24 flex items-center">Categories</button>
           </div>
         </div>
 
         <div className="flex items-center gap-6">
-           <div className="hidden md:flex items-center gap-3 bg-brand-prime/10 border border-brand-prime/20 px-5 py-2.5 rounded-xl focus-within:bg-brand-prime/20 focus-within:border-brand-prime transition-all duration-300">
+           <div className="hidden md:flex items-center gap-3 bg-brand-prime/10 border border-brand-prime/20 px-5 py-2.5 rounded-xl focus-within:bg-brand-prime/20 focus-within:border-brand-prime transition-all duration-300 backdrop-blur-md">
               <button onClick={() => triggerAIChat(searchQuery)} className="p-1 text-brand-prime hover:scale-110 transition-transform outline-none">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.25 15L17.5 17.625 14.875 18.375l2.625.75.75 2.625.75-2.625 2.625-.75-2.625-.75-.75-2.625zM16.5 3.5l.75 2.625 2.625.75-2.625.75-.75 2.625-.75-2.625-2.625-.75 2.625-.75.75-2.625z" /></svg>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09-3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.25 15L17.5 17.625 14.875 18.375l2.625.75.75 2.625.75 2.625.75-2.625 2.625-.75-2.625-.75-.75-2.625zM16.5 3.5l.75 2.625 2.625.75-2.625.75-.75 2.625-.75-2.625-2.625-.75 2.625-.75.75-2.625z" /></svg>
               </button>
               <input 
                 type="text" placeholder="Ask AI Concierge..." 
-                className="bg-transparent border-none outline-none text-sm w-48 text-white placeholder:text-brand-prime/40 font-bold"
+                className="bg-transparent border-none outline-none text-sm w-48 text-brand-beige placeholder:text-brand-prime/40 font-bold"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && triggerAIChat(searchQuery)}
               />
            </div>
            {currentUser ? (
-              <button onClick={() => handleOpenDashboardTab('settings')} className="w-11 h-11 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center font-black text-sm hover:border-brand-prime hover:bg-brand-prime/10 transition-all">
+              <button onClick={() => handleOpenDashboard('settings')} className="w-11 h-11 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center font-black text-sm hover:border-brand-prime hover:bg-brand-prime/10 transition-all text-brand-beige backdrop-blur-md">
                 {currentUser.name.charAt(0)}
               </button>
            ) : (
-              <button onClick={() => setShowAuthModal(true)} className="px-7 h-11 bg-brand-prime text-white rounded-xl text-sm font-bold uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-brand-prime/20">Sign In</button>
+              <button onClick={() => setShowAuthModal(true)} className="px-7 h-11 bg-brand-prime text-brand-beige rounded-xl text-sm font-bold uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-brand-prime/20">Sign In</button>
            )}
         </div>
       </nav>
@@ -579,10 +511,36 @@ const App: React.FC = () => {
                   <svg className="w-10 h-10 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
                 </div>
                 <div className="space-y-2">
-                  <h2 className="text-3xl font-display font-extrabold text-white">Your list is quiet</h2>
+                  <h2 className="text-3xl font-display font-extrabold text-brand-beige">Your list is quiet</h2>
                   <p className="max-w-md mx-auto">Calibrate your future self by adding the experiences that move you to your watchlist.</p>
                 </div>
-                <button onClick={() => setShowFavoritesOnly(false)} className="px-10 py-4 bg-brand-prime text-white rounded-xl font-bold uppercase tracking-widest shadow-xl shadow-brand-prime/20 active:scale-95 transition-all">Explore Experience</button>
+                <button onClick={() => setShowFavoritesOnly(false)} className="px-10 py-4 bg-brand-prime text-brand-beige rounded-xl font-bold uppercase tracking-widest shadow-xl shadow-brand-prime/20 active:scale-95 transition-all">Explore Experience</button>
+              </div>
+            )}
+
+            {/* Top Rated Section */}
+            {topRatedEvents.length > 0 && (
+              <div className="space-y-6 md:space-y-8 animate-slide-up">
+                <div className="flex items-end justify-between px-2">
+                  <div className="space-y-1">
+                    <h2 className="text-2xl md:text-4xl font-display font-black tracking-tight text-brand-prime italic">
+                      Top Rated Resonance
+                    </h2>
+                    <div className="h-1 w-20 bg-brand-prime rounded-full"></div>
+                  </div>
+                </div>
+                <div className="flex gap-6 overflow-x-auto pb-8 -mx-6 px-6 scrollbar-hide snap-x">
+                  {topRatedEvents.map((e) => (
+                    <div key={e.id} className="min-w-[300px] md:min-w-[440px] snap-center">
+                      <EventCard 
+                        event={e} 
+                        onClick={handleOpenEvent} 
+                        isFavorite={favorites.includes(e.id)} 
+                        onToggleFavorite={toggleFavorite}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
             
@@ -594,7 +552,7 @@ const App: React.FC = () => {
                 <div key={category} className="space-y-6 md:space-y-8 animate-slide-up">
                   <div className="flex items-end justify-between px-2">
                     <div className="space-y-1">
-                      <h2 className="text-2xl md:text-4xl font-display font-black tracking-tight text-white">
+                      <h2 className="text-2xl md:text-4xl font-display font-black tracking-tight text-brand-beige">
                         {category}
                       </h2>
                       <div className="h-1 w-12 bg-brand-prime rounded-full"></div>
@@ -623,7 +581,7 @@ const App: React.FC = () => {
                 <div className="relative z-10 max-w-4xl space-y-12 w-full">
                   <div className="space-y-4">
                     <span className="text-brand-prime text-[10px] font-black uppercase tracking-[0.4em] inline-block mb-2">Personalized Discovery</span>
-                    <h3 className="text-4xl md:text-6xl font-display font-black tracking-tighter text-white leading-tight">What's your energy today?</h3>
+                    <h3 className="text-4xl md:text-6xl font-display font-black tracking-tighter text-brand-beige leading-tight">What's your energy today?</h3>
                     <p className="text-slate-400 text-base md:text-xl font-medium leading-relaxed max-w-2xl mx-auto">Our Gemini AI curator will sync your current emotional state with the perfect physical frequency.</p>
                   </div>
 
@@ -635,7 +593,7 @@ const App: React.FC = () => {
                         className="group relative flex flex-col items-center gap-2 p-5 rounded-3xl bg-white/5 border border-white/10 hover:border-brand-prime/50 hover:bg-brand-prime/10 transition-all duration-300 active:scale-95"
                       >
                         <span className="text-2xl group-hover:scale-125 transition-transform duration-300">{mood.icon}</span>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-white">{mood.label}</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-brand-beige">{mood.label}</span>
                       </button>
                     ))}
                   </div>
@@ -644,21 +602,20 @@ const App: React.FC = () => {
                     <input 
                       type="text" 
                       placeholder="Or describe how you feel in detail..." 
-                      className="bg-brand-navy/60 border border-white/10 px-8 h-18 rounded-[2rem] text-lg w-full outline-none focus:border-brand-prime focus:bg-brand-navy/80 transition-all backdrop-blur-md placeholder:text-slate-600 shadow-2xl text-white"
+                      className="bg-brand-navy/60 border border-white/10 px-8 h-18 rounded-[2rem] text-lg w-full outline-none focus:border-brand-prime focus:bg-brand-navy/80 transition-all backdrop-blur-md placeholder:text-slate-600 shadow-2xl text-brand-beige"
                       value={userMood}
                       onChange={(e) => setUserMood(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && triggerAIChat(userMood)}
                     />
                     <button 
                       onClick={() => triggerAIChat(userMood)} 
-                      className="absolute right-3 top-3 bottom-3 px-8 bg-brand-prime text-white rounded-[1.5rem] font-black text-xs uppercase tracking-widest active:scale-95 shadow-xl shadow-brand-prime/20 transition-all hover:brightness-110"
+                      className="absolute right-3 top-3 bottom-3 px-8 bg-brand-prime text-brand-beige rounded-[1.5rem] font-black text-xs uppercase tracking-widest active:scale-95 shadow-xl shadow-brand-prime/20 transition-all hover:brightness-110"
                     >
                       Sync
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl mx-auto">
-                    <ExperienceRoulette events={events} onSelect={handleOpenEvent} />
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-6xl mx-auto">
                     <AuraScanner events={events} onSelect={handleOpenEvent} />
                     <RhythmTuner events={events} onSelect={handleOpenEvent} />
                   </div>
@@ -669,26 +626,26 @@ const App: React.FC = () => {
         </main>
       )}
 
-      <nav className="md:hidden fixed bottom-6 left-6 right-6 z-[200] bg-[#1A242E]/80 backdrop-blur-3xl border border-white/10 h-16 rounded-[2rem] flex items-center justify-around px-2 shadow-2xl shadow-black/50">
+      <nav className="md:hidden fixed bottom-6 left-6 right-6 z-[200] bg-[#1A242E]/80 backdrop-blur-3xl border border-white/10 h-16 rounded-[2rem] flex items-center justify-around px-2 shadow-2xl shadow-black/50 text-brand-beige">
         <button onClick={() => { 
           if (showDashboard) window.history.back();
           setShowFavoritesOnly(false); 
-        }} className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all ${!showDashboard && !showFavoritesOnly ? 'bg-brand-prime text-white' : 'text-slate-500 hover:text-white'}`}>
+        }} className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all ${!showDashboard && !showFavoritesOnly ? 'bg-brand-prime text-brand-beige' : 'text-slate-500 hover:text-brand-beige'}`}>
           <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
         </button>
         <button onClick={() => setIsChatOpen(true)} className="flex items-center justify-center w-12 h-12 rounded-2xl text-slate-500 hover:text-brand-prime transition-colors">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.25 15L17.5 17.625 14.875 18.375l2.625.75.75 2.625.75-2.625 2.625-.75-2.625-.75-.75-2.625zM16.5 3.5l.75 2.625 2.625.75-2.625.75-.75 2.625-.75-2.625-2.625-.75 2.625-.75.75-2.625z" /></svg>
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.25 15L17.5 17.625 14.875 18.375l2.625.75.75 2.625.75 2.625.75-2.625 2.625-.75-2.625-.75-.75-2.625zM16.5 3.5l.75 2.625 2.625.75-2.625.75-.75 2.625-.75-2.625-2.625-.75 2.625-.75.75-2.625z" /></svg>
         </button>
-        <button onClick={() => handleOpenDashboard('hosting')} className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all ${showDashboard && dashboardTab === 'hosting' ? 'bg-brand-prime text-white' : 'text-slate-500 hover:text-white'}`}>
+        <button onClick={() => handleOpenDashboard('hosting')} className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all ${showDashboard && dashboardTab === 'hosting' ? 'bg-brand-prime text-brand-beige' : 'text-slate-500 hover:text-brand-beige'}`}>
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" strokeWidth="2.5"/></svg>
         </button>
         <button onClick={() => { 
           if (showDashboard) window.history.back();
           setShowFavoritesOnly(true); 
-        }} className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all ${showFavoritesOnly ? 'bg-brand-prime text-white' : 'text-slate-500 hover:text-white'}`}>
+        }} className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all ${showFavoritesOnly ? 'bg-brand-prime text-brand-beige' : 'text-slate-500 hover:text-brand-beige'}`}>
           <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
         </button>
-        <button onClick={() => handleOpenDashboard('bookings')} className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all ${showDashboard && dashboardTab === 'bookings' ? 'bg-brand-prime text-white' : 'text-slate-500 hover:text-white'}`}>
+        <button onClick={() => handleOpenDashboard('bookings')} className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all ${showDashboard && dashboardTab === 'bookings' ? 'bg-brand-prime text-brand-beige' : 'text-slate-500 hover:text-brand-beige'}`}>
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" strokeWidth="2.5"/></svg>
         </button>
       </nav>

@@ -1,3 +1,4 @@
+
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
@@ -17,15 +18,10 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
-    // Using esbuild as it is faster and native to Vite 6
     minify: 'esbuild',
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
-          genai: ['@google/genai'],
-        },
+        // Simple output to prevent circular dependency issues during code splitting
       },
     },
   },

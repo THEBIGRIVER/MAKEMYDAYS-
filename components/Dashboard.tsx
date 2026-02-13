@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useMemo } from 'react';
 import { Booking, Event, Category, User, Slot } from '../types.ts';
 import { PolicyType } from './LegalModal.tsx';
@@ -159,10 +160,10 @@ const CreateEventModal: React.FC<{ userUid: string, onClose: () => void, onSucce
       <div className="fixed inset-0 z-[600] flex items-center justify-center p-4">
         <div className="absolute inset-0 bg-slate-950/98 backdrop-blur-3xl"></div>
         <div className="relative text-center space-y-6 animate-in zoom-in-95 duration-700">
-           <div className="w-20 h-20 md:w-24 md:h-24 bg-brand-moss rounded-full flex items-center justify-center mx-auto shadow-2xl animate-bounce">
-              <svg className="w-10 h-10 md:w-12 md:h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7"/></svg>
+           <div className="w-20 h-20 md:w-24 md:h-24 bg-brand-prime rounded-full flex items-center justify-center mx-auto shadow-2xl animate-bounce">
+              <svg className="w-10 h-10 md:w-12 md:h-12 text-brand-beige" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7"/></svg>
            </div>
-           <h2 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter text-slate-100">Broadcasting...</h2>
+           <h2 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter text-brand-beige">Broadcasting...</h2>
         </div>
       </div>
     );
@@ -174,24 +175,24 @@ const CreateEventModal: React.FC<{ userUid: string, onClose: () => void, onSucce
       <div className="relative w-full max-w-2xl bg-slate-900 h-[95vh] md:h-auto rounded-t-[2.5rem] md:rounded-[3.5rem] shadow-3xl border border-white/10 overflow-hidden animate-in slide-in-from-bottom duration-500 pb-[env(safe-area-inset-bottom)]">
         <div className="p-6 flex justify-between items-center border-b border-white/5 bg-slate-900 sticky top-0 z-10">
           <div>
-            <h2 className="text-xl font-black italic uppercase text-slate-200 leading-tight">Launch Node</h2>
+            <h2 className="text-xl font-black italic uppercase text-brand-beige leading-tight">Launch Node</h2>
           </div>
           <button onClick={onClose} className="text-slate-400 p-2"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-8 overflow-y-auto h-[calc(95vh-80px)] md:max-h-[75vh] scrollbar-hide">
           <div className="space-y-4">
             <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Core Frequency</p>
-            <input required placeholder="Title" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-base" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
-            <select className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-base" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value as Category})}>
-              <option value="Activity">Activity</option><option value="Shows">Shows</option><option value="Mindfulness">Mindfulness</option><option value="Workshop">Workshop</option><option value="MMD Originals">MMD Originals</option>
+            <input required placeholder="Title" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-brand-beige text-base placeholder:text-slate-600 outline-none focus:border-brand-prime" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
+            <select className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-brand-beige text-base outline-none focus:border-brand-prime" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value as Category})}>
+              <option value="Activity" className="bg-slate-900">Activity</option><option value="Shows" className="bg-slate-900">Shows</option><option value="Mindfulness" className="bg-slate-900">Mindfulness</option><option value="Workshop" className="bg-slate-900">Workshop</option><option value="MMD Originals" className="bg-slate-900">MMD Originals</option>
             </select>
           </div>
 
           <div className="space-y-4">
             <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Dates</p>
             <div className="flex gap-3">
-              <input type="date" className="flex-1 bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-base" value={newDate} onChange={e => setNewDate(e.target.value)} />
-              <button type="button" onClick={handleAddDate} className="px-6 bg-slate-800 text-white rounded-2xl font-black uppercase text-[10px]">Add</button>
+              <input type="date" className="flex-1 bg-white/5 border border-white/10 rounded-2xl p-4 text-brand-beige text-base placeholder:text-slate-600" value={newDate} onChange={e => setNewDate(e.target.value)} />
+              <button type="button" onClick={handleAddDate} className="px-6 bg-slate-800 text-brand-beige rounded-2xl font-black uppercase text-[10px]">Add</button>
             </div>
             {dates.length > 0 && (
               <div className="flex flex-wrap gap-2">
@@ -208,13 +209,13 @@ const CreateEventModal: React.FC<{ userUid: string, onClose: () => void, onSucce
           <div className="space-y-4">
             <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Slots</p>
             <div className="grid grid-cols-3 gap-2">
-              <input type="time" className="bg-white/5 border border-white/10 rounded-2xl p-3 text-white text-sm" value={newSlotTime} onChange={e => setNewSlotTime(e.target.value)} />
-              <input type="number" min="1" step="1" placeholder="Cap" className="bg-white/5 border border-white/10 rounded-2xl p-3 text-white text-sm" value={newSlotCapacity} onChange={e => setNewSlotCapacity(e.target.value === '' ? '' : Number(e.target.value))} />
-              <button type="button" onClick={handleAddSlot} className="bg-slate-800 text-white rounded-2xl font-black uppercase text-[9px]">Add</button>
+              <input type="time" className="bg-white/5 border border-white/10 rounded-2xl p-3 text-brand-beige text-sm" value={newSlotTime} onChange={e => setNewSlotTime(e.target.value)} />
+              <input type="number" min="1" step="1" placeholder="Cap" className="bg-white/5 border border-white/10 rounded-2xl p-3 text-brand-beige text-sm placeholder:text-slate-600" value={newSlotCapacity} onChange={e => setNewSlotCapacity(e.target.value === '' ? '' : Number(e.target.value))} />
+              <button type="button" onClick={handleAddSlot} className="bg-slate-800 text-brand-beige rounded-2xl font-black uppercase text-[9px]">Add</button>
             </div>
             {slots.map((s, i) => (
               <div key={i} className="bg-white/5 border border-white/10 rounded-2xl p-4 flex justify-between items-center">
-                <span className="text-xs font-black text-slate-100 italic">{s.time} ({s.availableSeats})</span>
+                <span className="text-xs font-black text-brand-beige italic">{s.time} ({s.availableSeats})</span>
                 <button type="button" onClick={() => removeSlot(i)} className="text-slate-500"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
               </div>
             ))}
@@ -223,15 +224,15 @@ const CreateEventModal: React.FC<{ userUid: string, onClose: () => void, onSucce
           <div className="space-y-4">
             <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Contact & Exchange</p>
             <div className="grid grid-cols-2 gap-3">
-              <input required type="number" placeholder="₹ Price" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-base" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value === '' ? 0 : Number(e.target.value)})} />
-              <input required type="number" min="1" step="1" placeholder="Capacity" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-base" value={formData.capacity === 0 ? '' : formData.capacity} onChange={e => setFormData({...formData, capacity: e.target.value === '' ? 0 : Number(e.target.value)})} />
+              <input required type="number" placeholder="₹ Price" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-brand-beige text-base placeholder:text-slate-600" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value === '' ? 0 : Number(e.target.value)})} />
+              <input required type="number" min="1" step="1" placeholder="Capacity" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-brand-beige text-base placeholder:text-slate-600" value={formData.capacity === 0 ? '' : formData.capacity} onChange={e => setFormData({...formData, capacity: e.target.value === '' ? 0 : Number(e.target.value)})} />
             </div>
-            <input required type="tel" placeholder="WhatsApp (10 digits)" className="w-full bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 text-emerald-400 font-bold text-base" value={formData.hostPhone} onChange={e => setFormData({...formData, hostPhone: e.target.value})} />
+            <input required type="tel" placeholder="WhatsApp (10 digits)" className="w-full bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 text-emerald-400 font-bold text-base placeholder:text-emerald-900/50" value={formData.hostPhone} onChange={e => setFormData({...formData, hostPhone: e.target.value})} />
           </div>
 
           <div className="space-y-4 pb-12">
             <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Aura</p>
-            <div onClick={() => !isSubmitting && fileInputRef.current?.click()} className="w-full h-32 bg-white/5 border-2 border-dashed border-white/10 rounded-2xl flex items-center justify-center relative overflow-hidden group">
+            <div onClick={() => !isSubmitting && fileInputRef.current?.click()} className="w-full h-32 bg-white/5 border-2 border-dashed border-white/10 rounded-2xl flex items-center justify-center relative overflow-hidden group cursor-pointer">
               <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
               {imagePreview ? (
                 <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
@@ -239,8 +240,8 @@ const CreateEventModal: React.FC<{ userUid: string, onClose: () => void, onSucce
                 <p className="text-slate-500 font-black uppercase text-[9px]">Tap to upload Visual Aura</p>
               )}
             </div>
-            <textarea required placeholder="Experience Narrative..." rows={3} className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-base resize-none" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
-            <button type="submit" disabled={isSubmitting} className="w-full py-5 bg-white text-slate-900 rounded-2xl font-black uppercase text-xs tracking-widest active:scale-[0.98] transition-all disabled:opacity-50">
+            <textarea required placeholder="Experience Narrative..." rows={3} className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-brand-beige text-base resize-none placeholder:text-slate-600" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
+            <button type="submit" disabled={isSubmitting} className="w-full py-5 bg-brand-prime text-brand-navy rounded-2xl font-black uppercase text-xs tracking-widest active:scale-[0.98] transition-all disabled:opacity-50">
               {isSubmitting ? "Launching..." : "Broadcast Node"}
             </button>
           </div>
@@ -264,7 +265,7 @@ const RatingStars: React.FC<{ rating?: number, onRate: (rating: number) => void,
           onMouseLeave={() => !disabled && setHover(0)}
           className={`transition-all ${disabled ? 'cursor-default' : 'cursor-pointer active:scale-90'}`}
         >
-          <svg className={`w-5 h-5 ${(hover || rating) >= star ? 'text-brand-gold fill-current' : 'text-slate-600'}`} viewBox="0 0 24 24">
+          <svg className={`w-5 h-5 ${(hover || rating) >= star ? 'text-brand-prime fill-current' : 'text-slate-600'}`} viewBox="0 0 24 24">
             <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
           </svg>
         </button>
@@ -325,16 +326,16 @@ const Dashboard: React.FC<DashboardProps> = ({ events, bookings, currentUser, in
       <div className="glass-card rounded-[2rem] md:rounded-[3.5rem] overflow-hidden border border-white/10 bg-slate-900/40 min-h-[70vh] pb-[env(safe-area-inset-bottom)]">
         <div className="p-6 md:p-14 border-b border-white/5 flex flex-col md:flex-row gap-6 justify-between items-center">
            <div className="text-center md:text-left">
-             <span className="text-brand-moss text-[9px] font-black uppercase tracking-[0.3em] mb-1 block">Sanctuary</span>
-             <h2 className="text-2xl md:text-6xl font-black italic uppercase text-slate-100 leading-tight">Namaste, {userName.split(' ')[0]}</h2>
+             <span className="text-brand-prime text-[9px] font-black uppercase tracking-[0.3em] mb-1 block">Sanctuary</span>
+             <h2 className="text-2xl md:text-6xl font-black italic uppercase text-brand-beige leading-tight">Namaste, {userName.split(' ')[0]}</h2>
            </div>
            <button onClick={handleLogout} className="px-6 py-3 border border-white/10 rounded-xl text-[9px] font-black uppercase text-slate-400 active:scale-95 transition-all">Disconnect</button>
         </div>
         <div className="p-4 md:p-14">
           <div className="flex gap-6 mb-8 border-b border-white/5 overflow-x-auto scrollbar-hide">
             {['bookings', 'hosting', 'settings'].map(tab => (
-              <button key={tab} onClick={() => setActiveTab(tab as any)} className={`pb-4 text-[10px] md:text-[12px] font-black uppercase tracking-widest relative whitespace-nowrap ${activeTab === tab ? 'text-slate-100' : 'text-slate-500'}`}>
-                {tab} {activeTab === tab && <div className="absolute bottom-0 left-0 right-0 h-1 bg-brand-moss rounded-full"></div>}
+              <button key={tab} onClick={() => setActiveTab(tab as any)} className={`pb-4 text-[10px] md:text-[12px] font-black uppercase tracking-widest relative whitespace-nowrap ${activeTab === tab ? 'text-brand-beige' : 'text-slate-500'}`}>
+                {tab} {activeTab === tab && <div className="absolute bottom-0 left-0 right-0 h-1 bg-brand-prime rounded-full"></div>}
               </button>
             ))}
           </div>
@@ -343,7 +344,7 @@ const Dashboard: React.FC<DashboardProps> = ({ events, bookings, currentUser, in
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {bookings.length === 0 ? (
                 <div className="col-span-full py-20 text-center opacity-50">
-                  <p className="font-black italic uppercase text-[10px] tracking-widest">No active frequencies.</p>
+                  <p className="font-black italic uppercase text-[10px] tracking-widest text-slate-500">No active frequencies.</p>
                 </div>
               ) :
                 bookings.map((b) => {
@@ -352,11 +353,11 @@ const Dashboard: React.FC<DashboardProps> = ({ events, bookings, currentUser, in
                     <div key={b.id} className="glass-card p-4 rounded-2xl border border-white/10 flex flex-col justify-between h-full min-h-[160px]">
                       <div className="flex justify-between items-start">
                         <div className="flex-1 pr-4">
-                          <span className="text-brand-moss text-[7px] font-black uppercase">{b.category}</span>
-                          <h4 className="text-slate-100 font-black italic text-sm mt-0.5 line-clamp-1">{b.eventTitle}</h4>
+                          <span className="text-brand-prime text-[7px] font-black uppercase">{b.category}</span>
+                          <h4 className="text-brand-beige font-black italic text-sm mt-0.5 line-clamp-1">{b.eventTitle}</h4>
                           <p className="text-slate-500 text-[8px] uppercase font-bold mt-1">{b.eventDate} @ {b.time}</p>
                         </div>
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${completed ? 'bg-brand-moss/20 text-brand-moss' : 'bg-slate-800 text-slate-500'}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${completed ? 'bg-brand-prime/20 text-brand-prime' : 'bg-slate-800 text-slate-500'}`}>
                            {completed ? <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" /></svg> : <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" strokeWidth="2.5"/></svg>}
                         </div>
                       </div>
@@ -365,10 +366,10 @@ const Dashboard: React.FC<DashboardProps> = ({ events, bookings, currentUser, in
                         {completed ? (
                           <div className="flex items-center justify-between p-2 rounded-xl bg-white/5">
                             <span className="text-[7px] font-black uppercase text-slate-500">Rate Resonance</span>
-                            {isRatingLoading === b.id ? <div className="w-3 h-3 border-2 border-brand-moss border-t-transparent rounded-full animate-spin"></div> : <RatingStars rating={b.rating} onRate={(r) => handleRate(b, r)} disabled={!!b.rating} />}
+                            {isRatingLoading === b.id ? <div className="w-3 h-3 border-2 border-brand-prime border-t-transparent rounded-full animate-spin"></div> : <RatingStars rating={b.rating} onRate={(r) => handleRate(b, r)} disabled={!!b.rating} />}
                           </div>
                         ) : (
-                          <button onClick={() => connectToHost(b)} className="w-full py-3 bg-emerald-500 text-white rounded-xl text-[9px] font-black uppercase tracking-widest active:scale-95 transition-all">WhatsApp Host</button>
+                          <button onClick={() => connectToHost(b)} className="w-full py-3 bg-brand-prime text-brand-navy rounded-xl text-[9px] font-black uppercase tracking-widest active:scale-95 transition-all">WhatsApp Host</button>
                         )}
                       </div>
                     </div>
@@ -380,22 +381,30 @@ const Dashboard: React.FC<DashboardProps> = ({ events, bookings, currentUser, in
 
           {activeTab === 'hosting' && (
             <div className="space-y-6">
-              <div className="p-5 md:p-8 rounded-2xl border border-brand-moss/20 bg-brand-moss/5 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-4">
+              <div className="p-5 md:p-8 rounded-2xl border border-brand-prime/20 bg-brand-prime/5 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
-                  <h3 className="text-sm md:text-xl font-black italic text-slate-100 uppercase leading-none">Broadcast Node</h3>
+                  <h3 className="text-sm md:text-xl font-black italic text-brand-beige uppercase leading-none">Broadcast Node</h3>
                   <p className="text-slate-500 text-[8px] uppercase mt-1 font-bold">Add your frequency to the global discovery stream.</p>
                 </div>
-                <button onClick={() => setShowCreateModal(true)} className="w-full md:w-auto bg-white text-slate-900 px-6 py-3 rounded-xl font-black uppercase text-[10px] active:scale-95 transition-all">Launch</button>
+                <button onClick={() => setShowCreateModal(true)} className="w-full md:w-auto bg-brand-prime text-brand-navy px-6 py-3 rounded-xl font-black uppercase text-[10px] active:scale-95 transition-all shadow-lg shadow-brand-prime/20">Launch</button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {myEvents.map(e => (
                   <div key={e.id} className="glass-card rounded-2xl overflow-hidden border border-white/10 flex items-center p-3 gap-3">
                     <img src={e.image} className="w-16 h-16 rounded-lg object-cover" alt={e.title} />
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-slate-100 font-bold italic text-xs truncate uppercase">{e.title}</h4>
-                      <p className="text-[7px] text-slate-500 uppercase font-black">{e.dates.length} Days Scheduled</p>
+                      <h4 className="text-brand-beige font-bold italic text-xs truncate uppercase">{e.title}</h4>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <p className="text-[7px] text-slate-500 uppercase font-black">{e.dates.length} Days Scheduled</p>
+                        {e.averageRating && (
+                          <div className="flex items-center gap-1 bg-white/5 px-1.5 py-0.5 rounded-md border border-white/5">
+                            <svg className="w-2 h-2 text-brand-prime fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
+                            <span className="text-[8px] font-bold text-brand-beige">{e.averageRating.toFixed(1)}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <button className="text-red-500 p-2" onClick={async () => { if(confirm("Terminate broadcast?")){ await api.deleteEvent(e.id, currentUser?.uid || ''); onRefreshEvents?.(); } }}><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" strokeWidth="2.5"/></svg></button>
+                    <button className="text-red-500 p-2 hover:scale-110 transition-transform" onClick={async () => { if(confirm("Terminate broadcast?")){ await api.deleteEvent(e.id, currentUser?.uid || ''); onRefreshEvents?.(); } }}><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" strokeWidth="2.5"/></svg></button>
                   </div>
                 ))}
               </div>
@@ -405,7 +414,7 @@ const Dashboard: React.FC<DashboardProps> = ({ events, bookings, currentUser, in
           {activeTab === 'settings' && (
             <div className="grid grid-cols-2 gap-3">
               {['Terms', 'Privacy', 'Refund'].map(p => (
-                <button key={p} className="glass-card p-4 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-500 active:scale-95 transition-all" onClick={() => onOpenPolicy?.(p.toLowerCase() as any)}>
+                <button key={p} className="glass-card p-4 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-500 active:scale-95 transition-all hover:border-brand-prime hover:text-brand-beige" onClick={() => onOpenPolicy?.(p.toLowerCase() as any)}>
                   {p}
                 </button>
               ))}

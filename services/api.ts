@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { Event, Booking, AIRecommendation, User } from '../types.ts';
 import { INITIAL_EVENTS } from '../constants.ts';

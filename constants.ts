@@ -14,13 +14,15 @@ export const INITIAL_EVENTS: Event[] = [
     id: 's1',
     title: 'Interstellar: Open Air Screening',
     category: 'Shows',
-    image: 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&q=80&w=1200',
+    image: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&q=80&w=1200',
     description: 'A cinematic journey through the stars under the real night sky. Spatial audio and premium seating provided.',
     price: 499,
     capacity: 150,
     dates: ['25 Dec 2024', '26 Dec 2024'],
     hostPhone: DEFAULT_HOST,
-    slots: [{ time: '08:00 PM', availableSeats: 150 }]
+    slots: [{ time: '08:00 PM', availableSeats: 150 }],
+    averageRating: 4.9,
+    totalRatings: 124
   },
   {
     id: 's2',
@@ -32,7 +34,9 @@ export const INITIAL_EVENTS: Event[] = [
     capacity: 15,
     dates: ['26 Dec 2024'],
     hostPhone: EXPLORER_1,
-    slots: [{ time: '06:30 PM', availableSeats: 15 }]
+    slots: [{ time: '06:30 PM', availableSeats: 15 }],
+    averageRating: 4.7,
+    totalRatings: 18
   },
   {
     id: 's3',
@@ -58,13 +62,15 @@ export const INITIAL_EVENTS: Event[] = [
     capacity: 40,
     dates: ['25 Dec 2024', '26 Dec 2024', '27 Dec 2024'],
     hostPhone: DEFAULT_HOST,
-    slots: [{ time: '07:00 PM', availableSeats: 20 }, { time: '09:00 PM', availableSeats: 20 }]
+    slots: [{ time: '07:00 PM', availableSeats: 20 }, { time: '09:00 PM', availableSeats: 20 }],
+    averageRating: 4.8,
+    totalRatings: 56
   },
   {
     id: 'a2',
     title: 'Midnight Forest Cycle Run',
     category: 'Activity',
-    image: 'https://images.unsplash.com/photo-1541625602330-2277a4c4b282?auto=format&fit=crop&q=80&w=1200',
+    image: 'https://images.unsplash.com/photo-1534067783941-51c9c23ecefd?auto=format&fit=crop&q=80&w=1200',
     description: 'A high-cadence group ride through the national park trails under moonlight. Safety gear mandatory.',
     price: 0,
     capacity: 25,
@@ -82,7 +88,9 @@ export const INITIAL_EVENTS: Event[] = [
     capacity: 12,
     dates: ['29 Dec 2024'],
     hostPhone: EXPLORER_4,
-    slots: [{ time: '10:00 AM', availableSeats: 12 }]
+    slots: [{ time: '10:00 AM', availableSeats: 12 }],
+    averageRating: 4.5,
+    totalRatings: 9
   },
 
   // --- MMD ORIGINALS ---
@@ -96,7 +104,9 @@ export const INITIAL_EVENTS: Event[] = [
     capacity: 1,
     dates: ['24 Dec 2024', '27 Dec 2024', '30 Dec 2024'],
     hostPhone: DEFAULT_HOST,
-    slots: [{ time: '02:00 PM', availableSeats: 1 }]
+    slots: [{ time: '02:00 PM', availableSeats: 1 }],
+    averageRating: 5.0,
+    totalRatings: 42
   },
   {
     id: 'm2',
@@ -108,7 +118,9 @@ export const INITIAL_EVENTS: Event[] = [
     capacity: 2,
     dates: ['26 Dec 2024', '28 Dec 2024'],
     hostPhone: DEFAULT_HOST,
-    slots: [{ time: '11:00 AM', availableSeats: 1 }, { time: '04:00 PM', availableSeats: 1 }]
+    slots: [{ time: '11:00 AM', availableSeats: 1 }, { time: '04:00 PM', availableSeats: 1 }],
+    averageRating: 4.9,
+    totalRatings: 31
   },
   {
     id: 'm3',
@@ -134,7 +146,9 @@ export const INITIAL_EVENTS: Event[] = [
     capacity: 20,
     dates: ['28 Dec 2024'],
     hostPhone: EXPLORER_5,
-    slots: [{ time: '07:30 PM', availableSeats: 20 }]
+    slots: [{ time: '07:30 PM', availableSeats: 20 }],
+    averageRating: 4.6,
+    totalRatings: 82
   },
   {
     id: 'mn2',
@@ -158,7 +172,9 @@ export const INITIAL_EVENTS: Event[] = [
     capacity: 30,
     dates: ['26 Dec 2024'],
     hostPhone: EXPLORER_1,
-    slots: [{ time: '05:30 PM', availableSeats: 30 }]
+    slots: [{ time: '05:30 PM', availableSeats: 30 }],
+    averageRating: 4.4,
+    totalRatings: 45
   },
 
   // --- WORKSHOP ---
@@ -172,7 +188,9 @@ export const INITIAL_EVENTS: Event[] = [
     capacity: 20,
     dates: ['28 Dec 2024', '29 Dec 2024'],
     hostPhone: DEFAULT_HOST,
-    slots: [{ time: '11:00 AM', availableSeats: 10 }, { time: '03:00 PM', availableSeats: 10 }]
+    slots: [{ time: '11:00 AM', availableSeats: 10 }, { time: '03:00 PM', availableSeats: 10 }],
+    averageRating: 4.8,
+    totalRatings: 12
   },
   {
     id: 'w2',
@@ -210,7 +228,9 @@ export const INITIAL_EVENTS: Event[] = [
     capacity: 2,
     dates: ['25 Dec 2024', '26 Dec 2024'],
     hostPhone: DEFAULT_HOST,
-    slots: [{ time: '10:00 AM', availableSeats: 1 }, { time: '04:00 PM', availableSeats: 1 }]
+    slots: [{ time: '10:00 AM', availableSeats: 1 }, { time: '04:00 PM', availableSeats: 1 }],
+    averageRating: 5.0,
+    totalRatings: 7
   },
   {
     id: 't2',
@@ -234,6 +254,8 @@ export const INITIAL_EVENTS: Event[] = [
     capacity: 1,
     dates: ['28 Dec 2024', '29 Dec 2024'],
     hostPhone: DEFAULT_HOST,
-    slots: [{ time: '12:00 PM', availableSeats: 1 }]
+    slots: [{ time: '12:00 PM', availableSeats: 1 }],
+    averageRating: 4.9,
+    totalRatings: 15
   }
 ];

@@ -1,7 +1,7 @@
 
-import { initializeApp } from "@firebase/app";
-import { getAuth } from "@firebase/auth";
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "@firebase/firestore";
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { initializeFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCjJxL6Vq-TZFHhuQ-XtUpOHVkBPO1XnQw",
@@ -12,13 +12,13 @@ const firebaseConfig = {
   appId: "1:751688831675:web:480c9eb6a28471c8bf0f9e"
 };
 
-const app = initializeApp(firebaseConfig);
+// Singleton pattern for Firebase App initialization
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+
 export const auth = getAuth(app);
 
-// Initialize Firestore with settings to resolve connectivity issues
-// experimentalForceLongPolling: true bypasses WebSocket issues that often cause the 10s timeout error.
-// localCache ensures the app remains functional in offline mode as requested.
+// Use initializeFirestore with forced long polling to fix "Could not reach Cloud Firestore backend"
+// This is more reliable in various network environments compared to the default WebSocket connection.
 export const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
-  experimentalForceLongPolling: true 
+  experimentalForceLongPolling: true,
 });

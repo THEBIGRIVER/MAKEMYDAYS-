@@ -70,11 +70,11 @@ const BookingModal: React.FC<BookingModalProps> = ({ event, onClose, onConfirm }
       <div className="fixed inset-0 z-[300] flex items-center justify-center p-6 bg-brand-navy/90 backdrop-blur-xl">
         <div className="bg-brand-slate border border-white/10 w-full max-w-sm rounded-lg p-10 text-center shadow-2xl animate-in zoom-in-95">
           <div className="w-16 h-16 bg-brand-prime rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" /></svg>
+            <svg className="w-8 h-8 text-brand-beige" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" /></svg>
           </div>
-          <h2 className="text-xl font-bold uppercase text-white">Booking Saved</h2>
+          <h2 className="text-xl font-bold uppercase text-brand-beige">Booking Saved</h2>
           <p className="text-slate-400 text-xs mt-2 italic">Redirected to WhatsApp to connect with your host.</p>
-          <button onClick={onClose} className="mt-8 w-full h-12 bg-white text-brand-navy rounded-md font-bold uppercase tracking-widest text-sm">Close</button>
+          <button onClick={onClose} className="mt-8 w-full h-12 bg-brand-beige text-brand-navy rounded-md font-bold uppercase tracking-widest text-sm">Close</button>
         </div>
       </div>
     );
@@ -91,9 +91,9 @@ const BookingModal: React.FC<BookingModalProps> = ({ event, onClose, onConfirm }
           <div className="absolute bottom-6 left-8 right-8 flex justify-between items-end">
             <div>
               <span className="text-brand-prime text-[9px] font-black uppercase tracking-[0.2em]">{event.category}</span>
-              <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight">{event.title}</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-brand-beige leading-tight">{event.title}</h2>
             </div>
-            <button onClick={onClose} className="text-white/50 hover:text-white transition-colors mb-2"><svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" /></svg></button>
+            <button onClick={onClose} className="text-brand-beige/50 hover:text-brand-beige transition-colors mb-2"><svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" /></svg></button>
           </div>
         </div>
 
@@ -114,7 +114,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ event, onClose, onConfirm }
                   key={d.full}
                   onClick={() => setSelectedDate(d.full)}
                   className={`flex-shrink-0 w-16 h-20 rounded-md flex flex-col items-center justify-center border-2 transition-all ${
-                    selectedDate === d.full ? 'bg-brand-prime border-brand-prime text-white shadow-lg' : 'bg-white/5 border-white/10 text-slate-500 hover:border-white/30'
+                    selectedDate === d.full ? 'bg-brand-prime border-brand-prime text-brand-beige shadow-lg' : 'bg-white/5 border-white/10 text-slate-500 hover:border-white/30'
                   }`}
                 >
                   <span className="text-[9px] font-bold mb-1">{d.day}</span>
@@ -132,7 +132,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ event, onClose, onConfirm }
                   key={s.time}
                   onClick={() => setSelectedSlot(s)}
                   className={`py-4 rounded-md font-bold text-xs uppercase border-2 transition-all ${
-                    selectedSlot?.time === s.time ? 'bg-white text-brand-navy border-white shadow-lg' : 'bg-white/5 border-white/10 text-slate-500'
+                    selectedSlot?.time === s.time ? 'bg-brand-beige text-brand-navy border-brand-beige shadow-lg' : 'bg-white/5 border-white/10 text-slate-500'
                   }`}
                 >
                   {s.time}
@@ -144,23 +144,23 @@ const BookingModal: React.FC<BookingModalProps> = ({ event, onClose, onConfirm }
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <p className="text-[11px] font-black uppercase text-slate-500 tracking-widest">Your Name</p>
-              <input placeholder="Ex: John Doe" className="w-full bg-white/5 border border-white/10 rounded-md p-4 text-white text-base focus:border-brand-prime outline-none transition-all" value={guestName} onChange={e => setGuestName(e.target.value)} />
+              <input placeholder="Ex: John Doe" className="w-full bg-white/5 border border-white/10 rounded-md p-4 text-brand-beige text-base focus:border-brand-prime outline-none transition-all placeholder:text-slate-600" value={guestName} onChange={e => setGuestName(e.target.value)} />
             </div>
             <div className="space-y-2">
               <p className="text-[11px] font-black uppercase text-slate-500 tracking-widest">WhatsApp Signal</p>
-              <input placeholder="Ex: 9876543210" type="tel" className="w-full bg-white/5 border border-white/10 rounded-md p-4 text-white text-base focus:border-brand-prime outline-none transition-all" value={guestPhone} onChange={e => setGuestPhone(e.target.value)} />
+              <input placeholder="Ex: 9876543210" type="tel" className="w-full bg-white/5 border border-white/10 rounded-md p-4 text-brand-beige text-base focus:border-brand-prime outline-none transition-all placeholder:text-slate-600" value={guestPhone} onChange={e => setGuestPhone(e.target.value)} />
             </div>
           </div>
 
           <div className="pt-6 flex flex-col md:flex-row items-center justify-between gap-6 border-t border-white/5">
             <div className="text-center md:text-left">
               <p className="text-[11px] font-black uppercase text-slate-500 tracking-widest">Total Price</p>
-              <p className="text-2xl font-bold text-white">₹{event.price}</p>
+              <p className="text-2xl font-bold text-brand-beige">₹{event.price}</p>
             </div>
             <button 
               onClick={handleBooking}
               disabled={modalState === 'processing'}
-              className="w-full md:flex-1 h-14 bg-[#25D366] text-white rounded-md font-bold uppercase text-[11px] md:text-xs tracking-[0.15em] active:scale-95 transition-all shadow-xl flex items-center justify-center gap-3"
+              className="w-full md:flex-1 h-14 bg-[#25D366] text-brand-beige rounded-md font-bold uppercase text-[11px] md:text-xs tracking-[0.15em] active:scale-95 transition-all shadow-xl flex items-center justify-center gap-3"
             >
               {modalState === 'processing' ? 'Syncing...' : (
                 <>
