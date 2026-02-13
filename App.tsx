@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Event, Category, Booking, User } from './types';
 import EventCard from './components/EventCard';
@@ -70,48 +69,48 @@ const RhythmTuner = ({ events, onSelect }: { events: Event[], onSelect: (e: Even
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/5 flex flex-col items-center gap-8 relative overflow-hidden mt-8">
-      <div className="text-center space-y-2">
-        <span className="text-brand-prime text-[9px] font-black uppercase tracking-[0.4em]">Somatic Pulse</span>
-        <h4 className="text-2xl font-display font-black text-brand-beige italic">Rhythm Tuner</h4>
+    <div className="w-full h-full p-6 rounded-[2rem] bg-white/[0.02] border border-white/5 flex flex-col items-center gap-6 relative overflow-hidden">
+      <div className="text-center space-y-1">
+        <span className="text-brand-prime text-[8px] font-black uppercase tracking-[0.3em]">Somatic Pulse</span>
+        <h4 className="text-lg font-display font-black text-brand-beige italic leading-none">Rhythm Tuner</h4>
       </div>
 
       {!isCalibrated ? (
-        <div className="flex flex-col items-center gap-6">
+        <div className="flex flex-col items-center gap-4">
           <div 
             ref={rippleRef}
             onClick={handleTap}
-            className="relative w-32 h-32 rounded-full bg-white/5 border-2 border-white/10 flex items-center justify-center cursor-pointer active:scale-95 transition-all group"
+            className="relative w-24 h-24 rounded-full bg-white/5 border-2 border-white/10 flex items-center justify-center cursor-pointer active:scale-95 transition-all group"
           >
-            <div className="absolute inset-4 rounded-full border border-white/5 group-hover:scale-110 transition-transform duration-500" />
-            <span className="text-2xl animate-pulse">💓</span>
+            <div className="absolute inset-3 rounded-full border border-white/5 group-hover:scale-110 transition-transform duration-500" />
+            <span className="text-xl animate-pulse">💓</span>
           </div>
           <div className="text-center">
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Tap 5 times in your current rhythm</p>
-            {bpm && <p className="text-brand-prime font-black text-xs mt-2">{bpm} BPM</p>}
+            <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Tap 5 times in your rhythm</p>
+            {bpm && <p className="text-brand-prime font-black text-[10px] mt-1">{bpm} BPM</p>}
           </div>
         </div>
       ) : (
-        <div className="w-full space-y-6 animate-in zoom-in-95 duration-500">
+        <div className="w-full space-y-4 animate-in zoom-in-95 duration-500">
           <div className="text-center">
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Pulse Sync: {bpm} BPM</p>
-            <h5 className="text-3xl font-display font-black tracking-tighter italic text-brand-prime">
+            <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Pulse: {bpm} BPM</p>
+            <h5 className="text-xl font-display font-black tracking-tighter italic text-brand-prime leading-none">
               {bpm! > 110 ? 'High Frequency' : bpm! < 90 ? 'Deep Resonance' : 'Balanced Static'}
             </h5>
           </div>
           {suggestedEvent && (
-            <div className="bg-white/5 border border-white/10 p-4 rounded-2xl flex items-center gap-4">
-              <img src={suggestedEvent.image} className="w-16 h-16 rounded-xl object-cover" alt="" />
+            <div className="bg-white/5 border border-white/10 p-3 rounded-xl flex items-center gap-3">
+              <img src={suggestedEvent.image} className="w-12 h-12 rounded-lg object-cover" alt="" />
               <div className="flex-1 min-w-0">
-                <span className="text-[8px] font-black uppercase text-brand-prime">{suggestedEvent.category}</span>
-                <p className="text-brand-beige font-bold truncate">{suggestedEvent.title}</p>
+                <span className="text-[7px] font-black uppercase text-brand-prime">{suggestedEvent.category}</span>
+                <p className="text-brand-beige text-xs font-bold truncate">{suggestedEvent.title}</p>
               </div>
-              <button onClick={() => onSelect(suggestedEvent)} className="p-3 bg-brand-prime text-brand-beige rounded-xl active:scale-90 transition-transform">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+              <button onClick={() => onSelect(suggestedEvent)} className="p-2 bg-brand-prime text-brand-beige rounded-lg active:scale-90 transition-transform">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
               </button>
             </div>
           )}
-          <button onClick={reset} className="w-full text-[9px] font-black text-slate-600 uppercase tracking-[0.3em] hover:text-brand-beige transition-colors">Reset Pulse</button>
+          <button onClick={reset} className="w-full text-[8px] font-black text-slate-600 uppercase tracking-[0.2em] hover:text-brand-beige transition-colors">Reset Pulse</button>
         </div>
       )}
     </div>
@@ -163,24 +162,24 @@ const AuraScanner = ({ events, onSelect }: { events: Event[], onSelect: (e: Even
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/5 flex flex-col items-center gap-8 relative overflow-hidden mt-8">
-      <div className="text-center space-y-2">
-        <span className="text-brand-prime text-[9px] font-black uppercase tracking-[0.4em]">Biometric Sync</span>
-        <h4 className="text-2xl font-display font-black text-brand-beige italic">Calibrate your Aura</h4>
+    <div className="w-full h-full p-6 rounded-[2rem] bg-white/[0.02] border border-white/5 flex flex-col items-center gap-6 relative overflow-hidden">
+      <div className="text-center space-y-1">
+        <span className="text-brand-prime text-[8px] font-black uppercase tracking-[0.3em]">Biometric Sync</span>
+        <h4 className="text-lg font-display font-black text-brand-beige italic leading-none">Aura Calibration</h4>
       </div>
 
       {!result ? (
-        <div className="flex flex-col items-center gap-6">
+        <div className="flex flex-col items-center gap-4">
           <div 
             onMouseDown={startScan}
             onMouseUp={stopScan}
             onMouseLeave={stopScan}
             onTouchStart={startScan}
             onTouchEnd={stopScan}
-            className={`relative w-32 h-32 rounded-full border-4 flex items-center justify-center cursor-pointer transition-all duration-500 ${isHolding ? 'border-brand-prime scale-110 shadow-[0_0_40px_rgba(255,153,51,0.4)]' : 'border-white/10 hover:border-white/30'}`}
+            className={`relative w-24 h-24 rounded-full border-4 flex items-center justify-center cursor-pointer transition-all duration-500 ${isHolding ? 'border-brand-prime scale-110 shadow-[0_0_30px_rgba(255,153,51,0.4)]' : 'border-white/10 hover:border-white/30'}`}
           >
-            <div className="absolute inset-2 rounded-full border border-white/5 animate-spin-slow" />
-            <svg className="w-12 h-12 text-white/20" fill="currentColor" viewBox="0 0 24 24">
+            <div className="absolute inset-1.5 rounded-full border border-white/5 animate-spin-slow" />
+            <svg className="w-8 h-8 text-white/20" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5-9h10v2H7z"/>
             </svg>
             <div 
@@ -191,27 +190,27 @@ const AuraScanner = ({ events, onSelect }: { events: Event[], onSelect: (e: Even
               }} 
             />
           </div>
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest animate-pulse">
-            {isHolding ? 'Synchronizing Frequencies...' : 'Hold to Calibrate'}
+          <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest animate-pulse">
+            {isHolding ? 'Syncing...' : 'Hold to Calibrate'}
           </p>
         </div>
       ) : (
-        <div className="w-full space-y-6 animate-in zoom-in-95 duration-500">
+        <div className="w-full space-y-4 animate-in zoom-in-95 duration-500">
           <div className="text-center">
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Frequency Signature Detected</p>
-            <h5 className={`text-3xl font-display font-black tracking-tighter italic ${result.color}`}>{result.aura}</h5>
+            <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Detected Signature</p>
+            <h5 className={`text-xl font-display font-black tracking-tighter italic leading-none ${result.color}`}>{result.aura}</h5>
           </div>
-          <div className="bg-white/5 border border-white/10 p-4 rounded-2xl flex items-center gap-4">
-            <img src={result.event.image} className="w-16 h-16 rounded-xl object-cover" alt="" />
+          <div className="bg-white/5 border border-white/10 p-3 rounded-xl flex items-center gap-3">
+            <img src={result.event.image} className="w-12 h-12 rounded-lg object-cover" alt="" />
             <div className="flex-1 min-w-0">
-              <span className="text-[8px] font-black uppercase text-brand-prime">{result.event.category}</span>
-              <p className="text-brand-beige font-bold truncate">{result.event.title}</p>
+              <span className="text-[7px] font-black uppercase text-brand-prime">{result.event.category}</span>
+              <p className="text-brand-beige text-xs font-bold truncate">{result.event.title}</p>
             </div>
-            <button onClick={() => onSelect(result.event)} className="p-3 bg-brand-prime text-brand-beige rounded-xl active:scale-90 transition-transform">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            <button onClick={() => onSelect(result.event)} className="p-2 bg-brand-prime text-brand-beige rounded-lg active:scale-90 transition-transform">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
             </button>
           </div>
-          <button onClick={reset} className="w-full text-[9px] font-black text-slate-600 uppercase tracking-[0.3em] hover:text-brand-beige transition-colors">Recalibrate System</button>
+          <button onClick={reset} className="w-full text-[8px] font-black text-slate-600 uppercase tracking-[0.2em] hover:text-brand-beige transition-colors">Recalibrate</button>
         </div>
       )}
     </div>
@@ -576,49 +575,62 @@ const App: React.FC = () => {
             })}
 
             {!showFavoritesOnly && (
-              <div className="py-24 flex flex-col items-center justify-center bg-white/5 rounded-[3rem] border border-white/10 px-8 text-center relative overflow-hidden group">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-brand-prime/5 blur-[120px] pointer-events-none rounded-full" />
-                <div className="relative z-10 max-w-4xl space-y-12 w-full">
-                  <div className="space-y-4">
-                    <span className="text-brand-prime text-[10px] font-black uppercase tracking-[0.4em] inline-block mb-2">Personalized Discovery</span>
-                    <h3 className="text-4xl md:text-6xl font-display font-black tracking-tighter text-brand-beige leading-tight">What's your energy today?</h3>
-                    <p className="text-slate-400 text-base md:text-xl font-medium leading-relaxed max-w-2xl mx-auto">Our Gemini AI curator will sync your current emotional state with the perfect physical frequency.</p>
+              <div className="py-12 flex flex-col items-center justify-center bg-white/5 rounded-[2.5rem] border border-white/10 px-6 text-center relative overflow-hidden group">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[400px] bg-brand-prime/5 blur-[100px] pointer-events-none rounded-full" />
+                <div className="relative z-10 w-full max-w-7xl">
+                  
+                  <div className="flex flex-row overflow-x-auto snap-x snap-mandatory gap-4 pb-4 -mx-4 px-4 lg:mx-0 lg:px-0 lg:pb-0 lg:grid lg:grid-cols-3 lg:gap-6 w-full scrollbar-hide">
+                    
+                    {/* Personalized Discovery Card */}
+                    <div className="min-w-[85vw] md:min-w-[400px] lg:min-w-0 snap-center p-6 rounded-[2rem] bg-white/[0.02] border border-white/5 flex flex-col justify-center items-center gap-6 text-center">
+                      <div className="space-y-1">
+                        <span className="text-brand-prime text-[8px] font-black uppercase tracking-[0.3em]">AI Concierge</span>
+                        <h3 className="text-xl font-display font-black tracking-tight text-brand-beige leading-none italic">Experience Sync</h3>
+                        <p className="text-slate-500 text-[9px] font-medium leading-relaxed max-w-[240px] mx-auto mt-2">What's your energy today?</p>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2 w-full">
+                        {MOODS.map((mood) => (
+                          <button
+                            key={mood.label}
+                            onClick={() => triggerAIChat(mood.query)}
+                            className="group flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-white/5 border border-white/10 hover:border-brand-prime/50 hover:bg-brand-prime/10 transition-all active:scale-95"
+                          >
+                            <span className="text-lg group-hover:scale-110 transition-transform">{mood.icon}</span>
+                            <span className="text-[7px] font-black uppercase tracking-widest text-slate-500 group-hover:text-brand-beige">{mood.label}</span>
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="relative w-full group">
+                        <input 
+                          type="text" 
+                          placeholder="Describe your feel..." 
+                          className="bg-brand-navy/60 border border-white/10 px-4 h-11 rounded-xl text-xs w-full outline-none focus:border-brand-prime focus:bg-brand-navy/80 transition-all backdrop-blur-md placeholder:text-slate-700 text-brand-beige"
+                          value={userMood}
+                          onChange={(e) => setUserMood(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && triggerAIChat(userMood)}
+                        />
+                        <button 
+                          onClick={() => triggerAIChat(userMood)} 
+                          className="absolute right-1.5 top-1.5 bottom-1.5 px-3 bg-brand-prime text-brand-beige rounded-lg font-black text-[8px] uppercase tracking-widest active:scale-95 transition-all"
+                        >
+                          Sync
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Biometric Sync Card */}
+                    <div className="min-w-[85vw] md:min-w-[400px] lg:min-w-0 snap-center">
+                      <AuraScanner events={events} onSelect={handleOpenEvent} />
+                    </div>
+
+                    {/* Somatic Pulse Card */}
+                    <div className="min-w-[85vw] md:min-w-[400px] lg:min-w-0 snap-center">
+                      <RhythmTuner events={events} onSelect={handleOpenEvent} />
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                    {MOODS.map((mood) => (
-                      <button
-                        key={mood.label}
-                        onClick={() => triggerAIChat(mood.query)}
-                        className="group relative flex flex-col items-center gap-2 p-5 rounded-3xl bg-white/5 border border-white/10 hover:border-brand-prime/50 hover:bg-brand-prime/10 transition-all duration-300 active:scale-95"
-                      >
-                        <span className="text-2xl group-hover:scale-125 transition-transform duration-300">{mood.icon}</span>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-brand-beige">{mood.label}</span>
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="relative max-w-2xl mx-auto w-full group">
-                    <input 
-                      type="text" 
-                      placeholder="Or describe how you feel in detail..." 
-                      className="bg-brand-navy/60 border border-white/10 px-8 h-18 rounded-[2rem] text-lg w-full outline-none focus:border-brand-prime focus:bg-brand-navy/80 transition-all backdrop-blur-md placeholder:text-slate-600 shadow-2xl text-brand-beige"
-                      value={userMood}
-                      onChange={(e) => setUserMood(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && triggerAIChat(userMood)}
-                    />
-                    <button 
-                      onClick={() => triggerAIChat(userMood)} 
-                      className="absolute right-3 top-3 bottom-3 px-8 bg-brand-prime text-brand-beige rounded-[1.5rem] font-black text-xs uppercase tracking-widest active:scale-95 shadow-xl shadow-brand-prime/20 transition-all hover:brightness-110"
-                    >
-                      Sync
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-6xl mx-auto">
-                    <AuraScanner events={events} onSelect={handleOpenEvent} />
-                    <RhythmTuner events={events} onSelect={handleOpenEvent} />
-                  </div>
                 </div>
               </div>
             )}
@@ -634,7 +646,7 @@ const App: React.FC = () => {
           <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
         </button>
         <button onClick={() => setIsChatOpen(true)} className="flex items-center justify-center w-12 h-12 rounded-2xl text-slate-500 hover:text-brand-prime transition-colors">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.25 15L17.5 17.625 14.875 18.375l2.625.75.75 2.625.75 2.625.75-2.625 2.625-.75-2.625-.75-.75-2.625zM16.5 3.5l.75 2.625 2.625.75-2.625.75-.75 2.625-.75-2.625-2.625-.75 2.625-.75.75-2.625z" /></svg>
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09-3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.25 15L17.5 17.625 14.875 18.375l2.625.75.75 2.625.75 2.625.75-2.625 2.625-.75-2.625-.75-.75-2.625zM16.5 3.5l.75 2.625 2.625.75-2.625.75-.75 2.625-.75-2.625-2.625-.75 2.625-.75.75-2.625z" /></svg>
         </button>
         <button onClick={() => handleOpenDashboard('hosting')} className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all ${showDashboard && dashboardTab === 'hosting' ? 'bg-brand-prime text-brand-beige' : 'text-slate-500 hover:text-brand-beige'}`}>
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" strokeWidth="2.5"/></svg>
