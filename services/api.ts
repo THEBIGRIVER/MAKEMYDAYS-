@@ -88,6 +88,8 @@ export const api = {
       const eventSnap = await getDoc(eventRef);
       if (eventSnap.exists() && eventSnap.data()?.ownerUid === userUid) {
         await deleteDoc(eventRef);
+      } else {
+        throw new Error("unauthorized");
       }
     } catch (e: any) {
       console.error("Delete failed:", e);
@@ -97,7 +99,6 @@ export const api = {
 
   // AI Recommendations
   async getRecommendations(mood: string, events: Event[]): Promise<AIRecommendation> {
-    // Fix: Use process.env.API_KEY exclusively and directly when initializing GoogleGenAI
     if (!process.env.API_KEY) {
       return { reasoning: "✨ Recalibrating local frequencies.", suggestedEventIds: events.slice(0, 3).map(e => e.id) };
     }
@@ -125,7 +126,6 @@ export const api = {
         throw new Error("No response from AI");
       }
       
-      // Fix: Access .text property directly
       const text = response.text;
       if (text === undefined) throw new Error("Empty AI response");
       return JSON.parse(text.trim());

@@ -13,12 +13,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Mood query is required' });
   }
 
-  // Fix: obtain API key exclusively from process.env.API_KEY
   if (!process.env.API_KEY) {
     return res.status(500).json({ error: 'Internal server configuration error' });
   }
 
-  // Fix: Use process.env.API_KEY directly when initializing GoogleGenAI
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   try {
@@ -62,7 +60,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     });
 
-    // Fix: Access .text property directly
     const text = response.text;
     if (!text) {
       throw new Error("Empty response from AI");
