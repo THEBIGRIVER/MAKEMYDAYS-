@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Event } from '../types';
 
@@ -7,23 +6,17 @@ interface EventCardProps {
   onClick: (event: Event) => void;
   isFavorite?: boolean;
   onToggleFavorite?: (id: string) => void;
-  onDelete?: (id: string) => void;
   id?: string;
 }
 
 const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=60&w=800";
 
-const EventCard: React.FC<EventCardProps> = ({ event, onClick, isFavorite, onToggleFavorite, onDelete, id }) => {
+const EventCard: React.FC<EventCardProps> = ({ event, onClick, isFavorite, onToggleFavorite, id }) => {
   const [imgSrc, setImgSrc] = useState(event.image);
 
   const handleToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
     onToggleFavorite?.(event.id);
-  };
-
-  const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onDelete?.(event.id);
   };
 
   return (
@@ -44,24 +37,10 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick, isFavorite, onTog
         <div className="bg-[#0F171E]/60 backdrop-blur-2xl border border-white/10 px-3 py-1 rounded-lg shadow-2xl flex items-center group-hover:bg-brand-prime group-hover:border-brand-prime transition-all duration-300">
           <span className="text-xs font-bold text-brand-beige tracking-tight">₹{event.price}</span>
         </div>
-        {onDelete && (
-           <div className="bg-brand-prime text-brand-navy px-2 py-1 rounded-md text-[8px] font-black uppercase tracking-widest animate-pulse shadow-lg">
-             Host
-           </div>
-        )}
       </div>
 
       {/* Control Actions - Top Right */}
       <div className="absolute top-3 right-3 z-40 flex items-center gap-2 transition-all duration-500">
-        {onDelete && (
-          <button 
-            onClick={handleDelete}
-            className="w-9 h-9 bg-red-500/20 backdrop-blur-2xl text-red-500 border border-red-500/30 rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-xl active:scale-90"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" strokeWidth="2.5"/></svg>
-          </button>
-        )}
-        
         <div className="bg-brand-navy/70 backdrop-blur-xl border border-brand-prime/30 px-3 py-1 rounded-full shadow-2xl flex items-center gap-2 group-hover:border-brand-prime group-hover:bg-brand-prime/10 transition-all duration-300">
           <div className="w-1.5 h-1.5 rounded-full bg-brand-prime animate-pulse shadow-[0_0_8px_rgba(255,153,51,0.8)]" />
           <span className="text-[9px] font-black uppercase tracking-[0.15em] text-brand-prime whitespace-nowrap">

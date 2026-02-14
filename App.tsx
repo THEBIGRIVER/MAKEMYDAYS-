@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Event, Category, Booking, User } from './types';
 import EventCard from './components/EventCard';
@@ -549,7 +548,6 @@ const App: React.FC = () => {
                         onClick={handleOpenEvent} 
                         isFavorite={favorites.includes(e.id)} 
                         onToggleFavorite={toggleFavorite}
-                        onDelete={currentUser?.uid === e.ownerUid ? handleDeleteEvent : undefined}
                       />
                     </div>
                   ))}
@@ -580,7 +578,6 @@ const App: React.FC = () => {
                           onClick={handleOpenEvent} 
                           isFavorite={favorites.includes(e.id)} 
                           onToggleFavorite={toggleFavorite}
-                          onDelete={currentUser?.uid === e.ownerUid ? handleDeleteEvent : undefined}
                         />
                       </div>
                     ))}
