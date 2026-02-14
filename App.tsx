@@ -378,18 +378,6 @@ const App: React.FC = () => {
     window.history.pushState({ view: 'dashboard', tab }, '');
   };
 
-  const handleDeleteEvent = async (eventId: string) => {
-    if (!currentUser) return;
-    if (window.confirm("Are you sure you want to terminate this experience broadcast? It will be removed for everyone.")) {
-      try {
-        await api.deleteEvent(eventId, currentUser.uid);
-        fetchData(currentUser.uid);
-      } catch (err) {
-        alert("Action disrupted. Verification failed.");
-      }
-    }
-  };
-
   useEffect(() => {
     const savedFavs = localStorage.getItem('mmd_wishlist');
     if (savedFavs) setFavorites(JSON.parse(savedFavs));

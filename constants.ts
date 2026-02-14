@@ -1,4 +1,3 @@
-
 import { Event } from './types.ts';
 
 export const DEFAULT_HOST = '917686924919';
@@ -6,7 +5,6 @@ const EXPLORER_1 = '9820012345';
 const EXPLORER_2 = '9930054321';
 const EXPLORER_3 = '9120098765';
 const EXPLORER_4 = '9870011223';
-const EXPLORER_5 = '9111122233';
 
 export const INITIAL_EVENTS: Event[] = [
   // --- SHOWS ---
