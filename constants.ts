@@ -1,3 +1,4 @@
+
 import { Event } from './types.ts';
 
 export const DEFAULT_HOST = '917686924919';
